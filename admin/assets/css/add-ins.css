@@ -1,0 +1,75 @@
+    .dataTables_filter input { width: 300px }
+    .sub-bucket-creation{padding:0 20px;}
+    .remove-subbucket{position:absolute;right:-21px;top:9px;}
+    .remove-subbucket:hover{color:red;cursor:pointer;}
+    .modal-on-success{padding-bottom:20px;}
+    #delete-bucket-confirmation{padding-bottom:20px;}
+    .loading-bucket-info, .empty-bucket, #delete-buckset, #delete-bucket-confirmation, .loading-conversation, .loading-new-conversation, .loading-bucket, .help, .conversation-wrapper, .messages-wrapper{display:none;}
+    #add-new-subbucket-field:hover{cursor:pointer}
+    .content-wrap{margin-bottom:50px;}
+    .conversation-panel{margin-bottom:-1px;border-radius:0px}
+    .editor-wrap .btn{border:none;}
+    .editor-wrap .btn-default{background-color: #E8E8E8;}
+    .wysihtml5-editor{min-height:200px;}
+    .wysihtml5-toolbar, .message-subject, .message-to{padding:0;background:none;border:none;}
+    .message-subject, .message-to{margin-bottom:10px;}
+    .wysihtml5-editor:focus{outline: none}
+    h6 small.display-block{line-height:23px !important;}
+    .heading-elements {top:28%;}
+    .create-new-message{margin-top: 7px;}
+    .btn-group button{background:#eee;}
+    .dataTables_filter input { width: 300px }
+    .sub-bucket-creation{padding:0 20px;}
+    .remove-subbucket{position:absolute;right:-21px;top:9px;}
+    .remove-subbucket:hover{color:red;cursor:pointer;}
+    .modal-on-success{padding-bottom:20px;}
+    #delete-bucket-confirmation{padding-bottom:20px;}
+    .loading-bucket-info, .empty-bucket, #delete-buckset, #delete-bucket-confirmation{display:none;}
+    #add-new-subbucket-field:hover{cursor:pointer}
+    .help{display:none}  
+    .navbar-brand {height:75px;}
+    .navbar-brand>img {
+        margin-top: 0;
+        height: auto;
+        width: 55px;
+    }  
+
+    /*==========  Mobile First Method  ==========*/
+
+    /* Custom, iPhone Retina */ 
+    @media only screen and (min-width : 320px) {
+        .content-wrap{padding:0 20px;}
+    }
+
+    /* Extra Small Devices, Phones */ 
+    @media only screen and (min-width : 480px) {
+
+    }
+
+    /* Small Devices, Tablets */
+    @media only screen and (min-width : 768px) {
+		.content-wrap{padding:0 67px;}
+    }
+
+    /* Small Devices, Tablets */
+    @media only screen and (max-width : 768px) {
+        .create-new-message{            
+            margin-left: 20px;
+            width: calc(100% - 41px);        
+        }
+    }    
+
+    /* Medium Devices, Desktops */
+    @media only screen and (min-width : 992px) {
+
+    }
+
+    /* Large Devices, Wide Screens */
+    @media only screen and (min-width : 1200px) {
+
+    }
+
+     /* Large Devices, Wide Screens */
+    @media only screen and (min-width : 1366px) {
+    	.content-wrap{padding:0 130px;}
+    }

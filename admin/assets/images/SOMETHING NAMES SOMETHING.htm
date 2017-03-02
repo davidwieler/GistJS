@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<!-- saved from url=(0046)https://msgable.com/dashboard/conversation/new -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SOMETHING NAMES SOMETHING</title>
+
+    <!-- Global stylesheets -->
+    <!--<link href="https://fonts.googleapis.com/css?family=Roboto:400,300,100,500,700,900" rel="stylesheet" type="text/css"> -->
+    <link href="./SOMETHING NAMES SOMETHING_files/styles.css" rel="stylesheet" type="text/css">
+    <link href="./SOMETHING NAMES SOMETHING_files/bootstrap.css" rel="stylesheet" type="text/css">
+    <link href="./SOMETHING NAMES SOMETHING_files/core.css" rel="stylesheet" type="text/css">
+    <link href="./SOMETHING NAMES SOMETHING_files/components.css" rel="stylesheet" type="text/css">
+    <link href="./SOMETHING NAMES SOMETHING_files/colors.css" rel="stylesheet" type="text/css">
+    <!-- /global stylesheets -->
+
+
+    <style>
+    .dataTables_filter input { width: 300px }
+    .sub-bucket-creation{padding:0 20px;}
+    .remove-subbucket{position:absolute;right:-21px;top:9px;}
+    .remove-subbucket:hover{color:red;cursor:pointer;}
+    .modal-on-success{padding-bottom:20px;}
+    #delete-bucket-confirmation{padding-bottom:20px;}
+    .loading-bucket-info, .empty-bucket, #delete-buckset, #delete-bucket-confirmation, .loading-conversation, .loading-new-conversation, .loading-bucket, .help, .conversation-wrapper, .messages-wrapper{display:none;}
+    #add-new-subbucket-field:hover{cursor:pointer}
+    .content-wrap{margin-bottom:50px;}
+    .conversation-panel{margin-bottom:-1px;border-radius:0px}
+    .editor-wrap .btn{border:none;}
+    .editor-wrap .btn-default{background-color: #E8E8E8;}
+    .wysihtml5-editor{min-height:200px;}
+    .wysihtml5-toolbar, .message-subject, .message-to{padding:0;background:none;border:none;}
+    .message-subject, .message-to{margin-bottom:10px;}
+    .wysihtml5-editor:focus{outline: none}
+    h6 small.display-block{line-height:23px !important;}
+    .heading-elements {top:28%;}
+    .create-new-message{margin-top:14px}
+
+    /*==========  Mobile First Method  ==========*/
+
+    /* Custom, iPhone Retina */ 
+    @media only screen and (min-width : 320px) {
+        .content-wrap{padding:0 20px;}
+    }
+
+    /* Extra Small Devices, Phones */ 
+    @media only screen and (min-width : 480px) {
+
+    }
+
+    /* Small Devices, Tablets */
+    @media only screen and (min-width : 768px) {
+		.content-wrap{padding:0 67px;}
+    }
+
+    /* Medium Devices, Desktops */
+    @media only screen and (min-width : 992px) {
+
+    }
+
+    /* Large Devices, Wide Screens */
+    @media only screen and (min-width : 1200px) {
+
+    }
+
+     /* Large Devices, Wide Screens */
+    @media only screen and (min-width : 1366px) {
+    	.content-wrap{padding:0 130px;}
+    }
+
+    </style>
+    <!-- Core JS files -->
+    <script type="text/javascript" src="./SOMETHING NAMES SOMETHING_files/pace.min.js"></script>
+    <script type="text/javascript" src="./SOMETHING NAMES SOMETHING_files/jquery.min.js"></script>
+    <script type="text/javascript" src="./SOMETHING NAMES SOMETHING_files/bootstrap.min.js"></script>
+    <script type="text/javascript" src="./SOMETHING NAMES SOMETHING_files/blockui.min.js"></script>
+    <script type="text/javascript" src="./SOMETHING NAMES SOMETHING_files/nicescroll.min.js"></script>
+    <script type="text/javascript" src="./SOMETHING NAMES SOMETHING_files/drilldown.js"></script>
+    <script type="text/javascript" src="./SOMETHING NAMES SOMETHING_files/datatables.js"></script>
+    <script type="text/javascript" src="./SOMETHING NAMES SOMETHING_files/select2.js"></script>
+    <script type="text/javascript" src="./SOMETHING NAMES SOMETHING_files/app.js"></script>
+    <script type="text/javascript" src="./SOMETHING NAMES SOMETHING_files/collectformdata.js"></script>    
+
+    <!-- /theme JS files -->
+
+    <script>
+
+        APP.init('AC25621821')
+        
+        $(document).ready(function(){
+        	switch('new'){
+
+        		case 'conversation' :
+        			APP.loadConversation('', false);   
+        		break;
+        		case 'bucket' :
+        			APP.loadMessages('' || 'all', false);   
+        		break;
+
+                case 'new' :
+                    APP.newConversation(); 
+                break;
+
+                APP.dataTables('.dataTable');
+        	}
+
+        	 
+        })    
+
+    </script>    
+
+</head>
+
+<body class="navbar-bottom   wysihtml5-supported pace-done pace-done" cz-shortcut-listen="true"><div class="pace  pace-inactive pace-inactive"><div class="pace-progress" data-progress-text="100%" data-progress="99" style="transform: translate3d(100%, 0px, 0px);">
+  <div class="pace-progress-inner"></div>
+</div>
+<div class="pace-activity"></div></div>
+    <button class="btn btn-lg test-send" data-id="focuswebmedia/contact">click me</button>
+    <button type="button" data-toggle="modal" data-target="#modal_full">Launch modal</button>
+
+        <!-- Modal Full-->
+    <div id="modal_full" class="modal fade in">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">×</button>
+                    <h5 class="modal-title"></h5>
+                </div>
+                <form class="new-bucket">
+                    <div class="text-center text-black loading-bucket-info">
+                        <h1>Loading Your Bucket Information<br> <i class="icon-spinner10 spinner position-left" style="font-size:80px"></i></h1>
+                    </div>                  
+                    <div class="modal-body">
+                        <p>Message buckets can be used for an unlimited amount of things! Go ahead, create one. We dare you!</p>
+
+                        <hr>
+
+                        <h6 class="text-semibold">Bucket Name</h6>
+                        
+                        <div class="form-group has-feedback has-feedback-left bucket-name-wrap">
+                            <input type="text" class="form-control" placeholder="Bucket Name" required="required" name="bucketname" value="">
+                            <div class="form-control-feedback">
+                                <i class="icon-drawer"></i>
+                            </div>
+                            <div class="help"></div>
+                        </div>
+                        <hr>
+                        <div class="sub-bucket-creation">
+                            <h6 class="text-semibold">Sub Buckets <small>Create a bunch of sub buckets to keep your messages organized.</small></h6>
+                            <div class="form-group has-feedback has-feedback-left sub-bucket-wrap">
+                                <input type="text" class="form-control sub-bucket-input" placeholder="Sub Bucket Name" name="subbucket[]" value="">
+                                <div class="form-control-feedback">
+                                    <i class="icon-more2"></i>
+                                </div>
+                                <i class="icon-cross3 pull-right remove-subbucket"></i>
+                            </div>
+
+                            <a href="https://msgable.com/dashboard/conversation/new#" class="btn border-teal text-teal btn-flat btn-rounded btn-icon btn-xs valign-text-bottom" id="add-new-subbucket-field"><i class="icon-plus3"></i> Add Another Sub Bucket</a>
+                        </div>
+                      
+                    </div>
+					<div id="delete-bucket-confirmation" class="text-center">
+                    	<h2>Are you sure?</h2>
+                    	<a href="https://msgable.com/dashboard/conversation/new#" class="btn border-teal text-teal btn-flat btn-rounded btn-icon btn-xs valign-text-bottom" id="confirm-bucket-delete"><i class="icon-checkmark"></i> Yes, Delete the Bucket</a>
+                    	<a href="https://msgable.com/dashboard/conversation/new#" class="btn border-danger text-danger btn-flat btn-rounded btn-icon btn-xs valign-text-bottom " id="cancel-bucket-delete"><i class="icon-cross3"></i> NO WAY</a>
+                    </div>  
+                    <div class="modal-footer">
+                        <a href="https://msgable.com/dashboard/conversation/new#" class="btn border-danger text-danger btn-flat btn-rounded btn-icon btn-xs valign-text-bottom pull-left" id="delete-bucket"><i class="icon-cross3"></i> Delete This Bucket</a>
+                        <button type="button" class="btn btn-link" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary submit-form-button">Create</button>
+                        <div class="clearfix"></div>                        
+                    </div>
+                </form>
+
+                <div class="modal-on-success hidden">
+                
+                    <div class="text-center">
+                        <h2><i class="text-success icon-checkmark"></i> Bucket Created!</h2>                        
+                        <h5 class="content-group">Learn how to <a href="https://msgable.com/knowledgebase/new-bucket-setup">send messages to your new bucket</a>.</h5>
+                        <p></p>
+                        <p>or</p>
+                        <p class="bucket-select visit-bucket"><a href="https://msgable.com/dashboard/conversation/new" data-id="" data-dismiss="modal" class="bucket-selection">Visit your bucket</a>, and check your messages.</p>                            
+                    </div>                      
+
+                
+                </div>              
+            </div>
+        </div>
+    </div>
+    <!-- End Modal Full-->
+    <!-- Page header -->
+    <div class="page-header page-header-inverse">
+
+        <!-- Main navbar -->
+        <div class="navbar navbar-inverse navbar-transparent">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="https://msgable.com/dashboard/conversation/index.html">Logo</a>
+
+                <ul class="nav navbar-nav pull-right visible-xs-block">
+                    <li><a data-toggle="collapse" data-target="#navbar-mobile"><i class="icon-grid3"></i></a></li>
+                </ul>
+            </div>
+
+            <div class="navbar-collapse collapse" id="navbar-mobile">
+                <p class="navbar-text"><span class="label bg-success-400">Premium</span></p>
+
+                <ul class="nav navbar-nav">
+                    <li><a href="https://msgable.com/dashboard/account#upgrade">Upgrade</a></li>
+                </ul>
+            </div>
+        </div>
+        <!-- /main navbar -->
+
+
+        
+
+
+        <!-- Second navbar -->
+        <div class="navbar navbar-inverse navbar-transparent" id="navbar-second">
+            <ul class="nav navbar-nav visible-xs-block">
+                <li><a class="text-center collapsed" data-toggle="collapse" data-target="#navbar-second-toggle"><i class="icon-paragraph-justify3"></i></a></li>
+            </ul>
+
+            <div class="navbar-collapse collapse" id="navbar-second-toggle">
+                <ul class="nav navbar-nav navbar-nav-material">
+                    <li class=""><a href="https://msgable.com/dashboard">Dashboard</a></li>
+
+                    <li class="dropdown">
+                        <a href="https://msgable.com/dashboard/conversation/new#" class="dropdown-toggle bucket-dropdown" data-toggle="dropdown">
+                            Buckets <span class="caret"></span>
+                        </a>
+
+                        <ul class="dropdown-menu width-250 buckets-nav">
+                            <li class="dropdown-header hidden-xs">Buckets</li>
+                            <li class="bucket-select"><a href="https://msgable.com/dashboard/conversation/new#" class="bucket-selection" data-id="all"><i class="icon-align-center-horizontal"></i> All</a></li>
+                            <li class="dropdown-submenu bucket-select">                        <a href="https://msgable.com/dashboard/conversation/new#" class="bucket-selection" data-id="asd"><i class="icon-drawer"></i> asd</a>                        <ul class="dropdown-menu width-200">                            <li><a class="bucket-selection" href="https://msgable.com/dashboard/conversation/new#" data-id="asd">All</a></li><li class="dropdown-header highlight">Sub Buckets</li><li><a class="bucket-selection" href="https://msgable.com/dashboard/conversation/new#" data-id="asd/asd">Asd</a></li>                            <li><a href"#"="" data-toggle="modal" data-target="#modal_full" class="edit-bucket" data-id="asd"><i class="icon-pencil"></i>Edit</a></li>                        </ul>                    </li><li class="dropdown-submenu bucket-select">                        <a href="https://msgable.com/dashboard/conversation/new#" class="bucket-selection" data-id="Test this"><i class="icon-drawer"></i> Test this</a>                        <ul class="dropdown-menu width-200">                            <li><a class="bucket-selection" href="https://msgable.com/dashboard/conversation/new#" data-id="Test this">All</a></li><li class="dropdown-header highlight">Sub Buckets</li><li><a class="bucket-selection" href="https://msgable.com/dashboard/conversation/new#" data-id="Test this/Fart">Fart</a></li>                            <li><a href"#"="" data-toggle="modal" data-target="#modal_full" class="edit-bucket" data-id="Test this"><i class="icon-pencil"></i>Edit</a></li>                        </ul>                    </li>
+                            <li class="new-bucket-li"><a data-toggle="modal" data-target="#modal_full" class="create-new-bucket"><i class="icon-plus3"></i>New Bucket</a></li>
+                        </ul>
+                    </li>
+
+                </ul>
+                
+                <ul class="nav navbar-nav navbar-nav-material navbar-right">
+                    <li class="dropdown hidden">
+                        <a href="https://msgable.com/dashboard/conversation/new#" class="dropdown-toggle" data-toggle="dropdown">
+                            <i class="icon-bell2"></i>
+                            <span class="visible-xs-inline-block position-right">Activity</span>
+                            <span class="status-mark border-pink-300"></span>
+                        </a>
+
+                        <div class="dropdown-menu dropdown-content">
+                            <div class="dropdown-content-heading">
+                                Activity
+                                <ul class="icons-list">
+                                    <li><a href="https://msgable.com/dashboard/conversation/new#"><i class="icon-menu7"></i></a></li>
+                                </ul>
+                            </div>
+
+                            <ul class="media-list dropdown-content-body width-350">
+                                <li class="media">
+                                    <div class="media-left">
+                                        <a href="https://msgable.com/dashboard/conversation/new#" class="btn bg-success-400 btn-rounded btn-icon btn-xs"><i class="icon-mention"></i></a>
+                                    </div>
+
+                                    <div class="media-body">
+                                        <a href="https://msgable.com/dashboard/conversation/new#">Taylor Swift</a> mentioned you in a post "Angular JS. Tips and tricks"
+                                        <div class="media-annotation">4 minutes ago</div>
+                                    </div>
+                                </li>
+
+                                <li class="media">
+                                    <div class="media-left">
+                                        <a href="https://msgable.com/dashboard/conversation/new#" class="btn bg-pink-400 btn-rounded btn-icon btn-xs"><i class="icon-paperplane"></i></a>
+                                    </div>
+                                    
+                                    <div class="media-body">
+                                        Special offers have been sent to subscribed users by <a href="https://msgable.com/dashboard/conversation/new#">Donna Gordon</a>
+                                        <div class="media-annotation">36 minutes ago</div>
+                                    </div>
+                                </li>
+
+                                <li class="media">
+                                    <div class="media-left">
+                                        <a href="https://msgable.com/dashboard/conversation/new#" class="btn bg-blue btn-rounded btn-icon btn-xs"><i class="icon-plus3"></i></a>
+                                    </div>
+                                    
+                                    <div class="media-body">
+                                        <a href="https://msgable.com/dashboard/conversation/new#">Chris Arney</a> created a new <span class="text-semibold">Design</span> branch in <span class="text-semibold">Limitless</span> repository
+                                        <div class="media-annotation">2 hours ago</div>
+                                    </div>
+                                </li>
+
+                                <li class="media">
+                                    <div class="media-left">
+                                        <a href="https://msgable.com/dashboard/conversation/new#" class="btn bg-purple-300 btn-rounded btn-icon btn-xs"><i class="icon-truck"></i></a>
+                                    </div>
+                                    
+                                    <div class="media-body">
+                                        Shipping cost to the Netherlands has been reduced, database updated
+                                        <div class="media-annotation">Feb 8, 11:30</div>
+                                    </div>
+                                </li>
+
+                                <li class="media">
+                                    <div class="media-left">
+                                        <a href="https://msgable.com/dashboard/conversation/new#" class="btn bg-warning-400 btn-rounded btn-icon btn-xs"><i class="icon-bubble8"></i></a>
+                                    </div>
+                                    
+                                    <div class="media-body">
+                                        New review received on <a href="https://msgable.com/dashboard/conversation/new#">Server side integration</a> services
+                                        <div class="media-annotation">Feb 2, 10:20</div>
+                                    </div>
+                                </li>
+
+                                <li class="media">
+                                    <div class="media-left">
+                                        <a href="https://msgable.com/dashboard/conversation/new#" class="btn bg-teal-400 btn-rounded btn-icon btn-xs"><i class="icon-spinner11"></i></a>
+                                    </div>
+                                    
+                                    <div class="media-body">
+                                        <strong>January, 2016</strong> - 1320 new users, 3284 orders, $49,390 revenue
+                                        <div class="media-annotation">Feb 1, 05:46</div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    <li class="dropdown hidden">
+                        <a href="https://msgable.com/dashboard/conversation/new#" class="dropdown-toggle" data-toggle="dropdown">
+                            <i class="icon-bubble8"></i>
+                            <span class="visible-xs-inline-block position-right">Messages</span>
+                        </a>
+                        
+                        <div class="dropdown-menu dropdown-content width-350">
+                            <div class="dropdown-content-heading">
+                                Messages
+                                <ul class="icons-list">
+                                    <li><a href="https://msgable.com/dashboard/conversation/new#"><i class="icon-menu7"></i></a></li>
+                                </ul>
+                            </div>
+
+                            <ul class="media-list dropdown-content-body">
+                                <li class="media">
+                                    <div class="media-left">
+                                        
+                                        <span class="badge bg-danger-400 media-badge">5</span>
+                                    </div>
+
+                                    <div class="media-body">
+                                        <a href="https://msgable.com/dashboard/conversation/new#" class="media-heading">
+                                            <span class="text-semibold">James Alexander</span>
+                                            <span class="media-annotation pull-right">04:58</span>
+                                        </a>
+
+                                        <span class="text-muted">who knows, maybe that would be the best thing for me...</span>
+                                    </div>
+                                </li>
+
+                                <li class="media">
+                                    <div class="media-left">
+                                        
+                                        <span class="badge bg-danger-400 media-badge">4</span>
+                                    </div>
+
+                                    <div class="media-body">
+                                        <a href="https://msgable.com/dashboard/conversation/new#" class="media-heading">
+                                            <span class="text-semibold">Margo Baker</span>
+                                            <span class="media-annotation pull-right">12:16</span>
+                                        </a>
+
+                                        <span class="text-muted">That was something he was unable to do because...</span>
+                                    </div>
+                                </li>
+
+                                <li class="media">
+                                    <div class="media-left"></div>
+                                    <div class="media-body">
+                                        <a href="https://msgable.com/dashboard/conversation/new#" class="media-heading">
+                                            <span class="text-semibold">Jeremy Victorino</span>
+                                            <span class="media-annotation pull-right">22:48</span>
+                                        </a>
+
+                                        <span class="text-muted">But that would be extremely strained and suspicious...</span>
+                                    </div>
+                                </li>
+
+                                <li class="media">
+                                    <div class="media-left"></div>
+                                    <div class="media-body">
+                                        <a href="https://msgable.com/dashboard/conversation/new#" class="media-heading">
+                                            <span class="text-semibold">Beatrix Diaz</span>
+                                            <span class="media-annotation pull-right">Tue</span>
+                                        </a>
+
+                                        <span class="text-muted">What a strenuous career it is that I've chosen...</span>
+                                    </div>
+                                </li>
+
+                                <li class="media">
+                                    <div class="media-left"></div>
+                                    <div class="media-body">
+                                        <a href="https://msgable.com/dashboard/conversation/new#" class="media-heading">
+                                            <span class="text-semibold">Richard Vango</span>
+                                            <span class="media-annotation pull-right">Mon</span>
+                                        </a>
+                                        
+                                        <span class="text-muted">Other travelling salesmen live a life of luxury...</span>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    <li class="dropdown">
+                        <a href="https://msgable.com/dashboard/conversation/new#" class="dropdown-toggle" data-toggle="dropdown">
+                            <i class="icon-cog3"></i>
+                            <span class="visible-xs-inline-block position-right">Settings</span>
+                            <span class="caret"></span>
+                        </a>
+
+                        <ul class="dropdown-menu dropdown-menu-right">
+                            <!-- 
+                            <li><a href="#"><i class="icon-user-lock"></i> Account security</a></li>
+                            <li><a href="#"><i class="icon-statistics"></i> Analytics</a></li>
+                            <li><a href="#"><i class="icon-accessibility"></i> Accessibility</a></li>
+                            <li class="divider"></li>
+                            <li><a href="/account/buckets/settings"><i class="icon-gear"></i> All settings</a></li>
+                            <li><a href="#"><i class="icon-user-plus"></i> My profile</a></li>
+                            <li><a href="#"><i class="icon-coins"></i> My balance</a></li>
+                            <li><a href="#"><span class="badge bg-blue pull-right">26</span> <i class="icon-comment-discussion"></i> Messages</a></li>
+                            <li class="divider"></li>
+                            -->
+                            <li><a href="https://msgable.com/dashboard/account"><i class="icon-cog5"></i> Account settings</a></li>
+                            <li><a href="https://msgable.com/logout"><i class="icon-switch2"></i> Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <!-- /second navbar -->
+
+    </div>
+    <!-- /page header -->        
+
+    <div class="container text-center text-black loading-bucket loading-wrap" style="margin-top:200px;">
+        <h1>Loading Your Message Bucket<br> <i class="icon-spinner10 spinner position-left" style="font-size:80px"></i></h1>
+    </div>
+
+    <div class="container text-center text-black loading-new-conversation loading-wrap hidden" style="margin-top: 200px; display: block;">
+        <h1>Starting a New Conversation<br> <i class="icon-spinner10 spinner position-left" style="font-size:80px"></i></h1>
+    </div>
+
+    <div class="container text-center text-black loading-conversation loading-wrap" style="margin-top:200px;">
+        <h1>Grabbing Your Conversation<br> <i class="icon-spinner10 spinner position-left" style="font-size:80px"></i></h1>
+    </div>
+
+    <div class="container text-center text-black empty-bucket" style="margin-top: 200px; display: none;">
+        <h1>There are no messages here. Let's add some! </h1>
+        <h5 class="content-group">Learn how to <a href="https://msgable.com/knowledgebase/sending-messages">send messages</a>.</h5>
+    </div>
+    <!-- Page container -->
+    <div class="">
+
+        <!-- Page content -->
+        <div class="">
+
+            <!-- Main content -->
+            <div class="content-wrap">
+
+            	<div class="row conversation-wrapper" style="display: block;">
+            		<div class="col-lg-12 data-wrap">
+
+
+            		<div class="panel panel-white conversation-panel">                        <div class="panel-body editor-wrap">                            <div class="col-lg-12 message-to">                                <input type="text" class="form-control" placeholder="Send To:" name="send-to" value="">                            </div>                            <div class="col-lg-12 message-subject">                                <input type="text" class="form-control" placeholder="Message Subject:" name="message-subject" value="">                            </div>                            <ul class="wysihtml5-toolbar" id="toolbar">                                <li class="dropdown">                                    <a class="btn btn-default dropdown-toggle " data-toggle="dropdown">                                        <span class="fa fa-font"></span>                                        <span class="current-font">Normal text</span>                                        <b class="caret"></b>                                    </a>                                    <ul class="dropdown-menu">                                        <li><a data-wysihtml5-command="formatBlock" data-wysihtml5-command-value="p" tabindex="-1" href="javascript:;" unselectable="on">Normal text</a></li>                                        <li><a data-wysihtml5-command="formatBlock" data-wysihtml5-command-value="h1" tabindex="-1" href="javascript:;" unselectable="on">Heading 1</a></li>                                        <li><a data-wysihtml5-command="formatBlock" data-wysihtml5-command-value="h2" tabindex="-1" href="javascript:;" unselectable="on">Heading 2</a></li>                                        <li><a data-wysihtml5-command="formatBlock" data-wysihtml5-command-value="h3" tabindex="-1" href="javascript:;" unselectable="on">Heading 3</a></li>                                        <li><a data-wysihtml5-command="formatBlock" data-wysihtml5-command-value="h4" tabindex="-1" href="javascript:;" unselectable="on">Heading 4</a></li>                                        <li><a data-wysihtml5-command="formatBlock" data-wysihtml5-command-value="h5" tabindex="-1" href="javascript:;" unselectable="on">Heading 5</a></li>                                        <li><a data-wysihtml5-command="formatBlock" data-wysihtml5-command-value="h6" tabindex="-1" href="javascript:;" unselectable="on">Heading 6</a></li>                                    </ul>                                </li>                                <li>                                <div class="btn-group">                                <a class="btn  btn-default wysihtml5-command-active" data-wysihtml5-command="bold" title="CTRL+B" tabindex="-1" href="javascript:;" unselectable="on">Bold</a>                                <a class="btn  btn-default" data-wysihtml5-command="italic" title="CTRL+I" tabindex="-1" href="javascript:;" unselectable="on">Italic</a>                                <a class="btn  btn-default" data-wysihtml5-command="underline" title="CTRL+U" tabindex="-1" href="javascript:;" unselectable="on">Underline</a>                                </div>                                </li>                                <li>                                <a class="btn  btn-default" data-wysihtml5-command="formatBlock" data-wysihtml5-command-value="blockquote" data-wysihtml5-display-format-name="false" tabindex="-1" href="javascript:;" unselectable="on">                                <span class="icon-quotes-left"></span>                                </a>                                </li>                                <li>                                <div class="btn-group">                                <a class="btn btn-default" data-wysihtml5-command="insertUnorderedList" title="Unordered list" tabindex="-1" href="javascript:;" unselectable="on">                                <span class="icon-list"></span>                                </a>                                <a class="btn  btn-default" data-wysihtml5-command="insertOrderedList" title="Ordered list" tabindex="-1" href="javascript:;" unselectable="on">                                <span class="icon-list-numbered"></span>                                </a>                                <a class="btn  btn-default" data-wysihtml5-command="Outdent" title="Outdent" tabindex="-1" href="javascript:;" unselectable="on">                                <span class="icon-indent-decrease2"></span>                                </a>                                <a class="btn  btn-default" data-wysihtml5-command="Indent" title="Indent" tabindex="-1" href="javascript:;" unselectable="on">                                <span class="icon-indent-increase2"></span>                                </a>                                </div>                                </li>                            </ul>                            <!-- element to edit -->                            <div id="editor" data-placeholder="Enter your message" class="wysihtml5-sandbox wysihtml5-editor" contenteditable="true">test<span style="color: rgb(34, 34, 34); font-size: 12.8px; background-color: rgb(255, 255, 255);">With some tasty treats attached for ya dave.</span><br><br><b>asdfasdfasdf</b><br><i></i><span style="color: rgb(34, 34, 34); font-size: 12.8px; background-color: rgb(255, 255, 255);">asdfasdfasdf</span><br><br><ul><li>1</li><li>2</li><li>3</li><li>4</li><li>5</li><li>6</li></ul><br></div>                        </div>                        <div class="panel-footer">                            <div class="col-xs-6">                                <ul class="icons-list icons-list-extended mt-10">                                    <li><a href="https://msgable.com/dashboard/conversation/new#" data-popup="tooltip" title="" data-container="body" data-original-title="Send photo"><i class="icon-file-picture"></i></a></li>                                    <li><a href="https://msgable.com/dashboard/conversation/new#" data-popup="tooltip" title="" data-container="body" data-original-title="Send video"><i class="icon-file-video"></i></a></li>                                    <li><a href="https://msgable.com/dashboard/conversation/new#" data-popup="tooltip" title="" data-container="body" data-original-title="Send file"><i class="icon-file-plus"></i></a></li>                                </ul>                            </div>                            <div class="col-xs-6 text-right">                                <span class="error_msg"></span>                                <button type="button" class="btn submit-message-editor bg-teal-400 btn-labeled btn-labeled-right" data-id="" data-status="new"><b><i class="icon-circle-right2"></i></b> Send</button>                            </div>                        </div>                    </div></div>
+
+            	</div>
+
+                <!-- Dashboard content -->
+                <div class="row messages-wrapper" style="display: none;">
+                    <div class="col-lg-12">                        
+                        <div class="col-md-6">
+                            <h2><small>Bucket:</small><div class="visible-xs"></div> <span class="text-bold main-bucket-name"></span><span class="sub-bucket-name"></span></h2>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <button type="button" class="btn bg-teal-400 btn-labeled btn-labeled-right create-new-message" data-id="new"><b><i class="icon-circle-right2"></i></b> New Message</button>
+                        </div>
+                        <div class="clearfix"></div>
+                        <!-- buckets and messages -->
+                        <div class="panel panel-flat">
+                            <div class="panel-heading">
+                                <h6 class="panel-title"><i class="icon-mail-read"></i> Messages</h6>
+                                <div class="heading-elements">
+                                    <span class="quick-buttons">
+
+                                    </span>                             
+                                    <ul class="icons-list hidden">
+                                        <li class="dropdown">
+                                            <a href="https://msgable.com/dashboard/conversation/new#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-menu7"></i> <span class="caret"></span></a>
+                                            <ul class="dropdown-menu dropdown-menu-right">
+                                                <li><a href="https://msgable.com/dashboard/conversation/new#"><i class="icon-sync"></i> Update data</a></li>
+                                                <li><a href="https://msgable.com/dashboard/conversation/new#"><i class="icon-list-unordered"></i> Detailed log</a></li>
+                                                <li><a href="https://msgable.com/dashboard/conversation/new#"><i class="icon-pie5"></i> Statistics</a></li>
+                                                <li class="divider"></li>
+                                                <li><a href="https://msgable.com/dashboard/conversation/new#"><i class="icon-cross3"></i> Clear list</a></li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </div>
+                            <a class="heading-elements-toggle"><i class="icon-more"></i></a></div>
+
+                            <div class="">
+                                <table class="table dataTable no-footer" id="messages_table" role="grid" aria-describedby="messages_table">
+                                    <thead>
+                                        <tr role="row">                                         
+                                            <th class="col-md-1">Status</th>
+                                            <th class="col-md-2">From</th>
+                                            <th class="col-md-1">Name</th>
+                                            <th class="col-md-5">Subject</th>
+                                            <th class="col-md-2">Bucket</th>                                            
+                                            <th class="text-right col-md-1"><i class="icon-arrow-down12"></i></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="messages">
+                                        <tr>
+                                            <td><span class="label"><i class="icon-bubbles3 text-green-400" title="Ongoing Conversation"></i></span></td>
+                                            <td>
+                                                <div class="media-left">
+                                                    <div class=""><a href="https://msgable.com/dashboard/conversation/new#" class="text-default text-semibold">davidw@focuswebmedia.com</a></div>
+                                                    <div class="text-muted text-size-small">
+                                                        <span class="status-mark border-blue position-left"></span>
+                                                        4:25am
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td><span class="text-muted">David Wieler</span></td>
+                                            <td><span class=""><a href"#"="">Requesting Information From You About Some Things Make this really long</a></span></td>
+                                            <td><h6 class="text-semibold">General</h6></td>                                         
+                                            <td class="text-right">
+                                                <ul class="icons-list">
+                                                    <li class="dropdown">
+                                                        <a href="https://msgable.com/dashboard/conversation/new#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-menu7"></i></a>
+                                                        <ul class="dropdown-menu dropdown-menu-right">
+                                                            <li><a href="https://msgable.com/dashboard/conversation/new#"><i class="icon-reply"></i> Reply</a></li>
+                                                            <li><a href="https://msgable.com/dashboard/conversation/new#"><i class="icon-bin2"></i> Trash</a></li>
+                                                            <li><a href="https://msgable.com/dashboard/conversation/new#"><i class="icon-cross3"></i> Mark Closed</a></li>
+                                                            <li><a href="https://msgable.com/dashboard/conversation/new#"><i class="icon-pushpin"></i> Sticky</a></li>
+                                                            <li class="divider"></li>
+                                                            <li><a href="https://msgable.com/dashboard/conversation/new#"><i class="icon-gear"></i> Settings</a></li>
+                                                        </ul>
+                                                    </li>
+                                                </ul>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <!-- /buckets and messages -->
+                    </div>
+                </div>
+                <!-- /dashboard content -->
+
+            </div>
+            <!-- /main content -->
+
+        </div>
+        <!-- /page content -->
+
+    </div>
+    <!-- /page container -->
+
+
+    <!-- Footer -->
+    <div class="navbar navbar-default navbar-fixed-bottom footer">
+        <ul class="nav navbar-nav visible-xs-block">
+            <li><a class="text-center collapsed" data-toggle="collapse" data-target="#footer"><i class="icon-circle-up2"></i></a></li>
+        </ul>
+
+        <div class="navbar-collapse collapse" id="footer">
+            <div class="navbar-text">
+                © 2016. <a href="https://msgable.com/dashboard/conversation/new#" class="navbar-link">msgme</a> by <a href="https://focuswebmedia.com/" class="navbar-link" target="_blank">Focus Web Media</a>
+            </div>
+
+            <div class="navbar-right">
+                <ul class="nav navbar-nav">
+                    <li><a href="https://msgable.com/dashboard/conversation/new#">About</a></li>
+                    <li><a href="https://msgable.com/dashboard/conversation/new#">Terms</a></li>
+                    <li><a href="https://msgable.com/dashboard/conversation/new#">Contact</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <!-- /footer -->
+    <script src="./SOMETHING NAMES SOMETHING_files/wysihtml-toolbar.min.js"></script>
+    <script src="./SOMETHING NAMES SOMETHING_files/advanced_and_extended.js"></script>
+    <script type="text/javascript" src="./SOMETHING NAMES SOMETHING_files/handlers.js"></script>
+
+
+</body></html>

@@ -1,0 +1,234 @@
+<% include includes/header %>
+
+<% include includes/pageheader %>
+<% var posts = data.posts;%>
+	<!-- Page container -->
+	<div class="page-container">
+
+		<!-- Page content -->
+		<div class="page-content">
+
+			<!-- Main sidebar -->
+			<div class="sidebar sidebar-main sidebar-default">
+				<div class="sidebar-content">
+
+					<!-- Main navigation -->
+					<div class="sidebar-category sidebar-category-visible">
+						<div class="category-title h6">
+							<span>Navigation</span>
+						</div>
+
+						<div class="category-content no-padding">
+							<% include includes/navigation %>
+						</div>
+					</div>
+					<!-- /main navigation -->
+
+				</div>
+			</div>
+			<!-- /main sidebar -->
+
+
+			<!-- Main content -->
+			<div class="content-wrapper">
+				<%
+					if (typeof data.msg !== 'undefined') {
+						%>
+
+				<div class="row">
+						<div class="alert alert-info">
+						<%
+							switch(data.msg){
+								case '3' :
+									%> <strong>Post has been trashed. Trashed posts will auto delete in 24 hours.</strong> <%
+								break;
+								default :
+									%> <strong>Uhhmm... Whatcha do'n there?</strong> <%
+								break;
+							}
+						%>
+				</div>
+						<%
+					}
+
+				%>
+
+				<!-- Single line -->
+				<div class="panel panel-white">
+					<div class="panel-heading">
+						<h6 class="panel-title">My Content</h6>
+					</div>
+
+					<div class="panel-toolbar panel-toolbar-inbox">
+						<div class="navbar navbar-default">
+							<ul class="nav navbar-nav visible-xs-block no-border">
+								<li>
+									<a class="text-center collapsed" data-toggle="collapse" data-target="#inbox-toolbar-toggle-single">
+										<i class="icon-circle-down2"></i>
+									</a>
+								</li>
+							</ul>
+
+							<div class="navbar-collapse collapse" id="inbox-toolbar-toggle-single">
+								<div class="btn-group navbar-btn">
+									<button type="button" class="btn btn-default btn-icon btn-checkbox-all">
+										<div class="checker"><span><input type="checkbox" class="styled"></span></div>
+									</button>
+
+									<button type="button" class="btn btn-default btn-icon dropdown-toggle" data-toggle="dropdown">
+										<span class="caret"></span>
+									</button>
+
+									<ul class="dropdown-menu">
+										<li><a href="#">Select all</a></li>
+										<li><a href="#">Select read</a></li>
+										<li><a href="#">Select unread</a></li>
+										<li class="divider"></li>
+										<li><a href="#">Clear selection</a></li>
+									</ul>
+								</div>
+
+								<div class="btn-group navbar-btn delete-post">
+									<button type="button" class="btn btn-default"><i class="icon-bin"></i> <span class="hidden-xs position-right">Delete</span></button>
+								</div>
+
+								<div class="navbar-right">
+
+									<%
+										let offset = Number(posts.limits.offset);
+										let limit = Number(posts.limits.limit);
+										let shownLimit = limit
+										let postCount = Number(posts.postCount);
+										let startCount = 1;
+										let nextOffset = limit;
+										let prevOffset = 0
+
+										if (offset > 0) {
+											startCount = offset + 1;
+											nextOffset = offset + limit;
+											prevOffset = offset - limit;
+											shownLimit = limit + offset;
+										}
+
+										if (limit > postCount) {
+											shownLimit = postCount
+										}
+
+										let hrefPrev = '/' + adminLocation + '/posts?limit=' + limit + '&offset=' + prevOffset;
+										let hrefNext = '/' + adminLocation + '/posts?limit=' + limit + '&offset=' + nextOffset;
+
+									%>
+									<p class="navbar-text"><span class="text-semibold"><%- startCount;%>-<%- shownLimit; %></span> of <span class="text-semibold"><%- postCount; %></span></p>
+
+									<%
+										if (Number(limit) < postCount) {
+											let nextDisabled = '';
+											let prevDisabled = '';
+
+											if (nextOffset >= postCount) {
+												nextDisabled = 'disabled';
+											}
+
+											if (prevOffset === 0 && startCount <= 1) {
+												prevDisabled = 'disabled';
+											}
+											%>
+											<div class="btn-group navbar-left navbar-btn">
+												<a href="<%- hrefPrev;%>" type="button" class="btn btn-default btn-icon <%- prevDisabled;%>"><i class="icon-arrow-left12"></i></a>
+						                    	<a href="<%- hrefNext;%>" type="button" class="btn btn-default btn-icon <%- nextDisabled;%>"><i class="icon-arrow-right13"></i></a>
+											</div>
+											<%
+										}
+									%>
+
+									<div class="btn-group navbar-btn">
+										<form>
+											<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+												<i class="icon-cog3"></i>
+												<span class="caret"></span>
+											</button>
+											<ul class="dropdown-menu dropdown-menu-right">
+												<li><a>Post count <input class="form-control" type="text" name="limit" value="<%- data.limit%>"></a></li>
+											</ul>
+										</form>
+									</div>
+
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="table-responsive">
+						<table class="table table-inbox">
+							<thead>
+								<tr>
+									<th></th>
+									<th>Title</th>
+									<th>User</th>
+									<th>Status</th>
+									<th>Time</th>
+								</tr>
+							</thead>
+							<tbody data-link="row" class="rowlink">
+
+								<%
+									var returnedPosts = posts.posts;
+									for (var i = 0; i < returnedPosts.length; i++) {
+										var title = returnedPosts[i].postTitle;
+										var user = returnedPosts[i].user || 'david wieler';
+										var postId = returnedPosts[i]._id;
+										var status = returnedPosts[i].status;
+										%>
+										<tr class="unread">
+											<td class="table-inbox-checkbox rowlink-skip" width="25px">
+												<div class="checker"><span><input type="checkbox" class="styled" value="<%-postId%>"></span></div>
+											</td>
+											<td class="table-inbox-message">
+												<a href="/<%-adminLocation%>/edit/<%-postId%>"><strong><%- title%></strong></a>
+											</td>
+											<td class="table-inbox-name">
+												<a href="#">
+													<div class="letter-icon-title text-default"><%- user%></div>
+												</a>
+											</td>
+											<td>
+											<%
+												switch (status) {
+													case 'draft' :
+														%><span class="label bg-blue"><%- status%></span><%
+													break;
+													case 'published' :
+														%><span class="label bg-green"><%- status%></span><%
+													break;
+													case 'private' :
+														%><span class="label bg-slate"><%- status%></span><%
+													break;
+													case 'trash' :
+														%><span class="label bg-danger-400"><%- status%></span><%
+													break;
+												}
+											%>
+											</td>
+											<td><%- app.timeAgo(returnedPosts[i].timestamp, 'ddd, mmm ddS yyyy h:MMtt'); %></td>
+										</tr>
+										<%
+									}
+								%>
+							</tbody>
+						</table>
+					</div>
+				</div>
+				<!-- /single line -->
+
+			</div>
+
+			</div>
+			<!-- /main content -->
+
+		</div>
+		<!-- /page content -->
+
+	</div>
+	<!-- /page container -->
+
+<% include includes/footer %>

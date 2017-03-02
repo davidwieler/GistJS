@@ -1,0 +1,35 @@
+<ul class="navigation navigation-main navigation-accordion">
+
+	<%
+		let nav = cms.navigation;
+		for (var i = 0; i < nav.length; i++) {
+			let slug = nav[i].slug;
+			let url = nav[i].url;
+			let icon = nav[i].icon;
+			let menuName = nav[i].menuName;
+			let subMenu = nav[i].subMenu;
+
+			if (menuName) {
+				%><li class="navigation-header"><span><%- menuName; %></span></li><%
+			} else {
+				if (subMenu) {
+					%>
+					<li>
+						<a href="#"><i class="<%- icon; %>"></i> <span><%- slug; %></span></a>
+						<ul id="themes-nav-list">
+							<%
+								for (var s = 0; s < subMenu.length; s++) {
+									%><li class=""><a href="/<%- adminLocation; %>/<%- subMenu[s].url; %>"><i class="<%- subMenu[s].icon; %>"></i> <span><%- subMenu[s].slug; %></span></a></li><%
+								}
+							%>
+						</ul>
+					</li>
+					<%
+				} else {
+					%><li class=""><a href="/<%- adminLocation; %>/<%- url; %>"><i class="<%- icon; %>"></i> <span><%- slug; %></span></a></li><%
+				}
+			}
+		}
+	%>
+
+</ul>

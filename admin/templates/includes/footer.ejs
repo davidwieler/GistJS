@@ -1,0 +1,25 @@
+<script>
+	var postMeta = '<%- JSON.stringify(postData.postMeta); %>';
+	var adminLocation = '<%- adminLocation%>';
+	var siteUrl = '<%- cms.cmsDetails.url%>';
+	var postId = '<%- postData._id%>';
+</script>
+
+	<!-- Plugin JS files -->
+<%
+	for (var i = plugins.length - 1; i >= 0; i--) {
+		var jsFile = plugins[i].pluginInfo.init;
+		var path = plugins[i].pluginPath;
+		var render = plugins[i].pluginInfo.render;
+		if (render === 'footer') {
+
+			%><script type="text/javascript" src="/plugins/<%- path %>/<%- jsFile %>"></script><%
+		}
+	}
+	if (typeof fileUploadModal !== 'undefined') {
+		%><script type="text/javascript" src="/assets/js/core/uploads.js"></script><%
+	}
+%>
+	<!-- /plugin JS files -->
+</body>
+</html>
