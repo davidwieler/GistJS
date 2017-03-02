@@ -4,6 +4,7 @@
 * NodeJS 4.4 + minimum. **Works best on NodeJS 7.6.**
 * Express 4 framework
 * body-parser NPM module
+* MongoDB
 
 ##NOTE
 This is a dev version that is currently an alpha.
@@ -28,7 +29,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 var cms = require('segments-cms');
 var cmsSettings = {
-    adminLocation: 'spry-admin',
+    adminLocation: 'cms-admin',
     themeDir: path.join(__dirname + '/themes'),
     pluginDir: path.join(__dirname + '/plugins'),
     uploadDir: path.join(__dirname + '/uploads'),
@@ -53,3 +54,8 @@ app.use('/', cms(cmsSettings, app))
 
 app.listen(port);
 ```
+
+### The Install
+Navigate to `localhost:7367/cms-admin`.
+The first time you run the app, you'll be taken to an install screen.
+Eventually this screen will allow you to add and create the database connections, as well as a few other fun things.
