@@ -1,4 +1,6 @@
 module.exports = (settings, app) => {
+
+	// Setting up the CMS.
 	const express = require('express');
 	const router = express.Router();
 	const routerAdditions = [];
@@ -14,18 +16,25 @@ module.exports = (settings, app) => {
 	const mongojs = require('mongojs');
 	const db = require('./admin/db.js');
 
+	// Initialize the CMS.
 	CMS.init(settings);
 
+	// Define the database details.
 	CMS.dbData = db(mongojs, CMS.dbConn).dataInit();
 	CMS.dbAccounts = db(mongojs, CMS.dbConn).accountInit();
 
-	app.use(helmet({
-		noSniff: false
-	}));
+	// Use Helmet by default to make the CMS more secure.
+	// Disable by setting: helmet: false in the settings.
+	if (settings.helmet !== false) {
+		app.use(helmet({
+			noSniff: false
+		}));
+	}
 
-	// pass passport for configuration
+	// Initialize PassportJS for login
 	require('./admin/passport')(passport, CMS);
 
+	// Initialize session store via MongoStore
     const dbSessionsConf = {
         db: {
             url: 'mongodb://' + settings.sessions.url,
@@ -46,13 +55,16 @@ module.exports = (settings, app) => {
 	    cookie : {  httpOnly: true, secure : false, sameSite: dbSessionsConf.sameSite, maxAge : dbSessionsConf.cookieLength} //Cookie for one month
 	};
 
-	app.use(cookieParser(dbSessionsConf.secret)); // read cookies (needed for auth)
-	app.use(session(sessionOpts)); // session secret
-
+	// read cookies and set up sessions (needed for auth)
+	app.use(cookieParser(dbSessionsConf.secret));
+	app.use(session(sessionOpts));
 	app.use(passport.initialize());
 	app.use(passport.session());
-	app.use(flash()); // use connect-flash for flash messages stored in session
-	// middleware that is specific to this router
+	// use connect-flash for flash messages stored in session
+	app.use(flash());
+
+	// middleware that is specific to the CMS.
+	// Will be run on every request
 	router.use( (req, res, next) => {
 		const requestUrl = req.url;
 		const baseUrl = req.baseUrl;
@@ -65,10 +77,12 @@ module.exports = (settings, app) => {
 			return;
 		}
 
+		// May remove this later --!!!!!!!!!!!!!!!!!
 		if (requestUrl === '/favicon.ico') {
 			return;
 		}
 
+		// Check if the requested URL is coming from the admin panel
 		if (CMS.passThroughUrl(requestUrl) === true) {
 
 			// clear plugin navigation additions
@@ -76,6 +90,7 @@ module.exports = (settings, app) => {
 
 			let adminPlugins = CMS.activePlugins.admin;
 
+			// run active admin panel plugins
 			for (var i = adminPlugins.length - 1; i >= 0; i--) {
 
 				let requirePath = path.join(adminPlugins[i].pluginPath, adminPlugins[i].pluginInfo.require);
@@ -104,6 +119,9 @@ module.exports = (settings, app) => {
 			return;
 		}
 
+		// Check if maintenance mode is on
+		// Enable by setting: maintenance: true in the settings.
+		// The system may set this automatically some times, like during updates or heavy processes.
 		if (CMS.cmsDetails.maintenance === true) {
 	    	if (typeof CMS.activeTheme === 'undefined') {
 	    		CMS.renderAdminTemplate(res, 'maintenance');
@@ -118,6 +136,7 @@ module.exports = (settings, app) => {
 			return;
 		}
 
+		// If not an admin panel request, look for valid url in db.
 		db[collection].findOne({postUrl: requestUrl, status: { $ne: 'trash' }}, (err, doc) => {
 
 			if (err) {
@@ -150,6 +169,13 @@ module.exports = (settings, app) => {
 		});
 
 	});
+
+	/*
+		----------------------------------------------
+		DO NOT CHANGE ANYTHING BELOW!
+		These routers are what power the admin panel and the API.
+		----------------------------------------------
+	 */
 
 	router.get('/' + CMS.adminLocation + '/install', (req, res) => {
 		if (fs.existsSync(__dirname + '/admin/.install')) {

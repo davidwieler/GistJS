@@ -55,7 +55,7 @@ const Promise = require('bluebird');
 			        let pluginInfo = JSON.parse(fs.readFileSync(pluginJson, 'utf-8'));
 			        let pluginRoutes = pluginInfo.routes;
 
-			        if (pluginInfo.active === 'true') {
+			        if (pluginInfo.active === true) {
 
 			        	let details = {
 			        		pluginName: pluginInfo.name,
@@ -508,28 +508,38 @@ const Promise = require('bluebird');
 				let themeJson = themePath + '/theme.json';
 		        let themeInfo = JSON.parse(fs.readFileSync(themeJson, 'utf-8'));
 
-		        if (themeInfo.active === 'true') {
+		        if (themeInfo.active === true) {
 		        	let templates = fs.readdirSync(themePath);
 		        	for (let i = templates.length - 1; i >= 0; i--) {
-		        		templates[i]
-				        let data = fs.readFileSync(themePath + '/' + templates[i], 'utf-8');
-						let temp = data.split('#!');
 
-						if (temp.length >= 2) {
-							let templateData = JSON.parse(temp[0].trim());
-							if (typeof templateData.template !== 'undefined') {
-								templateNames.push({location:themePath + '/' + templates[i], filename: templates[i], name: templateData.template});
+						let templateInfo = {location:themePath + '/' + templates[i], filename: templates[i]};
+
+		        		if (templates[i].indexOf('.ejs') >= 0) {
+					        let data = fs.readFileSync(themePath + '/' + templates[i], 'utf-8');
+							let temp = data.split('#!');
+
+							if (temp.length >= 2) {
+								let templateData = JSON.parse(temp[0].trim());
+								if (typeof templateData.template !== 'undefined') {
+									templateInfo.name = templateData.template;
+								}
+							} else {
+								templateInfo.name = templates[i].replace('.ejs', '');
 							}
+
+							templateNames.push(templateInfo);
 						}
+
 		        	}
 
 		        }
 			}
-
 			return templateNames;
 	    },
 
 	    renderTemplate: (res, templateData) => {
+
+	    	console.log('loading front template');
 
 	    	if (typeof CMS.activeTheme === 'undefined') {
 	    		CMS.error(res, 500, 'You do not have an active theme. ');
@@ -573,7 +583,7 @@ const Promise = require('bluebird');
 
 	    	render.app = APP;
 
-			console.log(render);
+			//console.log(render);
 
 			if (!fs.existsSync(templateExists)) {
 				CMS.sendResponse(res, 500, 'Missing ' + template + '.ejs template file');
