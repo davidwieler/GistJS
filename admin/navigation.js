@@ -91,6 +91,11 @@ module.exports = [
 				slug: 'API',
 				url: 'settings/api',
 				icon: 'icon-image2'
+			},
+			{
+				slug: 'Webhooks',
+				url: 'settings/webhooks',
+				icon: 'icon-image2'
 			}
 		]
 	}
