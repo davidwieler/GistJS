@@ -48,7 +48,7 @@ var cmsSettings = {
     }
 }
 
-app.use("/assets", express.static(path.join(__dirname + '/node_modules/cms/admin/assets') ));
+app.use("/assets", express.static(path.join(__dirname + '/node_modules/segments-cms/admin/assets') ));
 app.use("/uploads", express.static(cmsSettings.uploadDir ));
 app.use('/', cms(cmsSettings, app))
 
