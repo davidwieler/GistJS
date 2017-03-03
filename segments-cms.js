@@ -11,10 +11,20 @@ module.exports = (settings, app) => {
 	const flash = require('connect-flash');
 	const fs = require('fs');
 	const path = require('path');
+	const mongojs = require('mongojs');
+	const db = require('./admin/db.js');
+
+	CMS.init(settings);
+
+	CMS.dbData = db(mongojs, CMS.dbConn).dataInit();
+	CMS.dbAccounts = db(mongojs, CMS.dbConn).accountInit();
 
 	app.use(helmet({
 		noSniff: false
 	}));
+
+	// pass passport for configuration
+	require('./admin/passport')(passport, CMS);
 
     const dbSessionsConf = {
         db: {
@@ -42,18 +52,18 @@ module.exports = (settings, app) => {
 	app.use(passport.initialize());
 	app.use(passport.session());
 	app.use(flash()); // use connect-flash for flash messages stored in session
-
-	CMS.init(settings);
-
-	// pass passport for configuration
-	require('./admin/passport')(passport, CMS);
-
 	// middleware that is specific to this router
 	router.use( (req, res, next) => {
-		let db = CMS.db();
+		const requestUrl = req.url;
+		const baseUrl = req.baseUrl;
+	    const db = CMS.dbData;
+	    const collection = CMS.dbConn.data.collection;
 
-		let requestUrl = req.url;
-		let baseUrl = req.baseUrl;
+	    // check if .install file exists. If so, stop everything and route there.
+		if (fs.existsSync(__dirname + '/admin/.install') && requestUrl !== '/' + CMS.adminLocation + '/install') {
+			res.redirect('/' + CMS.adminLocation + '/install');
+			return;
+		}
 
 		if (requestUrl === '/favicon.ico') {
 			return;
@@ -67,7 +77,6 @@ module.exports = (settings, app) => {
 			let adminPlugins = CMS.activePlugins.admin;
 
 			for (var i = adminPlugins.length - 1; i >= 0; i--) {
-				console.log(i);
 
 				let requirePath = path.join(adminPlugins[i].pluginPath, adminPlugins[i].pluginInfo.require);
 
@@ -90,12 +99,26 @@ module.exports = (settings, app) => {
             	}
 
             }
-            console.log(CMS.navigation);
+
 			next();
 			return;
 		}
 
-		db[CMS.dbConn.collection].findOne({postUrl: requestUrl, status: { $ne: 'trash' }}, (err, doc) => {
+		if (CMS.cmsDetails.maintenance === true) {
+	    	if (typeof CMS.activeTheme === 'undefined') {
+	    		CMS.renderAdminTemplate(res, 'maintenance');
+	    		return;
+	    	}
+
+	    	let maintenanceDoc = {
+	    		template: 'maintenance',
+	    		statusCode: 503
+	    	}
+			CMS.renderTemplate(res, maintenanceDoc);
+			return;
+		}
+
+		db[collection].findOne({postUrl: requestUrl, status: { $ne: 'trash' }}, (err, doc) => {
 
 			if (err) {
 				if (CMS.cmsDetails.custom500 === 'true') {
@@ -432,7 +455,6 @@ module.exports = (settings, app) => {
 		});
 
 	});
-
 	return router;
 
 }
