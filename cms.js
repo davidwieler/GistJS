@@ -8,6 +8,7 @@ const bcrypt   = require('bcrypt-nodejs');
 const adminDir = './node_modules/segments-cms/admin';
 const APP = require('./admin/assets/js/core/app.js');
 const Promise = require('bluebird');
+
 (() => {
 
 	CMS = {
@@ -28,7 +29,7 @@ const Promise = require('bluebird');
 				let themeJson = themePath + '/theme.json';
 		        let themeInfo = JSON.parse(fs.readFileSync(themeJson, 'utf-8'));
 
-		        if (themeInfo.active === 'true') {
+		        if (themeInfo.active === true) {
 		        	CMS.activeTheme = themeInfo;
 		        	CMS.activeTheme.path = themePath;
 		        }
@@ -54,7 +55,7 @@ const Promise = require('bluebird');
 			        let pluginInfo = JSON.parse(fs.readFileSync(pluginJson, 'utf-8'));
 			        let pluginRoutes = pluginInfo.routes;
 
-			        if (pluginInfo.active === 'true') {
+			        if (pluginInfo.active === true) {
 
 			        	let details = {
 			        		pluginName: pluginInfo.name,
@@ -206,16 +207,6 @@ const Promise = require('bluebird');
 			});
 		},
 
-	    db: () => {
-	    	let db = mongojs(CMS.dbConn.url, [CMS.dbConn.collection]);
-	    	return db;
-	    },
-
-	    dbUserAccounts: () => {
-	    	let db = mongojs(CMS.dbAccountConn.url, [CMS.dbAccountConn.collection]);
-	    	return db;
-	    },
-
 		passThroughUrl: (url) => {
             let okay = [
 	            '/' + CMS.adminLocation,
@@ -266,13 +257,13 @@ const Promise = require('bluebird');
 	    },
 
 	    createContent: (data, type, done) => {
-
-	    	let db = CMS.db();
+			const db = CMS.dbData;
+		    const collection = CMS.dbConn.data.collection;
 
 	    	data.timestamp = +new Date();
 	    	data.contentType = type;
 
-	    	db[CMS.dbConn.collection].insert(data, (err, result) => {
+	    	db[collection].insert(data, (err, result) => {
 	        	if (err) {
 	        		console.log(err);
 	        	}
@@ -285,9 +276,10 @@ const Promise = require('bluebird');
 	    },
 
 	    deletePost: (postId, done) => {
-	    	let db = CMS.db();
+			const db = CMS.dbData;
+		    const collection = CMS.dbConn.data.collection;
 
-	    	db[CMS.dbConn.collection].remove({'_id':ObjectId(postId)}, (err, result) => {
+	    	db[collection].remove({'_id':ObjectId(postId)}, (err, result) => {
 	        	if (err) {
 	        		console.log(err);
 	        	}
@@ -300,8 +292,8 @@ const Promise = require('bluebird');
 	    },
 
 	    deleteAttachment: (attachmentIds, done) => {
-
-	    	let db = CMS.db();
+			const db = CMS.dbData;
+		    const collection = CMS.dbConn.data.collection;
 
         	if (Object.prototype.toString.call(attachmentIds) !== '[object Array]') {
         		attachmentIds = [attachmentIds];
@@ -315,7 +307,7 @@ const Promise = require('bluebird');
 
 		    	let getAttachmentData = (search, readyCallback) => {
 
-		            db[CMS.dbConn.collection].find(search).toArray((err, docs) => {
+		            db[collection].find(search).toArray((err, docs) => {
 		            	readyCallback(docs)
 		            });
 		        };
@@ -327,7 +319,7 @@ const Promise = require('bluebird');
 		        		unlink.push(results[0].thumbnails[t]);
 		        	};
 
-			    	db[CMS.dbConn.collection].remove({'_id':ObjectId(results[0]._id)});
+			    	db[collection].remove({'_id':ObjectId(results[0]._id)});
 		        	callback();
 		        });
 			}, (err) => {
@@ -359,7 +351,8 @@ const Promise = require('bluebird');
 	    },
 
 	    updatePost: (data, postId, done) => {
-			let db = CMS.db();
+			const db = CMS.dbData;
+		    const collection = CMS.dbConn.data.collection;
 
 			data.postContent = APP.sanitizeHtml(data.postContent);
 
@@ -374,7 +367,7 @@ const Promise = require('bluebird');
 					delete data.postId;
 					data.updatedTimestamp = +new Date();
 
-				    db[CMS.dbConn.collection].update(
+				    db[collection].update(
 				        {'_id':ObjectId(postId)},
 				        { $set: data},
 				        (err, response) => {
@@ -389,7 +382,7 @@ const Promise = require('bluebird');
 				    )
 				});
 			} else {
-			    db[CMS.dbConn.collection].update(
+			    db[collection].update(
 			        {'_id':ObjectId(postId)},
 			        { $set: data},
 			        (err, response) => {
@@ -407,9 +400,10 @@ const Promise = require('bluebird');
 	    },
 
 	    getPost: (postId, done) => {
-			let db = CMS.db();
+			const db = CMS.dbData;
+		    const collection = CMS.dbConn.data.collection;
 
-	        db[CMS.dbConn.collection].findOne({'_id':ObjectId(postId)}, (err, post) => {
+	        db[collection].findOne({'_id':ObjectId(postId)}, (err, post) => {
 	        	if (err) {
 	        		console.log(err);
 	        	}
@@ -418,9 +412,10 @@ const Promise = require('bluebird');
 	    },
 
 	    getAttachment: (attachmentId, done) => {
-			let db = CMS.db();
+	    	const db = CMS.dbData;
+		    const collection = CMS.dbConn.data.collection;
 
-	        db[CMS.dbConn.collection].findOne({'_id':ObjectId(attachmentId), contentType: 'attachment'}, (err, post) => {
+	        db[collection].findOne({'_id':ObjectId(attachmentId), contentType: 'attachment'}, (err, post) => {
 	        	if (err) {
 	        		console.log(err);
 	        	}
@@ -429,8 +424,8 @@ const Promise = require('bluebird');
 	    },
 
 	    getAttachments: (findAttachments, done) => {
-
-			let db = CMS.db();
+	    	const db = CMS.dbData;
+		    const collection = CMS.dbConn.data.collection;
 			let returnedAttachments = [];
 			let count = 0;
 			let returnedLimits = {};
@@ -444,7 +439,7 @@ const Promise = require('bluebird');
     		returnedLimits.limit = limit;
     		returnedLimits.offset = Number(findAttachments.offset) || 0;
 			let calc = (limit - 1);
-			db[CMS.dbConn.collection].find(search).sort({timestamp: -1}, (err, attachments) => {
+			db[collection].find(search).sort({timestamp: -1}, (err, attachments) => {
 
 				for (var i = 0; i < attachments.length; i++) {
 					if (returnedLimits.offset >= 1) {
@@ -466,7 +461,8 @@ const Promise = require('bluebird');
 	    },
 
 	    getPosts: (findPosts, done) => {
-			let db = CMS.db();
+		    const db = CMS.dbData;
+		    const collection = CMS.dbConn.data.collection;
 			let returnedPosts = [];
 			let count = 0;
 			let returnedLimits = {};
@@ -481,7 +477,7 @@ const Promise = require('bluebird');
     		returnedLimits.offset = Number(findPosts.offset) || 0;
     		let calc = (limit - 1);
     		//db[CMS.dbConn.collection].find(search).limit(Number(limit)).sort({timestamp: -1}, (err, posts) => {
-			db[CMS.dbConn.collection].find(search).sort({timestamp: -1}, (err, posts) => {
+			db[collection].find(search).sort({timestamp: -1}, (err, posts) => {
 
 				for (var i = 0; i < posts.length; i++) {
 					if (returnedLimits.offset >= 1) {
@@ -512,28 +508,38 @@ const Promise = require('bluebird');
 				let themeJson = themePath + '/theme.json';
 		        let themeInfo = JSON.parse(fs.readFileSync(themeJson, 'utf-8'));
 
-		        if (themeInfo.active === 'true') {
+		        if (themeInfo.active === true) {
 		        	let templates = fs.readdirSync(themePath);
 		        	for (let i = templates.length - 1; i >= 0; i--) {
-		        		templates[i]
-				        let data = fs.readFileSync(themePath + '/' + templates[i], 'utf-8');
-						let temp = data.split('#!');
 
-						if (temp.length >= 2) {
-							let templateData = JSON.parse(temp[0].trim());
-							if (typeof templateData.template !== 'undefined') {
-								templateNames.push({location:themePath + '/' + templates[i], filename: templates[i], name: templateData.template});
+						let templateInfo = {location:themePath + '/' + templates[i], filename: templates[i]};
+
+		        		if (templates[i].indexOf('.ejs') >= 0) {
+					        let data = fs.readFileSync(themePath + '/' + templates[i], 'utf-8');
+							let temp = data.split('#!');
+
+							if (temp.length >= 2) {
+								let templateData = JSON.parse(temp[0].trim());
+								if (typeof templateData.template !== 'undefined') {
+									templateInfo.name = templateData.template;
+								}
+							} else {
+								templateInfo.name = templates[i].replace('.ejs', '');
 							}
+
+							templateNames.push(templateInfo);
 						}
+
 		        	}
 
 		        }
 			}
-
 			return templateNames;
 	    },
 
 	    renderTemplate: (res, templateData) => {
+
+	    	console.log('loading front template');
 
 	    	if (typeof CMS.activeTheme === 'undefined') {
 	    		CMS.error(res, 500, 'You do not have an active theme. ');
@@ -577,7 +583,7 @@ const Promise = require('bluebird');
 
 	    	render.app = APP;
 
-			console.log(render);
+			//console.log(render);
 
 			if (!fs.existsSync(templateExists)) {
 				CMS.sendResponse(res, 500, 'Missing ' + template + '.ejs template file');
@@ -597,7 +603,8 @@ const Promise = require('bluebird');
 	        let templateLoopData = JSON.parse(temp[0].trim());
 			let configs = [];
 			let returns = {};
-			let db = CMS.db();
+			const db = CMS.dbData;
+		    const collection = CMS.dbConn.data.collection;
 
 			async.forEachOf(templateLoopData.loop, (value, key, callback) => {
 
@@ -607,7 +614,7 @@ const Promise = require('bluebird');
 
 		    	let data = (search, readyCallback) => {
 
-		            db[CMS.dbConn.collection].find(search).toArray((err, docs) => {
+		            db[collection].find(search).toArray((err, docs) => {
 		            	readyCallback(docs)
 		            });
 		        };

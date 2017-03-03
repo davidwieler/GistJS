@@ -8,6 +8,7 @@
 	"imageRevisions": "false",
 	"jpgQuality": 100,
 	"pngQuality": 100,
+	"maintenance": true,
 	"thumbnails": [
 		{
 			"suffix": "-thumb1024",

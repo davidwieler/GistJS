@@ -25,8 +25,8 @@ module.exports = function(passport, CMS) {
     // passport needs ability to serialize and unserialize users out of session
 
     // initialize accounts db
-    const db = CMS.dbUserAccounts();
-    const collection = CMS.dbAccountConn.collection
+    const db = CMS.dbAccounts;
+    const collection = CMS.dbConn.accounts.collection;
 
     // used to serialize the user for the session
     passport.serializeUser(function(user, done) {
