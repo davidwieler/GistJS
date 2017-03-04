@@ -122,6 +122,7 @@ module.exports = (settings, app) => {
 		// Check if maintenance mode is on
 		// Enable by setting: maintenance: true in the settings.
 		// The system may set this automatically some times, like during updates or heavy processes.
+
 		if (CMS.cmsDetails.maintenance === true) {
 	    	if (typeof CMS.activeTheme === 'undefined') {
 	    		CMS.renderAdminTemplate(res, 'maintenance');

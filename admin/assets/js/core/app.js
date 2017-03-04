@@ -244,7 +244,7 @@
 	                    <div id="editor" data-placeholder="">' + postContent + '</div>\
 	                </div>\
 	                <div class="panel-footer">\
-	                    <div class="col-xs-7">\
+	                    <div class="col-xs-12">\
 	                        <div class="btn-group btn-group-xs pull-left">\
 	                            <a class="btn btn-default btn-info editor-mode" data-mode="visual">Visual</a>\
 	                            <a class="btn btn-default editor-mode" data-mode="html">HTML</a>\
@@ -252,8 +252,6 @@
 	                            <a class="btn btn-default action-preview" data-mode="preview">Preview</a>\
 	                            <a class="btn btn-default action-distraction-free">Distraction Free</a>\
 	                        </div>\
-	                    </div>\
-	                    <div class="col-xs-5 text-right">\
 	                    </div>\
 	                </div>\
 	            </div>';

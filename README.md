@@ -29,30 +29,34 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 var cms = require('segments-cms');
 var cmsSettings = {
-    adminLocation: 'cms-admin',
+    adminLocation: 'spry-admin',
     themeDir: path.join(__dirname + '/themes'),
     pluginDir: path.join(__dirname + '/plugins'),
     uploadDir: path.join(__dirname + '/uploads'),
     db: {
-        url: 'localhost:27017/cms',
-        collection: 'data'
-    },
-    accountDb: {
-        url: 'localhost:27017/cms',
-        collection: 'accounts'
+        data: {
+            url: 'localhost:27017/cms',
+            collection: 'data'
+        },
+        accounts: {
+            url: 'localhost:27017/cms',
+            collection: 'accounts'
+        }
     },
     sessions: {
-      url: 'localhost:27017/cms',
-      secret: 'storethesegmentsessions',
-      cookieName: 'chooseacookiename'
+        url: 'localhost:27017/cms',
+        secret: 'storethesegmentsessions',
+        cookieName: 'chooseacookiename'
     }
 }
 
 app.use("/assets", express.static(path.join(__dirname + '/node_modules/segments-cms/admin/assets') ));
 app.use("/uploads", express.static(cmsSettings.uploadDir ));
+app.use("/plugins", express.static(cmsSettings.pluginDir ));
 app.use('/', cms(cmsSettings, app))
 
 app.listen(port);
+
 ```
 
 ### The Install

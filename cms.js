@@ -67,8 +67,9 @@ const Promise = require('bluebird');
 			        	if (pluginInfo.require) {
 			        		CMS.plugins[pluginInfo.name] = require(path.join(pluginPath, pluginInfo.require))(CMS, APP);
 			        	}
+			        	console.log();
 
-			        	pluginInfo.path = pluginPath;
+			        	pluginInfo.path = path.join(pluginFolder);
 
 			        	if (Object.prototype.toString.call(pluginRoutes) === '[object Array]') {
 				        	for (let i = pluginRoutes.length - 1; i >= 0; i--) {
@@ -538,6 +539,9 @@ const Promise = require('bluebird');
 	    },
 
 	    renderTemplate: (res, templateData) => {
+
+	    	console.log(res.req.url);
+	    	console.log(templateData);
 
 	    	console.log('loading front template');
 
