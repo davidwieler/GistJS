@@ -1,0 +1,334 @@
+<% include includes/header %>
+<% include includes/pageheader %>
+	<!-- Page container -->
+	<div class="page-container">
+
+		<!-- Page content -->
+		<div class="page-content">
+
+			<!-- Main sidebar -->
+			<div class="sidebar sidebar-main sidebar-default">
+				<div class="sidebar-content">
+
+					<!-- Main navigation -->
+					<div class="sidebar-category sidebar-category-visible">
+						<div class="category-title h6">
+							<span>Navigation</span>
+						</div>
+
+						<div class="category-content no-padding">
+							<% include includes/navigation %>
+						</div>
+					</div>
+					<!-- /main navigation -->
+
+				</div>
+			</div>
+			<!-- /main sidebar -->
+
+
+			<!-- Main content -->
+			<div class="content-wrapper">
+				<%
+					if (typeof data.msg !== 'undefined') {
+						console.log(data);
+						%>
+
+				<div class="row">
+						<div class="alert alert-info">
+						<%
+							switch(data.msg){
+								case '3' :
+									%> <strong>Post has been trashed. Trashed posts will auto delete in 24 hours.</strong> <%
+								break;
+							}
+						%>
+				</div>
+						<%
+					}
+
+				%>
+
+				<!-- Single line -->
+				<div class="panel panel-white">
+					<div class="panel-heading">
+						<h6 class="panel-title">
+							<%
+								switch(data.type) {
+									default :
+									case 'general' :
+										%>General Settings<%
+									break;
+									case 'media' :
+										%>Media Settings<%
+									break;
+									case 'reading' :
+										%>Reading Settings<%
+									break;
+									case 'writing' :
+										%>Writing Settings<%
+									break;
+									case 'discussion' :
+										%>Discussion Settings<%
+									break;
+									case 'api' :
+										%>API Settings<%
+									break;
+									case 'webhooks' :
+										%>Webhook Settings<%
+									break;
+								}
+							%>
+						</h6>
+					</div>
+
+					<div class="panel-body">
+						<div class="col-md-12">
+							<form class="form-horizontal" action="/<%- adminLocation;%>/settings" method="POST">
+
+								<legend class="text-bold">General Settings</legend>
+								<div class="form-group">
+									<label class="control-label col-lg-2">Site name</label>
+									<div class="col-lg-10">
+										<input type="text" class="form-control" name="name" value="<%- cmsInfo.name%>">
+										<span class="help-block">The name of your site. Appears in the top left of the CMS</span>
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="control-label col-lg-2">Site title</label>
+									<div class="col-lg-10">
+										<input type="text" class="form-control" name="title" value="<%- cmsInfo.title%>">
+										<span class="help-block">The name of your site. Used for theme titles</span>
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="control-label col-lg-2">Tagline</label>
+									<div class="col-lg-10">
+										<input type="text" class="form-control" name="tagline" value="<%- cmsInfo.tagline%>">
+										<span class="help-block">In a few words, explain what this site is about</span>
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="control-label col-lg-2">Site URL</label>
+									<div class="col-lg-10">
+										<input type="text" class="form-control" name="url" value="<%- cmsInfo.url%>">
+										<span class="help-block">The URL of your site. Example: https://mydomain.com or https://sub.mydomain.com</span>
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="control-label col-lg-2">Admin Email</label>
+									<div class="col-lg-10">
+										<input type="email" class="form-control" name="adminEmail" value="<%- cmsInfo.adminEmail%>">
+										<span class="help-block">This email is used for admin purposes, like new user notifications</span>
+									</div>
+								</div>
+
+								<legend class="text-bold">User Settings</legend>
+								<div class="col-md-6">
+									<div class="row">
+										<label class="display-block text-semibold">Registration</label>
+									</div>
+									<div class="form-group">
+										<div class="checkbox">
+											<label>
+												<div class="checker"><span class="checked"><input type="checkbox" class="styled" checked="checked"></span></div>
+												Anyone can register
+											</label>
+											<span class="help-block">Will place a registation link on the CMS login page. <br />New registrations have to be authorized by an Administrator</span>
+										</div>
+									</div>
+								</div>
+								<div class="col-md-6">
+									<div class="row">
+										<label class="display-block text-semibold">Maintenance Mode</label>
+									</div>
+									<div class="form-group">
+										<div class="checkbox">
+											<label>
+												<div class="checker"><span class="checked"><input type="checkbox" class="styled" checked="checked"></span></div>
+												Toggle maintenance-mode
+											</label>
+											<span class="help-block">Will display a themes maintenance page, or the general one if the theme doesn't have one</span>
+										</div>
+									</div>
+								</div>
+
+								<legend class="text-bold">Writing Settings</legend>
+								<label class="display-block text-semibold">Posts &amp; Images</label>
+								<div class="col-md-12">
+									<div class="form-group">
+										<div class="checkbox">
+											<label>
+												<div class="checker"><span class="checked"><input type="checkbox" class="styled" checked="checked"></span></div>
+												Post Revisions
+											</label>
+											<span class="help-block">Posts will be revised, enabling you to roll back changes and see the difference between updates</span>
+										</div>
+
+										<div class="checkbox">
+											<label>
+												<div class="checker"><span class="checked"><input type="checkbox" class="styled" checked="checked"></span></div>
+												Image Revisions
+											</label>
+											<span class="help-block">Images with the same name will be grouped together, enabling you to roll back which version is published to view</span>
+										</div>
+									</div>
+								</div>
+								<div class="col-md-6">
+									<div class="form-group">
+										<label class="control-label">Auto save timer</label>
+										<div class="row">
+											<div class="col-md-3">
+											<input class="form-control" type="number" name="autoSaveTimer" value="<%- cmsInfo.autoSaveTimer%>" min="0">
+											</div>
+											<span class="help-inline">seconds</span>
+										</div>
+										<span class="help-block">Post updates will autosave after this amount of time</span>
+									</div>
+
+									<div class="form-group">
+										<label class="control-label">Post and Image deletion timer</label>
+										<div class="row">
+											<div class="col-md-3">
+											<input class="form-control" type="number" name="deleteAfter" value="<%- cmsInfo.deleteAfter%>" min="0">
+											</div>
+											<span class="help-inline">seconds</span>
+										</div>
+										<span class="help-block">This timer controls how long until a trashed image or post is permanently deleted. <br />Setting this to <code>0</code> will permanently delete immediately</span>
+									</div>
+								</div>
+								<div class="col-md-6">
+									<div class="form-group">
+										<label class="control-label">JPG image quality</label>
+										<div class="row">
+											<div class="col-md-3">
+											<input class="form-control" type="number" name="jpgQuality" value="<%- cmsInfo.jpgQuality%>" min="50" max="100">
+											</div>
+										</div>
+										<span class="help-block">Visual quality of <code>.jpg</code> and <code>.jpeg</code> files and thumbnails</span>
+									</div>
+									<div class="form-group">
+										<label class="control-label">PNG image quality</label>
+										<div class="row">
+											<div class="col-md-3">
+											<input class="form-control" type="number" name="pngQuality" value="<%- cmsInfo.pngQuality%>" min="50" max="100">
+											</div>
+										</div>
+										<span class="help-block">Visual quality of <code>.png</code> files and thumbnails</span>
+									</div>
+								</div>
+
+								<div class="col-md-12">
+									<div class="row">
+										<label class="control-label">Thumbnails</label>
+										<div class="form-group">
+											<%
+												let thumbnails = cmsInfo.thumbnails;
+
+												for (var i = 0; i < thumbnails.length; i++) {
+													let name = thumbnails[i].suffix;
+													let size = thumbnails[i].size;
+													let disabled = '';
+													let text = '';
+													if (name === '-preview') {
+														disabled = 'disabled';
+														text = '-preview is required, and not adjustable';
+													} else {
+														text = 'Thumbnail name. Will be appended to the filename';
+													}
+
+													%>
+													<div class="col-lg-12">
+														<div class="row">
+															<div class="col-md-5">
+																<input type="text" class="form-control" name="thumbnails[][names]" value="<%- name%>" <%- disabled%> >
+																<span class="help-block"><%- text%></span>
+															</div>
+															<div class="col-md-3">
+																<input type="text" class="form-control" name="thumbnails[][<%- name%>]" value="<%- size[0]%>" <%- disabled%>>
+																<span class="help-block">Maximum width</span>
+															</div>
+
+															<div class="col-md-3">
+																<input type="text" class="form-control" name="thumbnails[][<%- name%>]" value="<%- size[1]%>" <%- disabled%>>
+																<span class="help-block">Maximum height</span>
+															</div>
+														</div>
+													</div>
+													<%
+												}
+											%>
+										</div>
+									</div>
+								</div>
+
+								<legend class="text-bold">Reading Settings</legend>
+								<label class="display-block text-semibold">Left stacked styled</label>
+								<div class="col-md-6">
+									<div class="form-group">
+										<div class="checkbox">
+											<label>
+												<div class="checker"><span class="checked"><input type="checkbox" class="styled" checked="checked" name="prettyPagination"></span></div>
+												Pretty Pagination
+											</label>
+											<span class="help-block">
+											Toggles pretty pagination in the address bar.
+											<br />
+											On: https://mydomain.com/blog/news<code>/page/2</code>
+											<br />
+											Off: https://mydomain.com/blog/news<code>?page=2</code>
+											</span>
+										</div>
+									</div>
+									<div class="form-group">
+										<label class="control-label">Pagination tag</label>
+										<div class="row">
+											<div class="col-md-10">
+											<input class="form-control" type="text" name="paginateBy" value="<%- cmsInfo.paginateBy%>">
+											</div>
+										</div>
+										<span class="help-block">Defines what the URL will paginate by. <br />Example: https://mydomain.com/blog/news<code>/page/2</code></span>
+									</div>
+								</div>
+								<div class="col-md-6">
+									<div class="form-group">
+										<div class="checkbox">
+											<label>
+												<div class="checker"><span class="checked"><input type="checkbox" class="styled" checked="checked"></span></div>
+												Custom error 404 page
+											</label>
+											<span class="help-block">Use a theme's error 404 template</span>
+										</div>
+
+										<div class="checkbox">
+											<label>
+												<div class="checker"><span><input type="checkbox" class="styled"></span></div>
+												Custom error 500 page
+											</label>
+											<span class="help-block">Use a theme's error 500 template</span>
+										</div>
+									</div>
+								</div>
+								<div class="col-md-12">
+									<div class="row">
+										<button class="btn btn-info" type="submit">Update Settings</button>
+									</div>
+								</div>
+    						</form>
+    					</div>
+					</div>
+				</div>
+				<!-- /single line -->
+
+			</div>
+
+			</div>
+			<!-- /main content -->
+
+		</div>
+		<!-- /page content -->
+
+	</div>
+	<!-- /page container -->
+
+<% include includes/footer %>

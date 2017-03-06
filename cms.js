@@ -7,6 +7,7 @@ const ejs = require('ejs');
 const bcrypt   = require('bcrypt-nodejs');
 const adminDir = './node_modules/segments-cms/admin';
 const APP = require('./admin/assets/js/core/app.js');
+const Utils = require('./admin/utils.js');
 const Promise = require('bluebird');
 
 (() => {
@@ -20,14 +21,24 @@ const Promise = require('bluebird');
 			CMS.themeDir = settings.themeDir;
 			CMS.pluginDir = settings.pluginDir;
 			CMS.uploadDir = settings.uploadDir;
+			CMS.hooks = CMS.defineHooks();
+			CMS.passToRender = {};
+			CMS.themes = [];
 
 			let themes = fs.readdirSync(CMS.themeDir);
 
 			for (let i = themes.length - 1; i >= 0; i--) {
+				if (themes[i] === '.DS_Store') {
+					continue;
+				}
 				let themeFolder = themes[i];
 				let themePath = path.join(CMS.themeDir, themeFolder);
 				let themeJson = themePath + '/theme.json';
 		        let themeInfo = JSON.parse(fs.readFileSync(themeJson, 'utf-8'));
+		        themeInfo.id = i;
+		        themeInfo.localPath = path.join(themeFolder);
+		        themeInfo.path = themePath;
+		        CMS.themes.push(themeInfo);
 
 		        if (themeInfo.active === true) {
 		        	CMS.activeTheme = themeInfo;
@@ -67,7 +78,6 @@ const Promise = require('bluebird');
 			        	if (pluginInfo.require) {
 			        		CMS.plugins[pluginInfo.name] = require(path.join(pluginPath, pluginInfo.require))(CMS, APP);
 			        	}
-			        	console.log();
 
 			        	pluginInfo.path = path.join(pluginFolder);
 
@@ -88,6 +98,31 @@ const Promise = require('bluebird');
 			        		break;
 			        	}
 			        }
+				}
+			}
+		},
+
+		defineHooks: () => {
+			let hooks = {
+				dashboard: {}
+			};
+
+			return hooks;
+		},
+
+		applyHook: (name, func, location) => {
+			if (typeof func === 'function') {
+				let hooks = CMS.hooks;
+				hooks[location][name] = func
+			}
+		},
+
+		doHook: (location) => {
+			let doTheseHooks = CMS.hooks[location];
+
+			for(var h in doTheseHooks){
+				if (doTheseHooks.hasOwnProperty(h) && typeof doTheseHooks[h] === 'function'){
+					doTheseHooks[h]();
 				}
 			}
 		},
@@ -167,6 +202,39 @@ const Promise = require('bluebird');
 				done(null, 'complete');
             });
 
+		},
+
+		themeSwitch: (newThemeId, done) => {
+
+			let themes = CMS.themes;
+			let updateThemes = [];
+			for (var i = 0; i < themes.length; i++) {
+
+				let themeConfigFile = themes[i].path + '/theme.json';
+				let themeFileInfo = require(themeConfigFile);
+
+				if (themes[i].id === Number(newThemeId)) {
+					CMS.activeTheme = themes[i];
+					themes[i].active = themeFileInfo.active = true;
+				} else {
+					themes[i].active = themeFileInfo.active = false;
+				}
+
+				let string = JSON.stringify(themeFileInfo, null, '\t');
+
+	            fs.writeFile(themeConfigFile, string, (err) => {
+					if (err) {
+						return done(err);
+					}
+	            });
+
+				updateThemes.push(themes[i]);
+			}
+
+			CMS.themes = updateThemes;
+			if (typeof done === 'function') {
+				done(CMS.activeTheme);
+			}
 		},
 
 		hash: (string) => {
@@ -253,6 +321,8 @@ const Promise = require('bluebird');
 				}
 			    CMS.renderTemplate(res, templateData);
 			    return;
+			} else {
+				CMS.sendResponse(res, statusCode, msg || 'error');
 			}
 
 	    },
@@ -263,6 +333,11 @@ const Promise = require('bluebird');
 
 	    	data.timestamp = +new Date();
 	    	data.contentType = type;
+
+			if (data.category) {
+				CMS.createCategory(data.category[0]);
+				data.category = data.category[0];
+			}
 
 	    	db[collection].insert(data, (err, result) => {
 	        	if (err) {
@@ -347,23 +422,77 @@ const Promise = require('bluebird');
 
 	    },
 
-	    createRevision: () => {
+	    createRevision: (data) => {
+	    	const db = CMS.dbData;
+	    	db.postrevisions.save(data);
+	    },
+
+	    getCategories: (done) => {
+	    	const db = CMS.dbData;
+	    	const collection = CMS.dbConn.data.collection;
+
+	    	let query = {contentType: 'categoryList'};
+
+	    	db[collection].find(query, (err, result) => {
+	    		done(result[0].categories);
+	    	});
+	    },
+
+	    createCategory: (data) => {
+	    	CMS.getCategories((result) => {
+	    		let slugs = result.slug;
+	    		let names = result.name;
+	    		let newSlugs = data.slug;
+	    		let newNames = data.name
+
+	    		let sulgsConcat = Utils().arrayUnique(slugs.concat(newSlugs));
+	    		let namesConcat = Utils().arrayUnique(names.concat(newNames));
+
+	    		let categoryList = {
+	    			slug: sulgsConcat,
+	    			name: namesConcat
+	    		}
+
+		    	const db = CMS.dbData;
+		    	const collection = CMS.dbConn.data.collection;
+
+		    	let query = {contentType: 'categoryList'};
+
+		    	let updateData = {
+		    		categories: categoryList,
+		    		contentType: 'categoryList'
+		    	}
+
+		    	db[collection].update(query, updateData, {upsert: true}, (err, result) => {
+		    		console.log(result);
+		    	});
+	    	});
+
+
 
 	    },
 
 	    updatePost: (data, postId, done) => {
+
+	    	console.log(data);
 			const db = CMS.dbData;
 		    const collection = CMS.dbConn.data.collection;
 
 			data.postContent = APP.sanitizeHtml(data.postContent);
 
+			if (data.category) {
+				CMS.createCategory(data.category[0]);
+				data.category = data.category[0];
+			} else {
+				data.category = {};
+			}
+
 			if (CMS.cmsDetails.postRevisions === true) {
 
 				CMS.getPost(postId, (res) => {
-					console.log(res);
 					res.postId = data.postId;
 					delete res._id;
-					db.postrevisions.save(res);
+					CMS.createRevision(res);
 
 					delete data.postId;
 					data.updatedTimestamp = +new Date();
@@ -372,6 +501,7 @@ const Promise = require('bluebird');
 				        {'_id':ObjectId(postId)},
 				        { $set: data},
 				        (err, response) => {
+				        	console.log(response);
 				        	if (err) {
 				        		console.log(err);
 				        	}
@@ -407,6 +537,10 @@ const Promise = require('bluebird');
 	        db[collection].findOne({'_id':ObjectId(postId)}, (err, post) => {
 	        	if (err) {
 	        		console.log(err);
+	        	}
+	        	if (post === null) {
+	        		done('not found');
+	        		return;
 	        	}
 	        	done(post);
 	        });
@@ -467,7 +601,7 @@ const Promise = require('bluebird');
 			let returnedPosts = [];
 			let count = 0;
 			let returnedLimits = {};
-			let limit = findPosts.limit;
+			let limit = findPosts.limit || 20;
 			let search = {contentType: 'post'};
 
 			if (typeof findPosts.search !== 'undefined') {
@@ -504,6 +638,9 @@ const Promise = require('bluebird');
 			let templateNames = [];
 
 			for (let i = themes.length - 1; i >= 0; i--) {
+				if (themes[i] === '.DS_Store') {
+					continue;
+				}
 				let themeFolder = themes[i];
 				let themePath = path.join(CMS.themeDir, themeFolder);
 				let themeJson = themePath + '/theme.json';
@@ -539,10 +676,6 @@ const Promise = require('bluebird');
 	    },
 
 	    renderTemplate: (res, templateData) => {
-
-	    	console.log(res.req.url);
-	    	console.log(templateData);
-
 	    	console.log('loading front template');
 
 	    	if (typeof CMS.activeTheme === 'undefined') {
@@ -613,13 +746,53 @@ const Promise = require('bluebird');
 			async.forEachOf(templateLoopData.loop, (value, key, callback) => {
 
 				let context = value.return;
-
-				delete value.return;
+				let limit = value.postsPerPage;
+				let pageNumber = Number(templateData.paginateNumber);
+				let onPageNumber = 1;
+				let returnedPosts = [];
+				let offset = 0;
 
 		    	let data = (search, readyCallback) => {
 
-		            db[collection].find(search).toArray((err, docs) => {
-		            	readyCallback(docs)
+		    		let calc = (limit);
+		    		let skipPosts = 0
+					if (pageNumber >= 2) {
+						offset = (pageNumber - 1) * limit;
+						calc = limit + offset;
+						onPageNumber = pageNumber;
+					}
+
+
+		            db[collection].find(value.find).toArray((err, posts) => {
+		            	//console.log(posts);
+
+						for (var i = 0; i < posts.length; i++) {
+
+							if (!isNaN(limit) && typeof limit !== 'undefined') {
+
+								if (pageNumber >= 2) {
+									if (i < offset) {
+										continue;
+									}
+								}
+
+								if (i < calc) {
+									returnedPosts.push(posts[i]);
+								} else {
+									break;
+								}
+
+							} else {
+								returnedPosts.push(posts[i]);
+							}
+						}
+
+						if (typeof limit === 'undefined') {
+							limit = -1;
+						}
+
+						let returns = {postCount: posts.length, posts: returnedPosts, pageNumber: onPageNumber, limit: limit, offset: offset};
+		            	readyCallback(returns)
 		            });
 		        };
 
@@ -673,13 +846,16 @@ const Promise = require('bluebird');
 	        	cms: CMS,
 	        	cmsInfo: CMS.cmsDetails,
 	        	themeInfo: CMS.activeTheme,
+	        	themes: CMS.themes,
 	        	templates: CMS.getTemplates(),
 	        	adminLocation: CMS.adminLocation,
 	        	data: urlParams,
 	        	app: APP,
+	        	msg: msg,
 	        	postData: {},
 	        	user: user,
-	        	plugins: CMS.activePlugins.admin
+	        	plugins: CMS.activePlugins.admin,
+	        	passedToRender: CMS.passToRender
 	        };
 
 	        if (typeof msg !== 'undefined') {
@@ -691,11 +867,17 @@ const Promise = require('bluebird');
 	    		case 'edit' :
 			        if (typeof urlParams !== 'undefined') {
 				    	let id = urlParams.id.toString();
-				    	let post = CMS.getPost(id, (postData) => {
-				    		render.postData = postData;
-				        	let rendered = ejs.render(data, render, options);
-				            CMS.sendResponse(res, 200, rendered);
-				    	});
+
+			            CMS.getCategories((result) => {
+			            	render.categoryList = result;
+					    	CMS.getPost(id, (postData) => {
+					    		render.postData = postData;
+					        	let rendered = ejs.render(data, render, options);
+					            CMS.sendResponse(res, 200, rendered);
+					    	});
+			            });
+
+
 			        } else {
 			        	let rendered = ejs.render(data, render, options);
 			            CMS.sendResponse(res, 200, rendered);

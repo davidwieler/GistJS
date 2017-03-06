@@ -9,8 +9,13 @@
 		['draft', 'Draft'],
 		['trash', 'Trash']
 	];
+
+	if (postData === 'not found') {
+		alert = '99';
+	}
+
 	if (postData._id) {
-		var formPostTo = '/spry-admin/edit/' + postData._id;
+		var formPostTo = '/' + adminLocation+ '/edit/' + postData._id;
 		var submitButton = 'Update';
 		var submitButtonProp = '';
 		var formClass = 'update';
@@ -212,6 +217,9 @@
 								case '2' :
 									%> <strong>Post updated</strong>  <%
 								break;
+								case '99' :
+									%> <strong>Post not found. Starting over.</strong>  <%
+								break;
 								default :
 									%> <strong>Uhhmm... Whatcha do'n there?</strong> <%
 								break;
@@ -300,15 +308,81 @@
 									<div class="col-xs-12">
 										<div class="form-group">
 											<label>Categories</label>
-											<select class="selectpicker form-control show-menu-arrow">
+											<div class="input-group">
+											   <input type="text" class="category-list-input form-control" placeholder="Create a new category">
+											   <span class="input-group-btn">
+											        <button class="btn bg-info submit-new-category" type="button"><i class="icon-plus2"></i></button>
+											   </span>
+											</div>
+											
+											<br />
+											<%
+											console.log();
+												if (typeof categoryList !== 'undefined') {
+													%>
+											<select class="selectpicker form-control show-menu-arrow" title="Add a category">
+												<option data-hidden="true"></option>
+													<%
+														var slugs = categoryList.slug;
+														var names = categoryList.name;
+
+														if (typeof slugs === 'string') {
+															slugs = [slugs];
+															names = [names];
+														}
+
+														for (var s = 0; s < slugs.length; s++) {
+														    let item = '<option value="' + slugs[s] +'">' + names[s] +'</option>';
+														    %><%- item%><%
+														}
+													%>
 											</select>
+													<%
+												}
+											%>
+
 										</div>
 										<div class="form-group">
-											<label>Categories</label>
+											<legend class="text-bold">Post categories</legend>
 											<ul class="category-list list-unstyled">
-												<li>Category 1 <button class="btn btn-xs" title="add to url">+</button> remove</li>
-												<li>Category 1 <button class="btn btn-xs">+</button> remove</li>
-												<li>Category 1 <button class="btn btn-xs">+</button> remove</li>
+												<%
+													let categories = postData.category;
+													if (categories.slug) {
+														if (typeof categories !== 'undefined') {
+															let urlArray = postData.postUrl.split('/');
+															let inUrl = '<button type="button" class="btn btn-default btn-xs category-to-url">Add to URL</button>';
+
+															var slugs = categories.slug;
+															var names = categories.name;
+
+															if (typeof slugs === 'string') {
+																slugs = [slugs];
+																names = [names];
+															}
+
+															for (var s = 0; s < slugs.length; s++) {
+																for (var u = urlArray.length - 1; u >= 0; u--) {
+
+																	if (urlArray[u] === slugs[s]) {
+																		inUrl = '<button type="button" class="btn btn-default btn-xs category-to-url added">Remove from URL</button>'
+																	}
+																}
+
+															    let item = '<li data-id="' + slugs[s] + '" data-name="' + names[s] + '">'+ names[s] + ' <small class="category-list-options"><a>Options</a></small>\
+														                    <div class="btn-group hidden category-list-options-buttons" role="group" aria-label="...">\
+														                        ' + inUrl + '\
+														                        <input type="hidden" data-id="' + slugs[s] +'" name="category[][slug]" value="' + slugs[s] +'">\
+														                        <input type="hidden" data-id="' + slugs[s] +'" name="category[][name]" value="' + names[s] +'">\
+														                        <button type="button" class="btn btn-default btn-xs category-remove">Remove</button>\
+														                    </div>\
+														                </li>';
+														        %><%- item%><%
+															}
+														} else {
+															%>None<%
+														}
+													}
+												%>
 											</ul>
 										</div>
 									</div>

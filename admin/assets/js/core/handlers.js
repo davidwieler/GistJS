@@ -1,4 +1,20 @@
 $(document).ready(function() {
+
+    // Auto save functions
+    let timeoutId;
+    if (postId) {
+        $('body').on('input propertychange change', 'form input, #editor', function() {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(function() {
+                // Runs 1 second (1000 ms) after the last change
+                $('input[name="postContent"], input[name="autoSave"]').remove();
+                var content = $('#editor').html();
+                $('.edit-form').append('<input type="hidden" value="'+ content + '" name="postContent"><input type="hidden" value="true" name="autoSave">')
+                autoSave($('.edit-form'));
+            }, autoSaveTimer);
+        });
+    }
+    // --------- end auto save functions
     $('body').on('input change', 'input[name="postTitle"]', function() {
         var value = $(this).val();
         if ($('form.edit-form').hasClass('update')) {
@@ -16,9 +32,58 @@ $(document).ready(function() {
         $('input[name="postUrl"').val(app.sanitizeTitle(value));
     });
 
-    $('body').on('input change', '.edit-form input', function() {
+    $('body').on('input change', '.edit-form input[name="postTitle"]', function() {
         $('.submit-editor').prop('disabled', false);
     });
+
+    // category form
+    $('body').on('keydown', '.category-list-input', function(e) {
+        if(e.which === 13) {
+           e.preventDefault();
+           categoryNew($(this).val(), true)
+        }
+    });
+
+    $('body').on('click', '.submit-new-category', function(e) {
+       e.preventDefault();
+       categoryNew($('.category-list-input').val(), true)
+    });
+
+    $('body').on('click', '.category-list-options', function() {
+        let options = $(this).parent().find('.category-list-options-buttons');
+
+        if (options.hasClass('open')) {
+            options.addClass('hidden').hide().removeClass('open');
+        } else {
+            options.removeClass('hidden').show().addClass('open');
+        }
+
+    });
+
+    $('body').on('click', '.category-to-url', function(e) {
+        e.preventDefault();
+        let self = $(this);
+        let categorySlug = self.parents().eq(1).attr('data-id');
+        let categoryName = self.parents().eq(1).attr('data-name');
+        let toDo = '';
+        if (self.hasClass('added')) {
+            toDo = 'remove';
+        } else {
+            toDo = 'add';
+        }
+        categoryToUrl(categorySlug, categoryName, toDo, self);
+    });
+
+    $('body').on('click', '.category-remove', function(e) {
+        e.preventDefault();
+        let self = $(this);
+        let categorySlug = self.parents().eq(1).attr('data-id');
+        let categoryName = self.parents().eq(1).attr('data-name');
+        categoryToUrl(categorySlug, categoryName, 'remove', self);
+        $('li[data-id="' + categorySlug + '"]').remove();
+    });
+
+    // --------- end category form
 
     $('body').on('click', '.submit-editor', function(e) {
         e.preventDefault();
@@ -34,7 +99,8 @@ $(document).ready(function() {
             if (content === 'Start entering your content') {
                 content = '';
             }
-            $('.edit-form').append('<input type="hidden" value="'+ app.sanitizeHtml(content) + '" name="postContent">')
+            $('input[name="postContent"], input[name="autoSave"]').remove();
+            $('.edit-form').append('<input type="hidden" value="'+ content + '" name="postContent">')
             $('.edit-form').submit();
         }
     });

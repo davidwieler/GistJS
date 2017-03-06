@@ -66,10 +66,11 @@ module.exports = (settings, app) => {
 	// middleware that is specific to the CMS.
 	// Will be run on every request
 	router.use( (req, res, next) => {
-		const requestUrl = req.url;
-		const baseUrl = req.baseUrl;
+		const baseUrl = req.url;
 	    const db = CMS.dbData;
 	    const collection = CMS.dbConn.data.collection;
+	    let requestUrl = req.url;
+	    let paginateNumber = 0;
 
 	    // check if .install file exists. If so, stop everything and route there.
 		if (fs.existsSync(__dirname + '/admin/.install') && requestUrl !== '/' + CMS.adminLocation + '/install') {
@@ -137,11 +138,42 @@ module.exports = (settings, app) => {
 			return;
 		}
 
+		var paginateRegEx = new RegExp('/' + CMS.cmsDetails.paginateBy + '/([0-9]+)((\/\w+)+|\/?)$');
+
+		if (paginateRegEx.test(requestUrl)) {
+
+			let paginate = requestUrl.split('/');
+			paginate = paginate.reverse();
+			let URLPath = [];
+
+			for (var i = paginate.length - 1; i >= 0; i--) {
+
+				if (paginate[i] !== '') {
+
+					if (!isNaN(paginate[i])) {
+						paginateNumber = paginate[i];
+						continue;
+					}
+
+					if (paginate[i] === CMS.cmsDetails.paginateBy) {
+						continue;
+					}
+
+				}
+
+				URLPath.push(paginate[i]);
+			}
+
+			requestUrl = '/' + path.join.apply(null, URLPath);
+		} else {
+			requestUrl = req._parsedUrl.pathname;
+			paginateNumber = req.query[CMS.cmsDetails.paginateBy] || 0;
+		}
+
 		// If not an admin panel request, look for valid url in db.
 		db[collection].findOne({postUrl: requestUrl, status: { $ne: 'trash' }}, (err, doc) => {
-
 			if (err) {
-				if (CMS.cmsDetails.custom500 === 'true') {
+				if (CMS.cmsDetails.custom500 === true) {
 					// Use cms based error 500 page
 					CMS.error(res, 500);
 					CMS.sendResponse(res, 500, 'Server Error');
@@ -154,16 +186,21 @@ module.exports = (settings, app) => {
 
 			if (doc === null) {
 
-				if (CMS.cmsDetails.custom404 === 'true') {
+				if (CMS.cmsDetails.custom404 === true) {
 					// Use cms based error 404 page
 					CMS.error(res, 404, 'Page not found');
 					return;
 				} else {
+					console.log('asdasd');
 					next();
 					return;
 				}
 
 			}
+
+			doc.paginateNumber = paginateNumber;
+			doc.requestUrl = requestUrl;
+			doc.baseUrl = baseUrl;
 
 			CMS.renderTemplate(res, doc);
 			return;
@@ -241,6 +278,7 @@ module.exports = (settings, app) => {
 	});
 
 	router.get(['/' + CMS.adminLocation + '/dashboard', '/' + CMS.adminLocation + '/'], CMS.isLoggedIn, (req, res) => {
+		CMS.doHook('dashboard');
 		CMS.renderAdminTemplate(res, 'dashboard');
 	});
 
@@ -321,10 +359,20 @@ module.exports = (settings, app) => {
 
 	router.post('/' + CMS.adminLocation + '/edit/:id', CMS.isLoggedIn, (req, res) => {
 		const postId = req.params.id;
+		let autoSave = false;
 		req.body.postId = postId;
+
+		if (req.body.autoSave) {
+			autoSave = true;
+			delete req.body.autoSave;
+		}
 		CMS.updatePost(req.body, req.body.postId, (result) => {
 
 			if (result.ok === 1) {
+				if (autoSave === true) {
+					CMS.sendResponse(res, 200, result);
+					return;
+				}
 				if (req.body.status === 'trash') {
 					res.redirect('/' + CMS.adminLocation + '/posts?msg=3');
 					return;
@@ -332,6 +380,28 @@ module.exports = (settings, app) => {
 					res.redirect('/' + CMS.adminLocation + '/edit/' + postId + '?msg=2');
 				}
 			}
+		});
+	});
+
+	// Settings routes
+	router.get('/' + CMS.adminLocation + '/settings', CMS.isLoggedIn, (req, res) => {
+		CMS.renderAdminTemplate(res, 'settings', req.params);
+	});
+
+	router.post('/' + CMS.adminLocation + '/settings', CMS.isLoggedIn, (req, res) => {
+		console.log(req.body.thumbnails);
+		res.redirect('/' + CMS.adminLocation + '/settings?msg=1');
+	});
+
+	// Theme routes
+	router.get('/' + CMS.adminLocation + '/themes', CMS.isLoggedIn, (req, res) => {
+		let msg = req.query.msg;
+		CMS.renderAdminTemplate(res, 'themes', req.params, msg);
+	});
+
+	router.post('/' + CMS.adminLocation + '/themes', CMS.isLoggedIn, (req, res) => {
+		CMS.themeSwitch(req.body.themeId, (newTheme) => {
+			res.redirect('/' + CMS.adminLocation + '/themes?msg=1');
 		});
 	});
 

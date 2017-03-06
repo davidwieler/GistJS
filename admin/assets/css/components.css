@@ -4865,7 +4865,7 @@ a.editable-empty, a.editable-empty:focus, a.editable-empty:hover {
 .wysihtml5-toolbar>li {
     display: inline-block;
     list-style: none;
-    margin: 0 15px 15px 0;
+    margin: 0 5px 15px 0;
 }
 .wysihtml5-toolbar .dropdown-menu {
     max-height: 200px;

@@ -1,6 +1,11 @@
 (function(exports){
     exports.timeAgo = function(dateString, format) {
         var rightNow = new Date();
+
+        if (!dateString) {
+        	dateString = rightNow;
+        }
+
         var then = new Date(dateString);
         var diff = rightNow - then;
         var second = 1000,
@@ -183,7 +188,7 @@
 	                    </div>\
 	                    <ul class="wysihtml5-toolbar" id="toolbar">\
 	                        <li class="dropdown">\
-	                            <a class="btn btn-xs btn-default dropdown-toggle " data-toggle="dropdown">\
+	                            <a class="btn btn-xxs btn-default dropdown-toggle " data-toggle="dropdown">\
 	                                <span class="fa fa-font"></span>\
 	                                <span class="current-font">Normal text</span>\
 	                                <b class="caret"></b>\
@@ -199,32 +204,32 @@
 	                            </ul>\
 	                        </li>\
 	                        <li class="file-uploads" data-toggle="modal" data-target="#file-uploads">\
-	                        <a class="btn btn-default btn-xs" href="javascript:;" unselectable="on">\
+	                        <a class="btn btn-default btn-xxs" href="javascript:;" unselectable="on">\
 	                        <span class="icon-file-picture"></span>\
 	                        </a>\
 	                        </li>\
-	                        <li><a class="btn btn-default btn-xs btn-icon insert-link toolbar-item" title="Insert link" tabindex="-1"><i class="icon-link"></i></a></li>\
+	                        <li><a class="btn btn-default btn-xxs btn-icon insert-link toolbar-item" title="Insert link" tabindex="-1"><i class="icon-link"></i></a></li>\
 	                        <li>\
-	                        <div class="btn-group btn-group-xs">\
+	                        <div class="btn-group btn-group-xxs">\
 	                        <a class="btn btn-default" data-wysihtml5-command="bold" title="CTRL+B" tabindex="-1" href="javascript:;" unselectable="on">Bold</a>\
 	                        <a class="btn btn-default" data-wysihtml5-command="italic" title="CTRL+I" tabindex="-1" href="javascript:;" unselectable="on">Italic</a>\
 	                        <a class="btn btn-default" data-wysihtml5-command="underline" title="CTRL+U" tabindex="-1" href="javascript:;" unselectable="on">Underline</a>\
 	                        </div>\
 	                        </li>\
 	                        <li>\
-	                        <div class="btn-group btn-group-xs">\
+	                        <div class="btn-group btn-group-xxs">\
 	                        <a class="btn btn-default" data-wysihtml5-command="alignLeftStyle" title="CTRL+B" tabindex="-1" href="javascript:;" unselectable="on"><span class="icon-paragraph-left3"></span></a>\
 	                        <a class="btn btn-default" data-wysihtml5-command="alignCenterStyle" title="CTRL+I" tabindex="-1" href="javascript:;" unselectable="on"><span class="icon-paragraph-center3"></span></a>\
 	                        <a class="btn btn-default" data-wysihtml5-command="alignRightStyle" title="CTRL+U" tabindex="-1" href="javascript:;" unselectable="on"><span class="icon-paragraph-right3"></span></a>\
 	                        </div>\
 	                        </li>\
 	                        <li>\
-	                        <a class="btn btn-default btn-xs" data-wysihtml5-command="formatBlock" data-wysihtml5-command-value="blockquote" data-wysihtml5-display-format-name="false" tabindex="-1" href="javascript:;" unselectable="on">\
+	                        <a class="btn btn-default btn-xxs" data-wysihtml5-command="formatBlock" data-wysihtml5-command-value="blockquote" data-wysihtml5-display-format-name="false" tabindex="-1" href="javascript:;" unselectable="on">\
 	                        <span class="icon-quotes-left"></span>\
 	                        </a>\
 	                        </li>\
 	                        <li>\
-	                        <div class="btn-group btn-group-xs">\
+	                        <div class="btn-group btn-group-xxs">\
 	                        <a class="btn  btn-default" data-wysihtml5-command="insertUnorderedList" title="Unordered list" tabindex="-1" href="javascript:;" unselectable="on">\
 	                        <span class="icon-list"></span>\
 	                        </a>\
@@ -244,7 +249,7 @@
 	                    <div id="editor" data-placeholder="">' + postContent + '</div>\
 	                </div>\
 	                <div class="panel-footer">\
-	                    <div class="col-xs-12">\
+	                    <div class="col-md-12">\
 	                        <div class="btn-group btn-group-xs pull-left">\
 	                            <a class="btn btn-default btn-info editor-mode" data-mode="visual">Visual</a>\
 	                            <a class="btn btn-default editor-mode" data-mode="html">HTML</a>\
@@ -252,6 +257,7 @@
 	                            <a class="btn btn-default action-preview" data-mode="preview">Preview</a>\
 	                            <a class="btn btn-default action-distraction-free">Distraction Free</a>\
 	                        </div>\
+	                        <div class="auto-save-status pull-right"></div>\
 	                    </div>\
 	                </div>\
 	            </div>';
@@ -440,6 +446,7 @@
 	};
 
 	exports.sanitizeHtml = function(html) {
+
 	    var entityMap = {
 	        '&': '&amp;',
 	        '<': '&lt;',

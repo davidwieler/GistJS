@@ -40,12 +40,11 @@
 		var jsFile = plugins[i].pluginInfo.init;
 		var path = plugins[i].pluginInfo.path;
 		var render = plugins[i].pluginInfo.render;
-		console.log(path);
 		if (cssFile) {
 			%><link href="/plugins/<%- path %>/<%- cssFile %>" rel="stylesheet" type="text/css"><%
 		}
 
-		if (render === 'header' || typeof render === 'undefined') {
+		if (render === 'header') {
 
 			%><script type="text/javascript" src="/plugins/<%- path %>/<%- jsFile %>"></script><%
 		}

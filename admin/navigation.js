@@ -61,42 +61,7 @@ module.exports = [
 	{
 		slug: 'Settings',
 		icon: 'icon-spell-check',
-		subMenu: [
-			{
-				slug: 'General',
-				url: 'settings',
-				icon: 'icon-image2'
-			},
-			{
-				slug: 'Media',
-				url: 'settings/media',
-				icon: 'icon-image2'
-			},
-			{
-				slug: 'Reading',
-				url: 'settings/readin',
-				icon: 'icon-image2'
-			},
-			{
-				slug: 'Writing',
-				url: 'settings/writing',
-				icon: 'icon-image2'
-			},
-			{
-				slug: 'Discussion',
-				url: 'settings/discussion',
-				icon: 'icon-image2'
-			},
-			{
-				slug: 'API',
-				url: 'settings/api',
-				icon: 'icon-image2'
-			},
-			{
-				slug: 'Webhooks',
-				url: 'settings/webhooks',
-				icon: 'icon-image2'
-			}
-		]
+		url: 'settings',
+		navItemName: 'settings'
 	}
 ]

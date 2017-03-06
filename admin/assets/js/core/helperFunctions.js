@@ -1,9 +1,76 @@
+let autoSave = function(form) {
+    form = form;
+    $.ajax({
+        url: postId,
+        type: 'POST',
+        data: form.serialize(), // serializes the form's elements.
+        beforeSend: function(xhr) {
+            // Let them know we are saving
+            $('.auto-save-status').html('<button type="button" class="btn btn-link">Link</button>');
+        },
+        success: function(data) {
+            $('.auto-save-status').html('<button type="button" class="btn btn-link">Saved ' + app.timeAgo() + '</button>');
+        },
+    });
+}
+
+let categoryToUrl = function(categorySlug, categoryName, toDo, el) {
+    let currentUrl = $('input[name="postUrl"');
+    let change = '';
+    let button = $(el);
+    let valArray = currentUrl.val().split('/');
+
+    switch(toDo) {
+        case 'add' :
+            button.addClass('added').text('Remove from URL');
+            let addedLength = $('.category-to-url.added').length;
+            valArray.splice(addedLength, 0, categorySlug)
+        break;
+
+        case 'remove' :
+            button.removeClass('added').text('Add to URL');
+            var index = valArray.indexOf(categorySlug);
+            console.log(index);
+            if (index !== -1) {
+                valArray.splice(index, 1);
+            }
+        break;
+    }
+
+    for (var i = 0; i < valArray.length; i++) {
+        if (valArray[i] === '') {
+            continue;
+        }
+
+        change += '/' + valArray[i];
+    }
+    currentUrl.val(change);
+
+};
+
+let categoryNew = function(category, addToUrl) {
+    let categorySlug = app.sanitizeTitle(category);
+    $('.category-list-input').val('');
+    let item = '<li data-id="' + categorySlug + '" data-name="' + category + '">'+ category + ' <small class="category-list-options"><a>Options</a></small>\
+                    <div class="btn-group hidden category-list-options-buttons" role="group" aria-label="...">\
+                        <button type="button" class="btn btn-default btn-xs category-to-url">Add to URL</button>\
+                        <input type="hidden" data-id="' + categorySlug +'" name="category[][slug]" value="' + categorySlug +'">\
+                        <input type="hidden" data-id="' + categorySlug +'" name="category[][name]" value="' + category +'">\
+                        <button type="button" class="btn btn-default btn-xs category-remove">Remove</button>\
+                    </div>\
+                </li>';
+    $('.category-list').append(item);
+
+    if (addToUrl === true) {
+        categoryToUrl(categorySlug, category, 'add', $('.category-list').find('li[data-id="' + categorySlug + '"] button.category-to-url'));
+    }
+};
+
 let showAttachmentDetails = function(data) {
     let attachmentData = $(data).children('.panel').data();
     $('.file-name').html(attachmentData.name);
     $('.upload-date').html(attachmentData.date);
     $('.file-size').html(attachmentData.size);
-    console.log(attachmentData);
 };
 
 let showSelectedImages = function() {

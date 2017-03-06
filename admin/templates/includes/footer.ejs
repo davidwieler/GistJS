@@ -1,17 +1,18 @@
 <script>
-	var postMeta = '<%- JSON.stringify(postData.postMeta); %>';
-	var adminLocation = '<%- adminLocation%>';
-	var siteUrl = '<%- cms.cmsDetails.url%>';
-	var postId = '<%- postData._id%>';
+	let postMeta = '<%- JSON.stringify(postData.postMeta); %>';
+	let adminLocation = '<%- adminLocation%>';
+	let siteUrl = '<%- cms.cmsDetails.url%>';
+	let postId = '<%- postData._id%>';
+	let autoSaveTimer = '<%- cms.cmsDetails.autoSaveTimer%>';
 </script>
 
 	<!-- Plugin JS files -->
 <%
 	for (var i = plugins.length - 1; i >= 0; i--) {
 		var jsFile = plugins[i].pluginInfo.init;
-		var path = plugins[i].pluginPath;
+		var path = plugins[i].pluginInfo.path;
 		var render = plugins[i].pluginInfo.render;
-		if (render === 'footer') {
+		if (render === 'footer' || typeof render === 'undefined') {
 
 			%><script type="text/javascript" src="/plugins/<%- path %>/<%- jsFile %>"></script><%
 		}

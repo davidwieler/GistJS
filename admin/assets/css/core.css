@@ -5014,6 +5014,19 @@ a.panel-title {
 .file-uploads-display .file-details{
     padding-bottom: 120px;
 }
+
+.category-list li{
+    margin-bottom: 10px;
+}
+
+.category-list li .btn-group{
+    padding: 11px;
+    background: #eee;
+    width: 100%;
+}
+.btn-group-xxs>.btn, .btn-xxs {
+    padding: 2px 5px;
+}
 #upload-input{
     display: none;
 }

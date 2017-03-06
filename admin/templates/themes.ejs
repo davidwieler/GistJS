@@ -1,0 +1,110 @@
+<% include includes/header %>
+<% include includes/pageheader %>
+	<!-- Page container -->
+	<div class="page-container">
+
+		<!-- Page content -->
+		<div class="page-content">
+
+			<!-- Main sidebar -->
+			<div class="sidebar sidebar-main sidebar-default">
+				<div class="sidebar-content">
+
+					<!-- Main navigation -->
+					<div class="sidebar-category sidebar-category-visible">
+						<div class="category-title h6">
+							<span>Navigation</span>
+						</div>
+
+						<div class="category-content no-padding">
+							<% include includes/navigation %>
+						</div>
+					</div>
+					<!-- /main navigation -->
+
+				</div>
+			</div>
+			<!-- /main sidebar -->
+
+
+			<!-- Main content -->
+			<div class="content-wrapper">
+				<%
+					if (typeof msg !== 'undefined') {
+				%>
+					<div class="row">
+							<div class="alert alert-info">
+							<%
+								switch(msg){
+									case '1' :
+										%> <strong>Theme activated</strong> <%
+									break;
+								}
+							%>
+					</div>
+				<%
+					}
+				%>
+
+				<!-- Theme wrap -->
+				<div class="row">
+					<%
+						for (var i = 0; i < themes.length; i++) {
+							%>
+							<div class="col-sm-6 col-lg-4">
+								<div class="thumbnail">
+									<div class="thumb">
+										<img src="/themes/<%- themes[i].localPath%>/<%- themes[i].image%>" alt="">
+										<%
+											if (themes[i].url) {
+												%>
+													<div class="caption-overflow">
+														<span>
+															<a href="<%- themes[i].url;%>" class="btn btn-info">View theme info</a>
+														</span>
+													</div>
+												<%
+											}
+										%>
+
+									</div>
+
+									<div class="caption text-center">
+										<h5 class="text-semibold no-margin"><%- themes[i].name;%></h5>
+										<p class="text-muted mb-15 mt-5"><%- themes[i].description;%></p>
+
+
+										<%
+											if (!themes[i].active) {
+												var formPostTo = '/' + adminLocation+ '/themes';
+												%>
+												<form action="<%- formPostTo;%>" method="POST">
+													<input type="hidden" name="themeId" value="<%- themes[i].id;%>">
+													<button type="submit" class="btn bg-teal-400">Activate</button>
+												</form>
+												<%
+											} else {
+												%><a href="#" class="btn bg-slate-400 disabled">Active theme</a><%
+											}
+										%>
+									</div>
+								</div>
+							</div>
+							<%
+						}
+					%>
+				</div>
+				<!-- /theme wrap -->
+
+			</div>
+
+			</div>
+			<!-- /main content -->
+
+		</div>
+		<!-- /page content -->
+
+	</div>
+	<!-- /page container -->
+
+<% include includes/footer %>
