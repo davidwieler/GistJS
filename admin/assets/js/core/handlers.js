@@ -4,14 +4,18 @@ $(document).ready(function() {
     let timeoutId;
     if (postId) {
         $('body').on('input propertychange change', 'form input, #editor', function() {
-            clearTimeout(timeoutId);
-            timeoutId = setTimeout(function() {
-                // Runs 1 second (1000 ms) after the last change
-                $('input[name="postContent"], input[name="autoSave"]').remove();
-                var content = $('#editor').html();
-                $('.edit-form').append('<input type="hidden" value="'+ content + '" name="postContent"><input type="hidden" value="true" name="autoSave">')
-                autoSave($('.edit-form'));
-            }, autoSaveTimer);
+
+            if ($(this).data('autosave') !== false) {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(function() {
+                    // Runs 1 second (1000 ms) after the last change
+                    $('input[name="postContent"], input[name="autoSave"]').remove();
+                    var content = $('#editor').html();
+                    $('.edit-form').append('<input type="hidden" value="'+ content + '" name="postContent"><input type="hidden" value="true" name="autoSave">')
+                    autoSave($('.edit-form'));
+                }, autoSaveTimer);
+            }
+
         });
     }
     // --------- end auto save functions
@@ -41,6 +45,14 @@ $(document).ready(function() {
         if(e.which === 13) {
            e.preventDefault();
            categoryNew($(this).val(), true)
+        }
+    });
+
+    $('body').on('input change', '.category-list-input', function(e) {
+        $('.submit-new-category').prop('disabled', false);
+
+        if ($(this).val() === '') {
+            $('.submit-new-category').prop('disabled', true);
         }
     });
 
@@ -144,6 +156,7 @@ $(document).ready(function() {
 
     $('body').on('click', '.editor-mode', function() {
         var type = $(this).attr('data-mode');
+        changeEditorMode(type);
         $('.editor-mode').removeClass('btn-info');
         $(this).addClass('btn-info');
     });

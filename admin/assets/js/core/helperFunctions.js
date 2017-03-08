@@ -1,3 +1,21 @@
+let changeEditorMode = function(type) {
+
+    console.log(type);
+    switch(type) {
+        case 'visual' :
+            var HTML_from_editor = editor.getValue(); // true means that code parsing is executed to ensure cleaner code
+            console.log(HTML_from_editor);
+        break;
+        case 'html' :
+            var html = editor.getValue(true); // true means that code parsing is executed to ensure cleaner code
+            console.log(html);
+        break;
+        case 'markdown' :
+
+        break;
+    }
+};
+
 let autoSave = function(form) {
     form = form;
     $.ajax({
@@ -30,7 +48,6 @@ let categoryToUrl = function(categorySlug, categoryName, toDo, el) {
         case 'remove' :
             button.removeClass('added').text('Add to URL');
             var index = valArray.indexOf(categorySlug);
-            console.log(index);
             if (index !== -1) {
                 valArray.splice(index, 1);
             }
