@@ -6,15 +6,15 @@ const path = require('path');
 const ejs = require('ejs');
 const bcrypt   = require('bcrypt-nodejs');
 const adminDir = './node_modules/segments-cms/admin';
-const APP = require('./admin/assets/js/core/app.js');
-const Utils = require('./admin/utils.js');
+const APP = require('./assets/js/core/app.js');
+const Utils = require('./utils.js');
 const Promise = require('bluebird');
 
 (() => {
 
 	CMS = {
 		init: (settings) => {
-			CMS.cmsDetails = require('./config.json');
+			CMS.cmsDetails = require('../config.json');
 			CMS.dbConn = settings.db;
 			CMS.dbAccountConn = settings.accountDb;
 			CMS.adminLocation = settings.adminLocation;
