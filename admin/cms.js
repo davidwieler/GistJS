@@ -27,8 +27,9 @@ const Promise = require('bluebird');
 
 			// Promises
 			CMS.Promise = Promise;
-			CMS.getPostPromise = Promise.promisify( CMS.getPost );
+			CMS.getPostByIdPromise = Promise.promisify( CMS.getPostById );
 			CMS.getCategoriesPromise = Promise.promisify( CMS.getCategories );
+			CMS.getAttachmentsPromise = Promise.promisify( CMS.getAttachments );
 
 			let themes = fs.readdirSync(CMS.themeDir);
 
@@ -497,7 +498,7 @@ const Promise = require('bluebird');
 
 			if (CMS.cmsDetails.postRevisions === true) {
 
-				CMS.getPost(postId, (res) => {
+				CMS.getPostById(postId, (res) => {
 					res.postId = data.postId;
 					delete res._id;
 					CMS.createRevision(res);
@@ -538,13 +539,29 @@ const Promise = require('bluebird');
 
 	    },
 
-	    getPost: (postId, done) => {
+	    getPostById: (postId, done) => {
 			const db = CMS.dbData;
 		    const collection = CMS.dbConn.data.collection;
 
 	        db[collection].findOne({'_id':ObjectId(postId)}, (err, post) => {
 	        	if (err) {
-	        		console.log(err);
+	        		done(err);
+	        	}
+	        	if (post === null) {
+	        		done('not found');
+	        		return;
+	        	}
+	        	done(null, post);
+	        });
+	    },
+
+	    getPost: (search, done) => {
+			const db = CMS.dbData;
+		    const collection = CMS.dbConn.data.collection;
+
+	        db[collection].findOne(search, (err, post) => {
+	        	if (err) {
+	        		done(err);
 	        	}
 	        	if (post === null) {
 	        		done('not found');
@@ -599,7 +616,7 @@ const Promise = require('bluebird');
 					}
 
 				}
-				done({attachmentCount: attachments.length, attachments: returnedAttachments, limits: returnedLimits});
+				done(null, {attachmentCount: attachments.length, attachments: returnedAttachments, limits: returnedLimits});
 			});
 	    },
 
@@ -877,7 +894,7 @@ const Promise = require('bluebird');
 
 				    	let id = urlParams.id.toString();
 
-						CMS.Promise.join(CMS.getPostPromise(id), CMS.getCategoriesPromise(), (post, cats) => {
+						CMS.Promise.join(CMS.getPostByIdPromise(id), CMS.getCategoriesPromise(), (post, cats) => {
 				    		render.postData = post;
 				    		render.categoryList = cats;
 				        	let rendered = ejs.render(data, render, options);

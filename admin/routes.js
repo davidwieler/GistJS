@@ -1,4 +1,5 @@
-module.exports = (CMS, router, app) => {
+const fs = require('fs');
+module.exports = (CMS, router, passport) => {
 
 	router.get('/' + CMS.adminLocation + '/install', (req, res) => {
 		if (fs.existsSync(__dirname + '/admin/.install')) {
@@ -114,7 +115,7 @@ module.exports = (CMS, router, app) => {
 			return;
 		}
 
-		CMS.getAttachments(findAttachments, (result) => {
+		CMS.getAttachments(findAttachments, (err, result) => {
 			CMS.renderAdminTemplate(res, 'media', {attachments: result, limit: findAttachments.limit, msg: msg});
 		});
 	});
@@ -277,7 +278,7 @@ module.exports = (CMS, router, app) => {
 	router.post('/' + CMS.adminLocation + '/api/posts', (req, res) => {
 
 		if (req.body.id) {
-			let post = CMS.getPost(req.body.id, (result) => {
+			let post = CMS.getPostById(req.body.id, (err, result) => {
 				CMS.sendResponse(res, 200, result);
 			});
 			return
