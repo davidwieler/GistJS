@@ -53,9 +53,11 @@ var cmsSettings = {
 app.use("/assets", express.static(path.join(__dirname + '/node_modules/segments-cms/admin/assets') ));
 app.use("/uploads", express.static(cmsSettings.uploadDir ));
 app.use("/plugins", express.static(cmsSettings.pluginDir ));
+app.use("/themes", express.static(cmsSettings.themeDir ));
 app.use('/', cms(cmsSettings, app))
 
 app.listen(port);
+
 
 ```
 
