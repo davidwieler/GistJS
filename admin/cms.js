@@ -26,6 +26,7 @@ const Promise = require('bluebird');
 			CMS.themes = [];
 
 			// Promises
+			CMS.Promise = Promise;
 			CMS.getPostPromise = Promise.promisify( CMS.getPost );
 			CMS.getCategoriesPromise = Promise.promisify( CMS.getCategories );
 
@@ -873,9 +874,10 @@ const Promise = require('bluebird');
 	    	switch (type) {
 	    		case 'edit' :
 			        if (typeof urlParams !== 'undefined') {
+
 				    	let id = urlParams.id.toString();
 
-						Promise.join(CMS.getPostPromise(id), CMS.getCategoriesPromise(), (post, cats) => {
+						CMS.Promise.join(CMS.getPostPromise(id), CMS.getCategoriesPromise(), (post, cats) => {
 				    		render.postData = post;
 				    		render.categoryList = cats;
 				        	let rendered = ejs.render(data, render, options);
