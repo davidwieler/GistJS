@@ -215,7 +215,7 @@ module.exports = (settings, app) => {
 		----------------------------------------------
 	 */
 
-	require('./admin/routes.js')(CMS, router);
+	require('./admin/routes.js')(CMS, router, passport);
 
 	return router;
 

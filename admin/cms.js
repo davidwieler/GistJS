@@ -25,6 +25,10 @@ const Promise = require('bluebird');
 			CMS.passToRender = {};
 			CMS.themes = [];
 
+			// Promises
+			CMS.getPostPromise = Promise.promisify( CMS.getPost );
+			CMS.getCategoriesPromise = Promise.promisify( CMS.getCategories );
+
 			let themes = fs.readdirSync(CMS.themeDir);
 
 			for (let i = themes.length - 1; i >= 0; i--) {
@@ -434,7 +438,10 @@ const Promise = require('bluebird');
 	    	let query = {contentType: 'categoryList'};
 
 	    	db[collection].find(query, (err, result) => {
-	    		done(result[0].categories);
+	    		if (err) {
+	    			done(err);
+	    		}
+	    		done(null, result[0].categories);
 	    	});
 	    },
 
@@ -542,7 +549,7 @@ const Promise = require('bluebird');
 	        		done('not found');
 	        		return;
 	        	}
-	        	done(post);
+	        	done(null, post);
 	        });
 	    },
 
@@ -868,15 +875,12 @@ const Promise = require('bluebird');
 			        if (typeof urlParams !== 'undefined') {
 				    	let id = urlParams.id.toString();
 
-			            CMS.getCategories((result) => {
-			            	render.categoryList = result;
-					    	CMS.getPost(id, (postData) => {
-					    		render.postData = postData;
-					        	let rendered = ejs.render(data, render, options);
-					            CMS.sendResponse(res, 200, rendered);
-					    	});
-			            });
-
+						Promise.join(CMS.getPostPromise(id), CMS.getCategoriesPromise(), (post, cats) => {
+				    		render.postData = post;
+				    		render.categoryList = cats;
+				        	let rendered = ejs.render(data, render, options);
+				            CMS.sendResponse(res, 200, rendered);
+						});
 
 			        } else {
 			        	let rendered = ejs.render(data, render, options);
