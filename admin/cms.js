@@ -347,11 +347,11 @@ const Promise = require('bluebird');
 
 	    	db[collection].insert(data, (err, result) => {
 	        	if (err) {
-	        		console.log(err);
+	        		done(err);
 	        	}
 
 	        	if (typeof done === 'function') {
-	        		done(result._id);
+	        		done(null, result._id);
 	        	}
 	    	})
 
@@ -363,11 +363,11 @@ const Promise = require('bluebird');
 
 	    	db[collection].remove({'_id':ObjectId(postId)}, (err, result) => {
 	        	if (err) {
-	        		console.log(err);
+	        		done(err);
 	        	}
 
 	        	if (typeof done === 'function') {
-	        		done(result);
+	        		done(null, result);
 	        	}
 	    	})
 
@@ -418,7 +418,7 @@ const Promise = require('bluebird');
 			    	}
 			    }
 
-			    done('done');
+			    done(null, 'done');
 
 			});
 
@@ -473,7 +473,12 @@ const Promise = require('bluebird');
 		    	}
 
 		    	db[collection].update(query, updateData, {upsert: true}, (err, result) => {
-		    		console.log(result);
+		        	if (err) {
+		        		done(err);
+		        	}
+		        	if (typeof done === 'function') {
+		        		done(null, response);
+		        	}
 		    	});
 	    	});
 
@@ -510,12 +515,11 @@ const Promise = require('bluebird');
 				        {'_id':ObjectId(postId)},
 				        { $set: data},
 				        (err, response) => {
-				        	console.log(response);
 				        	if (err) {
-				        		console.log(err);
+				        		done(err);
 				        	}
 				        	if (typeof done === 'function') {
-				        		done(response);
+				        		done(null, response);
 				        	}
 
 				        }
@@ -527,10 +531,10 @@ const Promise = require('bluebird');
 			        { $set: data},
 			        (err, response) => {
 			        	if (err) {
-			        		console.log(err);
+			        		done(err);
 			        	}
 			        	if (typeof done === 'function') {
-			        		done(response);
+			        		done(null, response);
 			        	}
 
 			        }
@@ -577,9 +581,9 @@ const Promise = require('bluebird');
 
 	        db[collection].findOne({'_id':ObjectId(attachmentId), contentType: 'attachment'}, (err, post) => {
 	        	if (err) {
-	        		console.log(err);
+	        		done(err);
 	        	}
-	        	done(post);
+	        	done(null, post);
 	        });
 	    },
 
