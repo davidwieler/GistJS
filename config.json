@@ -14,7 +14,7 @@
 	"maintenance": false,
 	"prettyPagination": true,
 	"paginateBy": "page",
-	"postContentStorageType": "html", // or "md" for markdown storage
+	"postContentStorageType": "html",
 	"autoSaveTimer": "3000",
 	"thumbnails": [
 		{
