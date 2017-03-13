@@ -1,4 +1,38 @@
 (function(exports){
+
+	exports.alert = function(type) {
+		let className;
+		let text;
+
+		switch(type){
+			case '1' :
+				className = 'alert-info';
+				text = '<strong>Post created</strong>';
+			break;
+			case '2' :
+				className = 'alert-info';
+				text = '<strong>Post updated</strong>';
+			break;
+			case '3' :
+				className = 'alert-danger';
+				text = '<strong>Post not updated. Problem writing to the database.</strong>';
+			break;
+			case '4' :
+				className = 'alert-info';
+				text = '<strong>Post has been trashed.</strong>';
+			break;
+			case '99' :
+				className = 'alert-danger';
+				text = '<strong>Post not found. Starting over.</strong>';
+			break;
+			default :
+				className = 'alert-info';
+				text = '<strong>Uhhmm... Whatcha do\'n there?</strong>';
+			break;
+		}
+
+		return '<div class="alert ' + className + '">' + text + '</div>';
+	};
     exports.timeAgo = function(dateString, format) {
         var rightNow = new Date();
 

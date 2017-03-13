@@ -3,6 +3,7 @@ module.exports = (settings, app) => {
 	// Setting up the CMS.
 	const express = require('express');
 	const router = express.Router();
+	const bodyParser = require('body-parser');
 	const routerAdditions = [];
 	const passport = require('passport');
 	const helmet = require('helmet');
@@ -15,6 +16,9 @@ module.exports = (settings, app) => {
 	const mongojs = require('mongojs');
 	const db = require('./admin/db.js');
 	const cmsConfig = require('./admin/cms.js');
+
+	app.use(bodyParser.json());
+	app.use(bodyParser.urlencoded({extended: true}));
 
 	// Initialize the CMS.
 	CMS.init(settings);
@@ -86,6 +90,8 @@ module.exports = (settings, app) => {
 		// Check if the requested URL is coming from the admin panel
 		if (CMS.passThroughUrl(requestUrl) === true) {
 
+			//CMS.deleteTrashed();
+
 			// clear plugin navigation additions
 			CMS.navigation = require('./admin/navigation.js');
 
@@ -95,7 +101,6 @@ module.exports = (settings, app) => {
 			for (var i = adminPlugins.length - 1; i >= 0; i--) {
 
 				let requirePath = path.join(adminPlugins[i].pluginPath, adminPlugins[i].pluginInfo.require);
-
 				let thisPlugin = require(requirePath);
 				thisPlugin(CMS, router).init();
 

@@ -94,7 +94,7 @@
 		        	</div>
                 	<div class="col-md-9 uploads-content image-display">
                 		<div class="thumbnail-display">
-                			<input id="upload-input" type="file" name="uploads[]" multiple="multiple">
+                			<input id="upload-input" type="file" name="uploads[]" multiple="multiple" accept="image/*">
 							<div class="row file-details">
 							</div>
                 		</div>
@@ -203,33 +203,9 @@
 
 			<!-- Main content -->
 			<div class="content-wrapper">
-				<%
-					if (typeof alert !== 'undefined') {
-						%>
-
-				<div class="row">
-						<div class="alert alert-info">
-						<%
-							switch(alert){
-								case '1' :
-									%> <strong>Post created</strong> <%
-								break;
-								case '2' :
-									%> <strong>Post updated</strong>  <%
-								break;
-								case '99' :
-									%> <strong>Post not found. Starting over.</strong>  <%
-								break;
-								default :
-									%> <strong>Uhhmm... Whatcha do'n there?</strong> <%
-								break;
-							}
-						%>
-				</div>
-						<%
-					}
-
-				%>
+				<% if (typeof alert !== 'undefined') { %>
+					<%- app.alert(alert);%>
+				<% } %>
 				<form class="row edit-form <%- formClass%>" action="<%- formPostTo%>" method="post">
 					<input type="hidden" name="user" value="<%- user.username%>">
 					<input type="hidden" name="userId" value="<%- user._id%>">
@@ -244,6 +220,34 @@
 						    });
 						</script>
 						<!-- /edit post -->
+
+						<!-- /Post revisions -->
+						<% if (cms.cmsDetails.postRevisions && postRevisions.length >= 1) { %>
+							<div class="panel panel-white revision-panel">
+								<div class="panel-heading">
+									<h6 class="panel-title">Post Revisions</h6>
+								</div>
+								<div class="panel-body revision-wrap">
+									<ul class="list-unstyled">
+									<%
+										for (var i = postRevisions.length - 1; i >= 0; i--) {
+											var title = postRevisions[i].postTitle;
+											var user = postRevisions[i].user || 'david wieler';
+											var postId = postRevisions[i]._id;
+											var status = postRevisions[i].status;
+											%>
+												<li class="post-revision">
+													<%- user%>, <%- app.timeAgo(postRevisions[i].updatedTimestamp, 'ddd, mmm ddS yyyy h:MMtt'); %> 
+													<a href="/<%-adminLocation%>/post-revision/<%-postId%>">(<%- app.formatDate(postRevisions[i].timestamp, 'ddd, mmm ddS yyyy h:MMtt'); %>)</a>
+												</li>
+											<%
+										}
+									%>
+									</ul>
+								</div>
+							</div>
+						<% } %>
+						<!-- /post revisions -->
 					</div>
 					<div class="col-md-3">
 						<div class="panel panel-white publish-panel">
@@ -314,10 +318,8 @@
 											        <button class="btn bg-info submit-new-category" type="button" disabled><i class="icon-plus2"></i></button>
 											   </span>
 											</div>
-											
 											<br />
 											<%
-											console.log();
 												if (typeof categoryList !== 'undefined') {
 													%>
 											<select class="selectpicker form-control show-menu-arrow" title="Add a category">
@@ -347,39 +349,41 @@
 											<ul class="category-list list-unstyled">
 												<%
 													let categories = postData.category;
-													if (categories.slug) {
-														if (typeof categories !== 'undefined') {
-															let urlArray = postData.postUrl.split('/');
-															let inUrl = '<button type="button" class="btn btn-default btn-xs category-to-url">Add to URL</button>';
+													if (categories) {
+														if (categories.slug) {
+															if (typeof categories !== 'undefined') {
+																let urlArray = postData.postUrl.split('/');
+																let inUrl = '<button type="button" class="btn btn-default btn-xs category-to-url">Add to URL</button>';
 
-															var slugs = categories.slug;
-															var names = categories.name;
+																var slugs = categories.slug;
+																var names = categories.name;
 
-															if (typeof slugs === 'string') {
-																slugs = [slugs];
-																names = [names];
-															}
-
-															for (var s = 0; s < slugs.length; s++) {
-																for (var u = urlArray.length - 1; u >= 0; u--) {
-
-																	if (urlArray[u] === slugs[s]) {
-																		inUrl = '<button type="button" class="btn btn-default btn-xs category-to-url added">Remove from URL</button>'
-																	}
+																if (typeof slugs === 'string') {
+																	slugs = [slugs];
+																	names = [names];
 																}
 
-															    let item = '<li data-id="' + slugs[s] + '" data-name="' + names[s] + '">'+ names[s] + ' <small class="category-list-options"><a>Options</a></small>\
-														                    <div class="btn-group hidden category-list-options-buttons" role="group" aria-label="...">\
-														                        ' + inUrl + '\
-														                        <input type="hidden" data-id="' + slugs[s] +'" name="category[][slug]" value="' + slugs[s] +'">\
-														                        <input type="hidden" data-id="' + slugs[s] +'" name="category[][name]" value="' + names[s] +'">\
-														                        <button type="button" class="btn btn-default btn-xs category-remove">Remove</button>\
-														                    </div>\
-														                </li>';
-														        %><%- item%><%
+																for (var s = 0; s < slugs.length; s++) {
+																	for (var u = urlArray.length - 1; u >= 0; u--) {
+
+																		if (urlArray[u] === slugs[s]) {
+																			inUrl = '<button type="button" class="btn btn-default btn-xs category-to-url added">Remove from URL</button>'
+																		}
+																	}
+
+																    let item = '<li data-id="' + slugs[s] + '" data-name="' + names[s] + '">'+ names[s] + ' <small class="category-list-options"><a>Options</a></small>\
+															                    <div class="btn-group hidden category-list-options-buttons" role="group" aria-label="...">\
+															                        ' + inUrl + '\
+															                        <input type="hidden" data-id="' + slugs[s] +'" name="category[][slug]" value="' + slugs[s] +'">\
+															                        <input type="hidden" data-id="' + slugs[s] +'" name="category[][name]" value="' + names[s] +'">\
+															                        <button type="button" class="btn btn-default btn-xs category-remove">Remove</button>\
+															                    </div>\
+															                </li>';
+															        %><%- item%><%
+																}
+															} else {
+																%>None<%
 															}
-														} else {
-															%>None<%
 														}
 													}
 												%>

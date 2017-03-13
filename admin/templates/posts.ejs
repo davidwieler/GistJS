@@ -30,27 +30,9 @@
 
 			<!-- Main content -->
 			<div class="content-wrapper">
-				<%
-					if (typeof data.msg !== 'undefined') {
-						%>
-
-				<div class="row">
-						<div class="alert alert-info">
-						<%
-							switch(data.msg){
-								case '3' :
-									%> <strong>Post has been trashed. Trashed posts will auto delete in 24 hours.</strong> <%
-								break;
-								default :
-									%> <strong>Uhhmm... Whatcha do'n there?</strong> <%
-								break;
-							}
-						%>
-				</div>
-						<%
-					}
-
-				%>
+				<% if (typeof data.msg !== 'undefined') { %>
+					<%- app.alert(data.msg);%>
+				<% } %>
 
 				<!-- Single line -->
 				<div class="panel panel-white">

@@ -1,0 +1,72 @@
+<% include includes/header %>
+<% include includes/pageheader %>
+	<!-- Page container -->
+	<div class="page-container">
+
+		<!-- Page content -->
+		<div class="page-content">
+
+			<!-- Main sidebar -->
+			<div class="sidebar sidebar-main sidebar-default">
+				<div class="sidebar-content">
+
+					<!-- Main navigation -->
+					<div class="sidebar-category sidebar-category-visible">
+						<div class="category-title h6">
+							<span>Navigation</span>
+						</div>
+
+						<div class="category-content no-padding">
+							<% include includes/navigation %>
+						</div>
+					</div>
+					<!-- /main navigation -->
+
+				</div>
+			</div>
+			<!-- /main sidebar -->
+
+
+			<!-- Main content -->
+			<div class="content-wrapper">
+				<% if (typeof alert !== 'undefined') { %>
+					<%- app.alert(alert);%>
+				<% } %>
+
+				<!-- Single line -->
+				<div class="panel panel-white">
+					<div class="panel-heading">
+						<h6 class="panel-title">Dashboard Stuff</h6>
+					</div>
+
+					<div class="panel-body">
+						<div class="row">
+							<div class="col-md-6">
+								<h6>Older Version</h6>
+								<%
+									//console.log(revision);
+								%>
+							</div>
+							<div class="col-md-6">
+								<h6>Current Version</h6>
+								<%
+									//console.log(postData);
+								%>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- /single line -->
+
+			</div>
+
+			</div>
+			<!-- /main content -->
+
+		</div>
+		<!-- /page content -->
+
+	</div>
+	<!-- /page container -->
+
+<% include includes/footer %>

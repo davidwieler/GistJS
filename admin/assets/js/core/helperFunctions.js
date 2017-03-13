@@ -149,12 +149,12 @@ let getAttachments = function(callback, limit, postId, offset, search) {
 let appendAttachments = function(res, empty) {
 
     let insertInto = $('.thumbnail-display .file-details');
+    const attachments = JSON.parse(res);
+    const a = attachments.attachments;
 
     if (empty === true) {
         insertInto.empty();
     }
-    let attachments = JSON.parse(res);
-    let a = attachments.attachments.attachments;
 
     for (let i = 0; i < a.length; i++) {
         insertInto.prepend(app.fileList(a[i], false));
@@ -169,7 +169,9 @@ let appendAttachments = function(res, empty) {
                 'id': a[i]._id,
                 'size': app.fileSizeConvert(a[i].size, true),
                 'date': app.timeAgo(a[i].timestamp, 'ddd, mmm ddS yyyy h:MMtt'),
-                'location': a[i].realPath
+                'location': a[i].realPath,
+                'type': a[i].fileType,
+                'timestamp': a[i].timestamp
             });
     }
 };
@@ -187,16 +189,12 @@ let getFileList = function(files){
         let formData = new FormData();
         let reader = new FileReader();
         reader.onload = $.proxy(function(file, $fileList, event) {
-            //let img = file.type.match('image.*') ? "<img src='" + event.target.result + "' /> " : "";
-            //$fileList.prepend( $("<li>").append( img + '<p class="file-details">' + file.name + '</p>' ) );
+
         }, this, file, $("#file-upload-list"));
         reader.readAsDataURL(file);
         formData.append(postId, file, file.name);
         fileUploads(formData, file.name);
     });
-
-    //$('.progress-bar span').text('0%');
-    //$('.progress-bar').addClass('active progress-bar-striped bg-primary').removeClass('bg-success').width('0%');
 
 };
 

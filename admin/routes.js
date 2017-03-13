@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 module.exports = (CMS, router, passport) => {
 
 	router.get('/' + CMS.adminLocation + '/install', (req, res) => {
@@ -85,7 +86,7 @@ module.exports = (CMS, router, passport) => {
 		if (typeof offset !== 'undefined') {
 			findPosts.offset = offset
 		}
-		CMS.getPosts(findPosts, (result) => {
+		CMS.getPosts(findPosts, (err, result) => {
 			CMS.renderAdminTemplate(res, 'posts', {posts: result, limit: findPosts.limit, msg: msg});
 		});
 
@@ -129,7 +130,7 @@ module.exports = (CMS, router, passport) => {
 	});
 
 	router.post('/' + CMS.adminLocation + '/edit', CMS.isLoggedIn, (req, res) => {
-		CMS.createContent(req.body, 'post', (result) => {
+		CMS.createContent(req.body, 'post', (err, result) => {
 			res.redirect('/' + CMS.adminLocation + '/edit/' + result + '?msg=1');
 		});
 	});
@@ -143,6 +144,10 @@ module.exports = (CMS, router, passport) => {
 		}
 	});
 
+	router.get('/' + CMS.adminLocation + '/post-revision/:id', CMS.isLoggedIn, (req, res) => {
+		CMS.renderAdminTemplate(res, 'post-revision', req.params);
+	});
+
 	router.post('/' + CMS.adminLocation + '/edit/:id', CMS.isLoggedIn, (req, res) => {
 		const postId = req.params.id;
 		let autoSave = false;
@@ -152,7 +157,8 @@ module.exports = (CMS, router, passport) => {
 			autoSave = true;
 			delete req.body.autoSave;
 		}
-		CMS.updatePost(req.body, req.body.postId, (result) => {
+		CMS.updatePost(req.body, req.body.postId, (err, result) => {
+			console.log(result);
 
 			if (result.ok === 1) {
 				if (autoSave === true) {
@@ -165,6 +171,8 @@ module.exports = (CMS, router, passport) => {
 				} else {
 					res.redirect('/' + CMS.adminLocation + '/edit/' + postId + '?msg=2');
 				}
+			} else {
+				res.redirect('/' + CMS.adminLocation + '/edit/' + postId + '?msg=3');
 			}
 		});
 	});
@@ -179,6 +187,10 @@ module.exports = (CMS, router, passport) => {
 		res.redirect('/' + CMS.adminLocation + '/settings?msg=1');
 	});
 
+	router.get('/' + CMS.adminLocation + '/analytics', CMS.isLoggedIn, (req, res) => {
+		CMS.renderAdminTemplate(res, 'analytics', req.params);
+	});
+
 	// Theme routes
 	router.get('/' + CMS.adminLocation + '/themes', CMS.isLoggedIn, (req, res) => {
 		let msg = req.query.msg;
@@ -186,7 +198,7 @@ module.exports = (CMS, router, passport) => {
 	});
 
 	router.post('/' + CMS.adminLocation + '/themes', CMS.isLoggedIn, (req, res) => {
-		CMS.themeSwitch(req.body.themeId, (newTheme) => {
+		CMS.themeSwitch(req.body.themeId, res, (newTheme) => {
 			res.redirect('/' + CMS.adminLocation + '/themes?msg=1');
 		});
 	});
@@ -194,6 +206,13 @@ module.exports = (CMS, router, passport) => {
 	//File uploads
 
 	router.post('/' + CMS.adminLocation + '/upload', (req, res) => {
+
+		/*
+			TODO:
+			- Add support for Adobe file formats (PSD, AI, EPS, etc..)
+			- Set file size limit somehow
+			- Set file type white/blacklist
+		*/
 		let formidable = require('formidable');
 
 		// create an incoming form object
@@ -225,7 +244,7 @@ module.exports = (CMS, router, passport) => {
 			let fileExt = fileName.split('.').pop();
 			let named = fileName.substr(0, fileName.lastIndexOf('.'))
 
-			CMS.getAttachments({search:{originalName: data.originalName}}, (result) => {
+			CMS.getAttachments({search:{originalName: data.originalName}}, (err, result) => {
 				if (result.attachmentCount >= 1) {
 					//data.name = named + '_' + result.length + '.' + fileExt;
 					named = named + '_' + result.attachmentCount;
@@ -311,7 +330,7 @@ module.exports = (CMS, router, passport) => {
 	router.post('/' + CMS.adminLocation + '/api/attachments', (req, res) => {
 
 		if (req.body.id) {
-			let post = CMS.getAttachment(req.body.id, (result) => {
+			let post = CMS.getAttachment(req.body.id, (err, result) => {
 				CMS.sendResponse(res, 200, result);
 			});
 			return
@@ -333,8 +352,9 @@ module.exports = (CMS, router, passport) => {
 			findAttachments.search = req.body.search;
 		}
 
-		CMS.getAttachments(findAttachments, (result) => {
-			CMS.sendResponse(res, 200, {attachments: result});
+		CMS.getAttachments(findAttachments, (err, result) => {
+			console.log(result);
+			CMS.sendResponse(res, 200, result);
 		});
 
 	});

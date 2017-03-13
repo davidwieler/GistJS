@@ -28,8 +28,12 @@ const Promise = require('bluebird');
 			// Promises
 			CMS.Promise = Promise;
 			CMS.getPostByIdPromise = Promise.promisify( CMS.getPostById );
+			CMS.getPostsPromise = Promise.promisify( CMS.getPosts );
+			CMS.getRevisionByIdPromise = Promise.promisify( CMS.getRevisionById );
+			CMS.getRevisionsPromise = Promise.promisify( CMS.getRevisions );
 			CMS.getCategoriesPromise = Promise.promisify( CMS.getCategories );
 			CMS.getAttachmentsPromise = Promise.promisify( CMS.getAttachments );
+			CMS.getConfigPromise = Promise.promisify( CMS.getConfig );
 
 			let themes = fs.readdirSync(CMS.themeDir);
 
@@ -210,9 +214,24 @@ const Promise = require('bluebird');
 
 		},
 
-		themeSwitch: (newThemeId, done) => {
+		getConfig: (type, done) => {
+			let config;
+			switch(type) {
+				case 'main' :
+					config = require('../config.json');
+				break;
 
-			let themes = CMS.themes;
+				case 'active-theme' :
+					config = require(path.join(CMS.activeTheme.path, 'theme.json'));
+				break;
+			}
+
+			done(null, config);
+		},
+
+		themeSwitch: (newThemeId, res, done) => {
+
+			const themes = CMS.themes;
 			let updateThemes = [];
 			for (var i = 0; i < themes.length; i++) {
 
@@ -221,7 +240,13 @@ const Promise = require('bluebird');
 
 				if (themes[i].id === Number(newThemeId)) {
 					CMS.activeTheme = themes[i];
+					CMS.activeTheme.path = path.join(CMS.themeDir, themes[i].localPath);
 					themes[i].active = themeFileInfo.active = true;
+
+					if (themeFileInfo.onInstall) {
+						const install = require(path.join(CMS.activeTheme.path, themeFileInfo.onInstall));
+						install(CMS, themes[i], res).init();
+					}
 				} else {
 					themes[i].active = themeFileInfo.active = false;
 				}
@@ -266,19 +291,35 @@ const Promise = require('bluebird');
 
 		deleteTrashed: () => {
 
-			let allPosts = CMS.getPosts(100, (posts) => {
-				let postList = posts.posts;
-				for (let i = postList.length - 1; i >= 0; i--) {
-					let ts = postList[i].timestamp;
-					let postId = postList[i]._id;
-					let status = postList[i].status;
-					let now = +new Date();
-					let calc = (ts + Number(CMS.activeTheme.deleteAfter));
+			CMS.Promise.join(CMS.getPostsPromise(100), (posts) => {
+				return {posts: posts};
+			})
+			.then((posts) => {
+				const postsLoop = posts.posts.posts;
+				let timestamp;
 
-					if (calc > now && status === 'trash') {
-						CMS.deletePost(postId);
+				for (var i = postsLoop.length - 1; i >= 0; i--) {
+					const postStatus = postsLoop[i].status;
+					const postTimestamp = postsLoop[i].timestamp;
+					const postUpdatedTimestamp = postsLoop[i].updatedTimestamp;
+
+					if (postUpdatedTimestamp) {
+						timestamp = postUpdatedTimestamp;
+					} else {
+						timestamp = postTimestamp;
+					}
+
+					const deleteAfterCalc = (timestamp + CMS.cmsDetails.deleteAfter);
+					const deleteInt = (+new Date() - deleteAfterCalc) / 1000;
+
+					if (deleteInt > CMS.cmsDetails.deleteAfter) {
+						CMS.deletePost(postsLoop[i]._id);
 					}
 				}
+			})
+			.catch((e) => {
+				console.log('test');
+				console.log('error: ' + e);
 			});
 		},
 
@@ -363,6 +404,7 @@ const Promise = require('bluebird');
 
 	    	db[collection].remove({'_id':ObjectId(postId)}, (err, result) => {
 	        	if (err) {
+	        		console.log('test');
 	        		done(err);
 	        	}
 
@@ -424,8 +466,31 @@ const Promise = require('bluebird');
 
 	    },
 
-	    getRevisions: (originalPostId, done) => {
+	    getRevisionById: (revId, done) => {
+			const db = CMS.dbData;
+		    const collection = CMS.dbConn.data.collection;
 
+	        db.postrevisions.findOne({'_id':ObjectId(revId)}, (err, post) => {
+	        	if (err) {
+	        		done(err);
+	        	}
+	        	if (post === null) {
+	        		done('Revision id: ' + postId + ' not found');
+	        		return;
+	        	}
+
+	        	done(null, post);
+	        });
+	    },
+
+	    getRevisions: (originalPostId, done) => {
+	    	const db = CMS.dbData;
+			db.postrevisions.find({postId: originalPostId}, (err, posts) => {
+	    		if (err) {
+	    			done(err);
+	    		}
+	    		done(null, posts);
+	    	});
 	    },
 
 	    createRevision: (data) => {
@@ -443,7 +508,13 @@ const Promise = require('bluebird');
 	    		if (err) {
 	    			done(err);
 	    		}
-	    		done(null, result[0].categories);
+
+	    		if (result.length === 0) {
+	    			done(null, 0);
+	    		} else {
+	    			done(null, result[0].categories);
+	    		}
+
 	    	});
 	    },
 
@@ -487,12 +558,8 @@ const Promise = require('bluebird');
 	    },
 
 	    updatePost: (data, postId, done) => {
-
-	    	console.log(data);
 			const db = CMS.dbData;
 		    const collection = CMS.dbConn.data.collection;
-
-			data.postContent = APP.sanitizeHtml(data.postContent);
 
 			if (data.category) {
 				CMS.createCategory(data.category[0]);
@@ -501,29 +568,33 @@ const Promise = require('bluebird');
 				data.category = {};
 			}
 
+			data.updatedUser = data.user;
+			data.updatedUserId = data.userId;
+			data.updatedTimestamp = +new Date();
+			delete data.user;
+			delete data.userId;
+
 			if (CMS.cmsDetails.postRevisions === true) {
 
-				CMS.getPostById(postId, (res) => {
+				CMS.getPostById(postId, (err, res) => {
 					res.postId = data.postId;
 					delete res._id;
 					CMS.createRevision(res);
-
-					delete data.postId;
-					data.updatedTimestamp = +new Date();
 
 				    db[collection].update(
 				        {'_id':ObjectId(postId)},
 				        { $set: data},
 				        (err, response) => {
+
 				        	if (err) {
 				        		done(err);
 				        	}
-				        	if (typeof done === 'function') {
-				        		done(null, response);
-				        	}
+
+				        	done(null, response);
 
 				        }
 				    )
+
 				});
 			} else {
 			    db[collection].update(
@@ -552,9 +623,10 @@ const Promise = require('bluebird');
 	        		done(err);
 	        	}
 	        	if (post === null) {
-	        		done('not found');
+	        		done('Post id: ' + postId + ' not found');
 	        		return;
 	        	}
+
 	        	done(null, post);
 	        });
 	    },
@@ -568,7 +640,7 @@ const Promise = require('bluebird');
 	        		done(err);
 	        	}
 	        	if (post === null) {
-	        		done('not found');
+	        		done('Post id: ' + postId + ' not found');
 	        		return;
 	        	}
 	        	done(null, post);
@@ -605,6 +677,10 @@ const Promise = require('bluebird');
 			let calc = (limit - 1);
 			db[collection].find(search).sort({timestamp: -1}, (err, attachments) => {
 
+				if (err) {
+					done(err);
+				}
+
 				for (var i = 0; i < attachments.length; i++) {
 					if (returnedLimits.offset >= 1) {
 						calc = (limit - 1 + returnedLimits.offset);
@@ -620,6 +696,10 @@ const Promise = require('bluebird');
 					}
 
 				}
+
+				console.log(attachments);
+
+				console.log(attachments.length);
 				done(null, {attachmentCount: attachments.length, attachments: returnedAttachments, limits: returnedLimits});
 			});
 	    },
@@ -643,6 +723,10 @@ const Promise = require('bluebird');
     		//db[CMS.dbConn.collection].find(search).limit(Number(limit)).sort({timestamp: -1}, (err, posts) => {
 			db[collection].find(search).sort({timestamp: -1}, (err, posts) => {
 
+				if (err) {
+					done(err);
+				}
+
 				for (var i = 0; i < posts.length; i++) {
 					if (returnedLimits.offset >= 1) {
 						calc = (limit - 1 + returnedLimits.offset);
@@ -658,7 +742,7 @@ const Promise = require('bluebird');
 					}
 
 				}
-				done({postCount: posts.length, posts: returnedPosts, limits: returnedLimits});
+				done(null, {postCount: posts.length, posts: returnedPosts, limits: returnedLimits});
 			});
 	    },
 
@@ -883,6 +967,7 @@ const Promise = require('bluebird');
 	        	msg: msg,
 	        	postData: {},
 	        	user: user,
+	        	postRevisions: 0,
 	        	plugins: CMS.activePlugins.admin,
 	        	passedToRender: CMS.passToRender
 	        };
@@ -892,31 +977,64 @@ const Promise = require('bluebird');
 	        }
 
 	    	let data = fs.readFileSync(options.filename, 'utf-8');
+
+	    	let rendered;
 	    	switch (type) {
 	    		case 'edit' :
 			        if (typeof urlParams !== 'undefined') {
 
 				    	let id = urlParams.id.toString();
 
-						CMS.Promise.join(CMS.getPostByIdPromise(id), CMS.getCategoriesPromise(), (post, cats) => {
+						CMS.Promise.join(CMS.getPostByIdPromise(id), CMS.getCategoriesPromise(), CMS.getRevisionsPromise(id), (post, cats, revisions) => {
 				    		render.postData = post;
-				    		render.categoryList = cats;
+				    		render.categoryList = cats || undefined;
+				    		render.postRevisions = revisions
 				        	let rendered = ejs.render(data, render, options);
 				            CMS.sendResponse(res, 200, rendered);
 						});
 
 			        } else {
-			        	let rendered = ejs.render(data, render, options);
+			        	rendered = ejs.render(data, render, options);
 			            CMS.sendResponse(res, 200, rendered);
 			        }
 	    		break;
 
-	    		case '' :
+	    		case 'post-revision' :
+	    			let id = urlParams.id.toString();
+	    			let revisionString;
+	    			CMS.getRevisionByIdPromise(id)
+	    			.then((revision) => {
+	    				revisionString = revision;
+	    				return CMS.getPostByIdPromise(revision.postId);
+	    			})
+	    			.then((post) => {
+						require('colors')
+						var jsdiff = require('diff');
+
+						var diff = jsdiff.diffWords(revisionString.postContent, post.postContent, [{newlineIsToken: true}]);
+
+						diff.forEach(function(part){
+							// green for additions, red for deletions
+							// grey for common parts
+							var color = part.added ? 'green' :
+							part.removed ? 'red' : 'grey';
+							console.log(color);
+							console.log(part.value[color]);
+						});
+						console.log(diff);
+	    				render.revision = diff;
+	    				render.postData = post;
+			        	rendered = ejs.render(data, render, options);
+			            CMS.sendResponse(res, 200, rendered);
+	    			})
+	    			.catch((e) => {
+	    				console.log(e);
+	    			})
 
 	    		break;
 
 	    		default :
-		        	let rendered = ejs.render(data, render, options);
+		        	rendered = ejs.render(data, render, options);
 		            CMS.sendResponse(res, 200, rendered);
 	    		break;
 	    	}
