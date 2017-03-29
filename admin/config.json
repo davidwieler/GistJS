@@ -1,9 +1,9 @@
 {
-	"name": "site test",
-	"url": "http://localhost:7637",
+	"name": "",
+	"url": "",
 	"title": "",
 	"tagline": "",
-	"adminEmail": "davidw@focuswebmedia.com",
+	"adminEmail": "",
 	"custom404": true,
 	"custom500": false,
 	"deleteAfter": 86400,
@@ -45,16 +45,5 @@
 				"200"
 			]
 		}
-	],
-	"adminLocation": "spry-admin",
-	"cmsLocation": "blog",
-	"dbHost": "localhost",
-	"dbUsername": "",
-	"dbPassword": "",
-	"dbName": "cms",
-	"dbPort": "27017",
-	"dbData": "data",
-	"dbAccounts": "accounts",
-	"dbSessions": "sessions",
-	"currentUser": "dave"
+	]
 }
