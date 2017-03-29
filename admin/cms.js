@@ -1,6 +1,7 @@
 const mongojs = require('mongojs');
 const ObjectId = mongojs.ObjectId;
 const fs = require('fs');
+const db = require('./db.js');
 const async = require('async');
 const path = require('path');
 const ejs = require('ejs');
@@ -14,10 +15,40 @@ const Promise = require('bluebird');
 
 	CMS = {
 		init: (settings) => {
-			CMS.cmsDetails = require('../config.json');
-			CMS.dbConn = settings.db;
-			CMS.dbAccountConn = settings.accountDb;
-			CMS.adminLocation = settings.adminLocation;
+			CMS.cmsDetails = require(__dirname + '/config.json');
+			CMS.adminDir = adminDir;
+
+			if (typeof CMS.cmsDetails.dbHost === 'undefined') {
+				return;
+			}
+
+			if (CMS.cmsDetails.dbUsername && CMS.cmsDetails.dbPassword) {
+				dbConnectionUrl = `${CMS.cmsDetails.dbUsername}:${CMS.cmsDetails.dbPassword}@${CMS.cmsDetails.dbHost}:${CMS.cmsDetails.dbPort}/${CMS.cmsDetails.dbName}`;
+			} else {
+				dbConnectionUrl = `${CMS.cmsDetails.dbHost}:${CMS.cmsDetails.dbPort}/${CMS.cmsDetails.dbName}`;
+			}
+
+			CMS.dbConn = {
+				data: {
+					url: dbConnectionUrl,
+					collection: CMS.cmsDetails.dbData
+				},
+				accounts: {
+					url: dbConnectionUrl,
+					collection: CMS.cmsDetails.dbAccounts
+				},
+				sessions: {
+					url: dbConnectionUrl,
+					collection: CMS.cmsDetails.dbSessions
+				},
+
+			};
+
+			// Define the database details.
+			CMS.dbData = db(mongojs, CMS.dbConn).dataInit();
+			CMS.dbAccounts = db(mongojs, CMS.dbConn).accountInit();
+
+			CMS.adminLocation = CMS.cmsDetails.adminLocation;
 			CMS.themeDir = settings.themeDir;
 			CMS.pluginDir = settings.pluginDir;
 			CMS.uploadDir = settings.uploadDir;
@@ -198,9 +229,8 @@ const Promise = require('bluebird');
 
 		writeConfig: (toWrite, done) => {
 			let configFile = __dirname + '/config.json';
-            let config = require('./config.json');
-            config.name = toWrite.name;
-            config.url = toWrite.url;
+            let config = require(configFile);
+			Object.assign(config, toWrite);
 
             let string = JSON.stringify(config, null, '\t');
 
@@ -218,7 +248,7 @@ const Promise = require('bluebird');
 			let config;
 			switch(type) {
 				case 'main' :
-					config = require('../config.json');
+					config = require(__dirname + '/config.json');
 				break;
 
 				case 'active-theme' :
@@ -788,6 +818,20 @@ const Promise = require('bluebird');
 			return templateNames;
 	    },
 
+	    testDbConnection: (testUrl, testCollection, done) => {
+	    	const db = mongojs(testUrl, [testCollection]);
+
+				db.on('error', function(err) {});
+
+		        db[testCollection].findOne({}, (err, post) => {
+		        	if (err) {
+		        		done(err.message);
+		        		return;
+		        	}
+		        	done(null, 'tets');
+		        });
+	    },
+
 	    renderTemplate: (res, templateData) => {
 	    	console.log('loading front template');
 
@@ -942,6 +986,23 @@ const Promise = require('bluebird');
 	        console.log(options);
 	        let data = fs.readFileSync(options.filename, 'utf-8');
         	let rendered = ejs.render(data, render, options);
+            CMS.sendResponse(res, 200, rendered);
+	    },
+
+	    renderInstallTemplate: (res) => {
+	        const options = {
+	        	filename: path.join(adminDir, 'templates', 'install.ejs')
+	        };
+
+	        const render = {
+	        	msg: '',
+	        	data: {currentLocation: res.req.protocol + '://' + res.req.get('host')},
+	        	cms: CMS
+	        };
+
+	        const data = fs.readFileSync(options.filename, 'utf-8');
+
+        	rendered = ejs.render(data, render, options);
             CMS.sendResponse(res, 200, rendered);
 	    },
 

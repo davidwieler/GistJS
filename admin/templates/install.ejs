@@ -4,7 +4,7 @@
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title><%- cmsInfo.name %> Install</title>
+	<title>Install</title>
 
 	<!-- Global stylesheets -->
 	<link href="https://fonts.googleapis.com/css?family=Roboto:400,300,100,500,700,900" rel="stylesheet" type="text/css">
@@ -13,22 +13,28 @@
 	<link href="/assets/css/core.css" rel="stylesheet" type="text/css">
 	<link href="/assets/css/components.css" rel="stylesheet" type="text/css">
 	<link href="/assets/css/colors.css" rel="stylesheet" type="text/css">
+	<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
 	<!-- /global stylesheets -->
 
 	<!-- Core JS files -->
 	<script type="text/javascript" src="/assets/js/plugins/loaders/pace.min.js"></script>
 	<script type="text/javascript" src="/assets/js/core/libraries/jquery.min.js"></script>
 	<script type="text/javascript" src="/assets/js/core/libraries/bootstrap.min.js"></script>
-	<script type="text/javascript" src="/assets/js/plugins/loaders/blockui.min.js"></script>
-	<script type="text/javascript" src="/assets/js/plugins/ui/nicescroll.min.js"></script>
-	<script type="text/javascript" src="/assets/js/plugins/ui/drilldown.js"></script>
 	<!-- /core JS files -->
 
 
 	<!-- Theme JS files -->
 	<script type="text/javascript" src="/assets/js/core/app.js"></script>
+	<script type="text/javascript" src="/assets/js/core/install.js"></script>
 	<!-- /theme JS files -->
-
+	<style>
+		.fa-spin{
+			font-size: 14px;
+		}
+		.config-item{
+			margin-bottom: 10px;
+		}
+	</style>
 </head>
 
 <body class="navbar-bottom login-container">
@@ -60,45 +66,189 @@
 								}
 							}
 						%>
-						<h5>Some details</h5>
-						<div class="form-group has-feedback has-feedback-left">
-							<input type="text" class="form-control" placeholder="Site Name" name="name" value="">
-							<div class="form-control-feedback">
-								<i class="icon-user text-muted"></i>
+						<div class="user-site-details step step-1">
+							<h5>Some details</h5>
+							<div class="form-group has-feedback has-feedback-left">
+								<label for="">Site name <i class="fa fa-question-circle text-muted"></i></label>
+								<input type="text" class="form-control" placeholder="My Fancy Site" name="name" value="site test">
+								<div class="form-control-feedback">
+									<i class="icon-user text-muted"></i>
+								</div>
+							</div>
+
+							<div class="form-group has-feedback has-feedback-left">
+								<label for="">Site URL <i class="fa fa-question-circle text-muted"></i></label>
+								<input type="text" class="form-control" placeholder="https://domain.com" name="url" value="<%- data.currentLocation;%>">
+								<div class="form-control-feedback">
+									<i class="icon-lock2 text-muted"></i>
+								</div>
+							</div>
+							<h5>Create your first user</h5>
+							<div class="form-group has-feedback has-feedback-left">
+								<input type="text" class="form-control" placeholder="Username" name="username" value="test">
+								<div class="form-control-feedback">
+									<i class="icon-user text-muted"></i>
+								</div>
+							</div>
+
+							<div class="form-group has-feedback has-feedback-left">
+								<input type="email" class="form-control" placeholder="Email" name="email" value="davidw@focuswebmedia.com">
+								<div class="form-control-feedback">
+									<i class="icon-envelope text-muted"></i>
+								</div>
+							</div>
+
+							<div class="form-group has-feedback has-feedback-left">
+								<input type="password" class="form-control" placeholder="Password" name="password" value="test">
+								<div class="form-control-feedback">
+									<i class="icon-lock2 text-muted"></i>
+								</div>
+							</div>
+
+							<div class="form-group">
+								<button class="btn bg-green-400 db-settings pull-right">Database settings <i class="icon-circle-right2 position-right"></i></button>
 							</div>
 						</div>
 
-						<div class="form-group has-feedback has-feedback-left">
-							<input type="text" class="form-control" placeholder="Site URL" name="url" value="">
-							<div class="form-control-feedback">
-								<i class="icon-lock2 text-muted"></i>
+						<div class="connection-details step step-2 hidden">
+							<h5>Site Configuration</h5>
+							<div class="form-group has-feedback has-feedback-left">
+								<label for="">Admin location <i class="fa fa-question-circle text-muted"></i></label>
+								<input type="text" class="form-control" placeholder="cms-admin" name="admin" value="spry-admin">
+								<div class="form-control-feedback">
+									<i class="icon-user text-muted"></i>
+								</div>
 							</div>
-						</div>
-						<h5>Create your first user</h5>
-						<div class="form-group has-feedback has-feedback-left">
-							<input type="text" class="form-control" placeholder="Username" name="username" value="">
-							<div class="form-control-feedback">
-								<i class="icon-user text-muted"></i>
+
+							<div class="form-group has-feedback has-feedback-left">
+								<label for="">Site location <i class="fa fa-question-circle text-muted"></i></label>
+								<input type="text" class="form-control" placeholder="Site URL" name="site" value="blog">
+								<div class="form-control-feedback">
+									<i class="icon-lock2 text-muted"></i>
+								</div>
+							</div>
+							<h5>Database connections</h5>
+							<div class="form-group">
+								<div class="radio quick-db">
+									<label><input type="radio" name="optradio" checked>Quick settings <small>(basic database settings using localhost)</small></label>
+								</div>
+								<div class="radio custom-db">
+									<label><input type="radio" name="optradio">Custom settings <small>(customize your database settings)</small></label>
+								</div>
+							</div>
+							<div class="custom-db-settings hidden">
+								<hr>
+								<h6>Advanced database setup</h6>
+								<p>
+									Use this option if you want to use custom database servers, either locally or remotely.
+								</p>
+								<div class="form-group has-feedback has-feedback-left">
+									<label for="">Username <i class="fa fa-question-circle text-muted"></i></label>
+									<input type="text" class="form-control" placeholder="username" name="dbusername" value="">
+									<div class="form-control-feedback">
+										<i class="icon-user text-muted"></i>
+									</div>
+								</div>
+
+								<div class="form-group has-feedback has-feedback-left">
+									<label for="">Password <i class="fa fa-question-circle text-muted"></i></label>
+									<input type="text" class="form-control" placeholder="password" name="dbpassword" value="">
+									<div class="form-control-feedback">
+										<i class="icon-lock2 text-muted"></i>
+									</div>
+								</div>
+
+								<div class="form-group has-feedback has-feedback-left">
+									<label for="">Database host <i class="fa fa-question-circle text-muted"></i></label>
+									<input type="text" class="form-control" placeholder="domain.com" name="dbdomain" value="localhost">
+									<div class="form-control-feedback">
+										<i class="icon-user text-muted"></i>
+									</div>
+								</div>
+
+								<div class="form-group has-feedback has-feedback-left">
+									<label for="">Database port <i class="fa fa-question-circle text-muted"></i></label>
+									<input type="text" class="form-control" placeholder="27017" name="dbport" value="27017">
+									<div class="form-control-feedback">
+										<i class="icon-user text-muted"></i>
+									</div>
+								</div>
+
+								<div class="form-group has-feedback has-feedback-left">
+									<label for="">Database name <i class="fa fa-question-circle text-muted"></i></label>
+									<input type="text" class="form-control" placeholder="cms" name="dbname" value="cms">
+									<div class="form-control-feedback">
+										<i class="icon-user text-muted"></i>
+									</div>
+								</div>
+
+								<div class="form-group has-feedback has-feedback-left">
+									<label for="">Collection name for data <i class="fa fa-question-circle text-muted"></i></label>
+									<input type="text" class="form-control" placeholder="data" name="dbcolldata" value="data">
+									<div class="form-control-feedback">
+										<i class="icon-user text-muted"></i>
+									</div>
+								</div>
+
+								<div class="form-group has-feedback has-feedback-left">
+									<label for="">Collection name for accounts <i class="fa fa-question-circle text-muted"></i></label>
+									<input type="text" class="form-control" placeholder="data" name="dbcollaccounts" value="accounts">
+									<div class="form-control-feedback">
+										<i class="icon-user text-muted"></i>
+									</div>
+								</div>
+
+								<div class="form-group has-feedback has-feedback-left">
+									<label for="">Collection name for sessions <i class="fa fa-question-circle text-muted"></i></label>
+									<input type="text" class="form-control" placeholder="data" name="dbcollsessions" value="sessions">
+									<div class="form-control-feedback">
+										<i class="icon-user text-muted"></i>
+									</div>
+								</div>
+
+							</div>
+							<div class="form-group">
+								<button class="btn bg-slate-400 back" data-step="1"><i class="icon-circle-left2 position-left"></i> back</button> 
+								<button class="btn bg-green-400 confirm pull-right">Confirm settings <i class="icon-circle-right2 position-right"></i></button>
 							</div>
 						</div>
 
-						<div class="form-group has-feedback has-feedback-left">
-							<input type="email" class="form-control" placeholder="Email" name="email" value="">
-							<div class="form-control-feedback">
-								<i class="icon-envelope text-muted"></i>
+						<div class="confirm-settings step step-3 hidden">
+							<h5>Review your settings</h5>
+							<div class="settings form-group"></div>
+							<div class="clearfix"></div>
+							<br />
+							<div class="form-group">
+								<button class="btn bg-slate-400 back" data-step="2"><i class="icon-circle-left2 position-left"></i> back</button> 
+								<button class="btn bg-green-400 configure pull-right">Configure <i class="icon-circle-right2 position-right"></i></button>
 							</div>
 						</div>
 
-						<div class="form-group has-feedback has-feedback-left">
-							<input type="password" class="form-control" placeholder="Password" name="password" value="">
-							<div class="form-control-feedback">
-								<i class="icon-lock2 text-muted"></i>
+						<div class="start-configure step step-4 hidden">
+							<h5>Starting configuration</h5>
+							<ul class="list-unstyled">
+								<li class="text-muted config-item connection-test" data-item="db">
+									Attempting database connection <i class="fa fa-cog fa-spin fa-3x fa-fw"></i>
+									<div class="alert alert-danger connection-error hidden"></div>
+								</li>
+								<li class="text-muted config-item write-configs" data-item="file">
+									Writing config files <i class="fa fa-cog fa-spin fa-3x fa-fw"></i>
+									<div class="alert alert-danger config-error hidden"></div>
+								</li>
+								<li class="text-muted config-item create-user" data-item="user">
+									Creating your first user <i class="fa fa-cog fa-spin fa-3x fa-fw"></i>
+									<div class="alert alert-danger user-error hidden"></div>
+								</li>
+							</ul>
+							<div class="form-group back-connection hidden">
+								<button class="btn bg-slate-400 back" data-step="3"><i class="icon-circle-left2 position-left"></i> back</button>
+								<button class="btn bg-slate-600 retry" data-step="3">Retry</button>
+							</div>
+							<div class="form-group hidden login-step">
+								<a href="" class="btn bg-green-400 btn-block">Get Started <i class="icon-circle-right2 position-right"></i></a>
 							</div>
 						</div>
 
-						<div class="form-group">
-							<button type="submit" class="btn bg-slate-400 btn-block">Get started <i class="icon-circle-right2 position-right"></i></button>
-						</div>
 					</div>
 				</form>
 				<!-- /simple login form -->

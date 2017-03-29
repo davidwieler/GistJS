@@ -1,15 +1,16 @@
 // config/passport.js
 
 // load all the things we need
-var LocalStrategy   = require('passport-local').Strategy;
-var FacebookStrategy = require('passport-facebook').Strategy;
-var TwitterStrategy  = require('passport-twitter').Strategy;
-var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
-var GithubStrategy = require('passport-github').Strategy;
-var mongojs = require('mongojs');
-var ObjectId = mongojs.ObjectId;
-var bcrypt   = require('bcrypt-nodejs');
-var fs = require('fs');
+const LocalStrategy   = require('passport-local').Strategy;
+const FacebookStrategy = require('passport-facebook').Strategy;
+const TwitterStrategy  = require('passport-twitter').Strategy;
+const GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
+const GithubStrategy = require('passport-github').Strategy;
+const mongojs = require('mongojs');
+const ObjectId = mongojs.ObjectId;
+const bcrypt   = require('bcrypt-nodejs');
+const fs = require('fs');
+const db = require('./db.js');
 //var hat = require('hat');
 
 // load the auth variables
@@ -24,8 +25,8 @@ module.exports = function(passport, CMS) {
     // required for persistent login sessions
     // passport needs ability to serialize and unserialize users out of session
 
-    // initialize accounts db
-    const db = CMS.dbAccounts;
+    // initialize accounts dbs
+    const dbConn = db(mongojs, CMS.dbConn).accountInit();
     const collection = CMS.dbConn.accounts.collection;
 
     // used to serialize the user for the session
@@ -38,7 +39,7 @@ module.exports = function(passport, CMS) {
     passport.deserializeUser(function(id, done) {
 
     	var ident = id.id.toString();
-        db[collection].findOne({'_id':ObjectId(ident)}, function(err, user) {
+        dbConn[collection].findOne({'_id':ObjectId(ident)}, function(err, user) {
             delete user.pass;
             return done(err, user);
         });
@@ -71,7 +72,7 @@ module.exports = function(passport, CMS) {
                 return done(null, false);
             }
 
-            db[collection].findOne({'username':username}, function(err, user){
+            dbConn[collection].findOne({'username':username}, function(err, user){
 
                 if(err){
                     return done(err);
@@ -82,41 +83,27 @@ module.exports = function(passport, CMS) {
                 }
                 else{
 
-                    var writeConfig = {
-                        name: req.body.name,
-                        url: req.body.url
-                    }
+                    var newUser = {
+                        pass : bcrypt.hashSync(password),
+                        email : email,
+                        username: username,
+                        accounttype: 'administrator',
+                        accountid: generateAccountId()
+                    };
 
-                    CMS.writeConfig(writeConfig, (err, result) => {
+                    fs.unlink(__dirname + '/.install', (err) => {
+
                         if (err) {
-                            return done(null, false, 'Could not write to "config.json". Please ensure it exists, and is writable.');
+                            return done(null, false, 'Could not delete ".install" file. This is either because you\'ve already done the install, or the ".install" file is missing.');
                         }
 
-                        if (result === 'complete') {
-                            var newUser = {
-                                pass : bcrypt.hashSync(password),
-                                email : email,
-                                username: username,
-                                accounttype: 'administrator',
-                                accountid: generateAccountId()
-                            };
+                        dbConn[collection].save(newUser, function(err) {
+                            if (err){
+                                return done(null, false, 'Error creating new user');
+                            }
 
-                            fs.unlink(__dirname + '/.install', (err) => {
-
-                                if (err) {
-                                    return done(null, false, 'Could not delete ".install" file. This is either because you\'ve already done the install, or the ".install" file is missing.');
-                                }
-
-                                db[collection].save(newUser, function(err) {
-                                    if (err){
-                                        return done(null, false, 'Error creating new user');
-                                    }
-
-                                    return done(null, newUser);
-                                });
-
-                            });
-                        }
+                            return done(null, newUser);
+                        });
 
                     });
 
@@ -145,7 +132,7 @@ module.exports = function(passport, CMS) {
 
 	        // find a user whose email is the same as the forms email
 	        // we are checking to see if the user trying to login already exists
-	        db[collection].findOne({'username':username}, function(err, user){
+	        dbConn[collection].findOne({'username':username}, function(err, user){
 
 	            // if there are any errors, return the error before anything else
 	            if (err){
@@ -193,7 +180,7 @@ module.exports = function(passport, CMS) {
             if(!req.user){
 
                 // find the user in the database based on their facebook id
-                db.accounts.findOne({'facebook.id' : profile.id}, function(err, user){
+                dbConn[collection].findOne({'facebook.id' : profile.id}, function(err, user){
 
                     // if there is an error, stop everything and return that
                     // ie an error connecting to the database
@@ -302,7 +289,7 @@ module.exports = function(passport, CMS) {
             if(!req.user){
 
                 // find the user in the database based on their twitter id
-                db.accounts.findOne({$or: [{'twitter.id' : profile.id}, {'email':profile.emails[0].value}]}, function(err, user){
+                dbConn[collection].findOne({$or: [{'twitter.id' : profile.id}, {'email':profile.emails[0].value}]}, function(err, user){
 
                     // if there is an error, stop everything and return that
                     // ie an error connecting to the database
@@ -316,7 +303,7 @@ module.exports = function(passport, CMS) {
 
                         if(!user.twitter){
 
-                            db.accounts.update({'accountid':user.accountid},{
+                            dbConn[collection].update({'accountid':user.accountid},{
                                 $set : {
                                     twitter : {
 
@@ -359,7 +346,7 @@ module.exports = function(passport, CMS) {
                         newUser.email = profile.emails[0].value;
                         newUser.accountid      = generateAccountId();
 
-                        db.accounts.save(newUser, function(err) {
+                        dbConn[collection].save(newUser, function(err) {
                             if (err)
                                 throw err;
 
@@ -383,7 +370,7 @@ module.exports = function(passport, CMS) {
                 user.twitter.displayName = profile.displayName
                 ///user.twitter.email = profile.emails[0].value; 
 
-                db.accounts.update({accountid: req.user.accountid}, user, function(err) {
+                dbConn[collection].update({accountid: req.user.accountid}, user, function(err) {
                     if (err)
                         throw err;
 
@@ -415,7 +402,7 @@ module.exports = function(passport, CMS) {
             if(!req.user){
 
                 // find the user in the database based on their google id
-                db.accounts.findOne({$or: [{'google.id' : profile.id}, {'email':profile.emails[0].value}]}, function(err, user){
+                dbConn[collection].findOne({$or: [{'google.id' : profile.id}, {'email':profile.emails[0].value}]}, function(err, user){
 
                     // if there is an error, stop everything and return that
                     // ie an error connecting to the database
@@ -427,7 +414,7 @@ module.exports = function(passport, CMS) {
 
                         if(!user.google){
 
-                            db.accounts.update({'accountid':user.accountid},{
+                            dbConn[collection].update({'accountid':user.accountid},{
                                 $set : {
                                     google : {
 
@@ -468,7 +455,7 @@ module.exports = function(passport, CMS) {
                         newUser.email = profile.emails[0].value;
                         newUser.accountid      = generateAccountId();
 
-                        db.accounts.save(newUser, function(err) {
+                        dbConn[collection].save(newUser, function(err) {
                             if (err)
                                 throw err;
 
@@ -492,7 +479,7 @@ module.exports = function(passport, CMS) {
                 user.google.displayName = profile.displayName
                 user.google.email = profile.emails[0].value; 
 
-                db.accounts.update({accountid: req.user.accountid}, user, function(err) {
+                dbConn[collection].update({accountid: req.user.accountid}, user, function(err) {
                     if (err)
                         throw err;
 
@@ -525,7 +512,7 @@ module.exports = function(passport, CMS) {
             if(!req.user){
                 // find the user in the database based on their google id
 
-                db.accounts.findOne({$or: [{'github.id' : profile.id}, {'email':profile.emails[0].value}]}, function(err, user){
+                dbConn[collection].findOne({$or: [{'github.id' : profile.id}, {'email':profile.emails[0].value}]}, function(err, user){
 
                     // if there is an error, stop everything and return that
                     // ie an error connecting to the database
@@ -537,7 +524,7 @@ module.exports = function(passport, CMS) {
 
                         if(!user.github){
 
-                            db.accounts.update({'accountid':user.accountid},{
+                            dbConn[collection].update({'accountid':user.accountid},{
                                 $set : {
                                     github : {
 
@@ -578,7 +565,7 @@ module.exports = function(passport, CMS) {
                         newUser.email = profile.emails[0].value;
                         newUser.accountid      = generateAccountId();
 
-                        db.accounts.save(newUser, function(err) {
+                        dbConn[collection].save(newUser, function(err) {
                             if (err)
                                 throw err;
 
@@ -600,9 +587,9 @@ module.exports = function(passport, CMS) {
                 user.github.id    = profile.id;
                 user.github.token = token;
                 user.github.displayName = profile.displayName
-                user.github.email = profile.emails[0].value; 
+                user.github.email = profile.emails[0].value;
 
-                db.accounts.update({accountid: req.user.accountid}, user, function(err) {
+                dbConn[collection].update({accountid: req.user.accountid}, user, function(err) {
                     if (err)
                         throw err;
 

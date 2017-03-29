@@ -1,0 +1,65 @@
+<% include includes/header %>
+<% include includes/pageheader %>
+	<!-- Page container -->
+	<div class="page-container">
+
+		<!-- Page content -->
+		<div class="page-content">
+
+			<!-- Main sidebar -->
+			<div class="sidebar sidebar-main sidebar-default">
+				<div class="sidebar-content">
+
+					<!-- Main navigation -->
+					<div class="sidebar-category sidebar-category-visible">
+						<div class="category-title h6">
+							<span>Navigation</span>
+						</div>
+
+						<div class="category-content no-padding">
+							<% include includes/navigation %>
+						</div>
+					</div>
+					<!-- /main navigation -->
+
+				</div>
+			</div>
+			<!-- /main sidebar -->
+
+
+			<!-- Main content -->
+			<div class="content-wrapper">
+				<%
+					if (typeof msg !== 'undefined') {
+				%>
+					<div class="row">
+							<div class="alert alert-info">
+							<%
+								switch(msg){
+									case '1' :
+										%> <strong>Theme activated</strong> <%
+									break;
+								}
+							%>
+					</div>
+				<%
+					}
+				%>
+
+				<!-- Users wrap -->
+				<div class="row">
+				</div>
+				<!-- /users wrap -->
+
+			</div>
+
+			</div>
+			<!-- /main content -->
+
+		</div>
+		<!-- /page content -->
+
+	</div>
+	<!-- /page container -->
+
+<% include includes/footer %>

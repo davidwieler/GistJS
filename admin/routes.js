@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-module.exports = (CMS, router, passport) => {
+module.exports = (CMS, router, passport, settings) => {
 
 	router.get('/' + CMS.adminLocation + '/install', (req, res) => {
 		if (fs.existsSync(__dirname + '/admin/.install')) {
@@ -14,31 +14,10 @@ module.exports = (CMS, router, passport) => {
 		if (fs.existsSync(__dirname + '/admin/.install')) {
 			res.redirect('/' + CMS.adminLocation + '/install');
 		} else {
-			CMS.renderAdminTemplate(res, 'login', { message: req.flash('installMessage')});
+			CMS.renderAdminTemplate(res, 'login', { message: ''});
 		}
 
 	});
-
-	router.post('/' + CMS.adminLocation + '/install', (req, res, next) => {
-        passport.authenticate('local-install', function(err, install, info) {
-			if (err) {
-				return next(err);
-			}
-
-			if (!install) {
-				CMS.renderAdminTemplate(res, 'install', {message: info});
-				return;
-			}
-			req.logIn(install, function(err) {
-				if (err) {
-					return res.redirect('/' + CMS.adminLocation + '/login');
-				}
-
-				res.redirect('/' + CMS.adminLocation + '/dashboard');
-
-			});
-        })(req, res, next);
-    });
 
 	router.post('/' + CMS.adminLocation + '/login', (req, res, next) => {
 		passport.authenticate('local-login', function(err, user, info) {
@@ -50,6 +29,7 @@ module.exports = (CMS, router, passport) => {
 				CMS.renderAdminTemplate(res, 'login', {message: info});
 				return;
 			}
+
 			req.logIn(user, function(err) {
 				if (err) { return next(err); }
 
@@ -62,6 +42,16 @@ module.exports = (CMS, router, passport) => {
 	router.get('/' + CMS.adminLocation + '/logout', function(req, res){
 	    req.logout();
 	    res.redirect('/' + CMS.adminLocation + '/login');
+	});
+
+	router.get('/' + CMS.adminLocation + '/forgot-password', (req, res) => {
+		CMS.renderAdminTemplate(res, 'forgot-password', { message: ''});
+
+	});
+
+	router.post('/' + CMS.adminLocation + '/forgot-password', (req, res) => {
+		console.log(req.body);
+
 	});
 
 	router.get(['/' + CMS.adminLocation + '/dashboard', '/' + CMS.adminLocation + '/'], CMS.isLoggedIn, (req, res) => {
@@ -195,6 +185,18 @@ module.exports = (CMS, router, passport) => {
 	router.get('/' + CMS.adminLocation + '/themes', CMS.isLoggedIn, (req, res) => {
 		let msg = req.query.msg;
 		CMS.renderAdminTemplate(res, 'themes', req.params, msg);
+	});
+
+	router.post('/' + CMS.adminLocation + '/themes', CMS.isLoggedIn, (req, res) => {
+		CMS.themeSwitch(req.body.themeId, res, (newTheme) => {
+			res.redirect('/' + CMS.adminLocation + '/themes?msg=1');
+		});
+	});
+
+	// User routes
+	router.get('/' + CMS.adminLocation + '/users', CMS.isLoggedIn, (req, res) => {
+		let msg = req.query.msg;
+		CMS.renderAdminTemplate(res, 'users', req.params, msg);
 	});
 
 	router.post('/' + CMS.adminLocation + '/themes', CMS.isLoggedIn, (req, res) => {
@@ -357,6 +359,89 @@ module.exports = (CMS, router, passport) => {
 			CMS.sendResponse(res, 200, result);
 		});
 
+	});
+
+	router.post('/segment-cms/api/install', (req, res, next) => {
+
+		if (!fs.existsSync(__dirname + '/.install')) {
+			CMS.sendResponse(res, 401, 'only available during install');
+			return;
+		}
+		const type = req.body.type;
+
+		switch (type) {
+			case 'testdb' :
+				const testUrl = req.body.url;
+				const testCollection = req.body.collection;
+
+				CMS.testDbConnection(testUrl, testCollection, (err, result) => {
+					if (err) {
+						CMS.sendResponse(res, 200, err);
+						return;
+					}
+
+					CMS.sendResponse(res, 200, 'connected');
+
+				});
+			break;
+
+			case 'configs' :
+
+				const config = {
+					name: req.body.data.siteName.value,
+					url: req.body.data.siteUrl.value,
+					adminEmail: req.body.data.email.value,
+					adminLocation: req.body.data.adminLocation.value,
+					cmsLocation: req.body.data.siteLocation.value,
+					dbHost: req.body.data.dbHost.value,
+					dbUsername: req.body.data.dbUsername.value,
+					dbPassword: req.body.data.dbPassword.value,
+					dbName: req.body.data.dbName.value,
+					dbPort: req.body.data.dbPort.value,
+					dbData: req.body.data.dbCollectionData.value,
+					dbAccounts: req.body.data.dbCollectionAccounts.value,
+					dbSessions: req.body.data.dbCollectionSessions.value,
+				}
+
+				CMS.writeConfig(config, (err, result) => {
+					if (err) {
+						CMS.sendResponse(res, 200, err.message);
+					} else {
+						CMS.sendResponse(res, 200, 'success');
+					}
+				});
+			break;
+
+			case 'user' :
+
+				// Config files written, so init the CMS with settings to
+				// open a database connection
+
+				CMS.init(settings);
+
+				req.body.username = req.body.data.username.value;
+				req.body.password = req.body.data.password.value;
+				req.body.email = req.body.data.email.value;
+
+				require('./passport.js')(passport, CMS);
+		        passport.authenticate('local-install', function(err, install, info) {
+					if (err) {
+						CMS.sendResponse(res, 200, err.message);
+						return;
+					}
+
+					if (!install) {
+						console.log(info);
+						CMS.sendResponse(res, 200, info);
+						return;
+					}
+
+					// Reinitialize the CMS with all the new data
+					CMS.init(settings);
+					CMS.sendResponse(res, 200, 'success');
+		        })(req, res, next);
+			break;
+		}
 	});
 
 	return router;
