@@ -1,9 +1,9 @@
 {
-	"name": "",
-	"url": "",
+	"name": "site test",
+	"url": "http://localhost:7637",
 	"title": "",
 	"tagline": "",
-	"adminEmail": "",
+	"adminEmail": "davidw@focuswebmedia.com",
 	"custom404": true,
 	"custom500": false,
 	"deleteAfter": 86400,
@@ -11,6 +11,7 @@
 	"imageRevisions": false,
 	"jpgQuality": 100,
 	"pngQuality": 100,
+	"coreVersion": 0.1,
 	"maintenance": false,
 	"prettyPagination": true,
 	"paginateBy": "page",
@@ -19,31 +20,42 @@
 	"thumbnails": [
 		{
 			"suffix": "-thumb1024",
-			"size": [
-				"1024",
-				"1024"
-			]
+			"size": {
+				"height": 1024,
+				"width": 1024
+			}
 		},
 		{
 			"suffix": "-thumb500",
-			"size": [
-				"500",
-				"500"
-			]
+			"size": {
+				"height": 500,
+				"width": 500
+			}
 		},
 		{
 			"suffix": "-thumb250",
-			"size": [
-				"250",
-				"250"
-			]
+			"size": {
+				"height": 250,
+				"width": 250
+			}
 		},
 		{
 			"suffix": "-preview",
-			"size": [
-				"200",
-				"200"
-			]
+			"size": {
+				"height": 200,
+				"width": 200
+			}
 		}
-	]
+	],
+	"adminLocation": "spry-admin",
+	"cmsLocation": "blog",
+	"dbHost": "localhost",
+	"dbUsername": "",
+	"dbPassword": "",
+	"dbName": "cms",
+	"dbPort": "27017",
+	"dbData": "data",
+	"dbAccounts": "accounts",
+	"dbSessions": "sessions",
+	"currentUser": "test"
 }

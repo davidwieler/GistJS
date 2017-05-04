@@ -20,6 +20,7 @@
 		var submitButtonProp = '';
 		var formClass = 'update';
 		var status = postData.status;
+		var template = postData.template;
 
 	} else {
 		var formPostTo = '/spry-admin/edit';
@@ -27,6 +28,7 @@
 		var submitButtonProp = 'disabled';
 		var formClass = 'create';
 		var status = '';
+		var template = '';
 	}
 %>
 
@@ -102,35 +104,37 @@
                 	<div class="col-md-3 uploads-sidebar image-display">
 						<div class="col-md-12">
 							<h5>Attachment Details</h5>
-						</div>
-						<div class="col-xs-5 sidebar-image-preview">
-						</div>
-						<div class="col-xs-7">
 							<strong class="file-name"></strong>
+						</div>
+						<div class="col-xs-12 sidebar-image-preview">
+						</div>
+						<div class="col-xs-12">
 							<div class="text-light upload-date"></div>
 							<div class="text-light file-size"></div>
 							<button class="btn btn-primary btn-sm edit-image-toggle">Edit Image</button>
+							<a href="" class="media-heading text-danger-400 delete-attachment">Delete permanently</a>
 						</div>
 						<div class="clearfix"></div>
-						<div class="col-xs-3 text-right">
-							<label>Title</label>
-						</div>
-						<div class="col-xs-9">
-							<input type="text" class="form-control" name="title" placeholder="Enter Title" value="">
-						</div>
-						<div class="col-xs-3 text-right">
-							<label>Alt text</label>
-						</div>
-						<div class="col-xs-9">
-							<input type="text" class="form-control" name="title" placeholder="Enter Title" value="">
-						</div>
-						<div class="col-xs-3 text-right">
-							<label>Caption</label>
-						</div>
-						<div class="col-xs-9">
-							<textarea name="" class="form-control" placeholer="Message" rows="7"></textarea>
-						</div>
-						<div class="col-xs-3 text-right">
+
+						<div class="image-meta">
+							<div class="col-xs-3 text-right">
+								<label>Title</label>
+							</div>
+							<div class="col-xs-9">
+								<input type="text" class="form-control" name="title" placeholder="Enter Title" value="">
+							</div>
+							<div class="col-xs-3 text-right">
+								<label>Alt text</label>
+							</div>
+							<div class="col-xs-9">
+								<input type="text" class="form-control" name="title" placeholder="Enter Title" value="">
+							</div>
+							<div class="col-xs-3 text-right">
+								<label>Caption</label>
+							</div>
+							<div class="col-xs-9">
+								<textarea name="" class="form-control" placeholer="Message" rows="7"></textarea>
+							</div>
 						</div>
 						<div class="col-xs-9">
 							<div class="checkbox">
@@ -142,6 +146,20 @@
 						</div>
 						<div class="col-md-12">
 							<h5>Insert Settings</h5>
+							<div class="form-group insert-settings">
+								<label>Image Size</label>
+								<select class="form-control image-size" name="status">
+									<option value="">Select an image</option>
+								</select>
+							</div>
+							<div class="form-group link-settings">
+								<label>Link to</label>
+								<select class="form-control attachment-link" name="status">
+									<option value="none">None</option>
+									<option value="attachment" class="insert-attachment-url">Attachment URL</option>
+									<option value="<%- postData.postUrl;%>">Post URL</option>
+								</select>
+							</div>
 						</div>
                 	</div>
                 </div>
@@ -232,12 +250,12 @@
 									<%
 										for (var i = postRevisions.length - 1; i >= 0; i--) {
 											var title = postRevisions[i].postTitle;
-											var user = postRevisions[i].user || 'david wieler';
+											var user = postRevisions[i].updatedUser || postRevisions[i].user;
 											var postId = postRevisions[i]._id;
 											var status = postRevisions[i].status;
 											%>
 												<li class="post-revision">
-													<%- user%>, <%- app.timeAgo(postRevisions[i].updatedTimestamp, 'ddd, mmm ddS yyyy h:MMtt'); %> 
+													<%- user%>, <%- app.timeAgo(postRevisions[i].updatedTimestamp, 'ddd, mmm ddS yyyy h:MMtt'); %>
 													<a href="/<%-adminLocation%>/post-revision/<%-postId%>">(<%- app.formatDate(postRevisions[i].timestamp, 'ddd, mmm ddS yyyy h:MMtt'); %>)</a>
 												</li>
 											<%
@@ -279,10 +297,14 @@
 											<select class="selectpicker form-control show-menu-arrow" name="template">
 												<option value="default">Default</option>
 											<%
-
 												for (var i = templates.length - 1; i >= 0; i--) {
 													var value = templates[i].filename.replace('.ejs', '');
-													%><option value="<%- value%>"><%- templates[i].name%></option><%
+													if (template.trim() === value.trim()) {
+														var selected = 'selected';
+													} else {
+														var selected = '';
+													}
+													%><option value="<%- value%>" <%- selected;%>><%- templates[i].name%></option><%
 												}
 											%>
 											</select>
@@ -292,7 +314,7 @@
 		                            	if (typeof postData.postUrl !== 'undefined') {
 		                            		%>
 											<div class="col-xs-12 text-right">
-												<button type="submit" class="btn bg-danger-400 btn-labeled btn-labeled-right trash-editor"><b><i class="icon-bin"></i></b>Trash</button>
+												<button type="submit" class="btn bg-danger-400 btn-labeled btn-labeled-right trash-editor pull-left"><b><i class="icon-bin"></i></b>Trash</button>
 												<a href="<%- postData.postUrl%>" target="_blank" class="btn btn-primary">View post</a>
 											</div>
 		                            		<%

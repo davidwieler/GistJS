@@ -59,7 +59,7 @@
     .sidebar {
     display: table-cell;
     vertical-align: top;
-    width: 280px;
+    width: 210px;
     padding-right: 20px;
 }
 }
@@ -4843,9 +4843,13 @@ a.editable-empty, a.editable-empty:focus, a.editable-empty:hover {
 .wysihtml5-sandbox {
     width: 100%!important;
     padding: 20px;
+	height: auto;
+    min-height: 350px;
+    max-height: 450px;
     background-color: #fdfdfd;
     border: 1px solid #eee;
     margin-bottom: 40px;
+	overflow-y: scroll;
 }
 .wysihtml5-sandbox:focus{
     outline: #ececec 1px solid;

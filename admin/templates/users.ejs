@@ -37,7 +37,7 @@
 							<%
 								switch(msg){
 									case '1' :
-										%> <strong>Theme activated</strong> <%
+										%> <strong>User updated</strong> <%
 									break;
 								}
 							%>
@@ -48,6 +48,81 @@
 
 				<!-- Users wrap -->
 				<div class="row">
+					<!-- Single line -->
+					<div class="panel panel-white">
+						<div class="panel-heading">
+							<h6 class="panel-title">Users</h6>
+						</div>
+
+						<div class="panel-toolbar panel-toolbar-inbox">
+							<div class="navbar navbar-default">
+								<ul class="nav navbar-nav visible-xs-block no-border">
+									<li>
+										<a class="text-center collapsed" data-toggle="collapse" data-target="#inbox-toolbar-toggle-single">
+											<i class="icon-circle-down2"></i>
+										</a>
+									</li>
+								</ul>
+
+								<div class="navbar-collapse collapse" id="inbox-toolbar-toggle-single">
+									<div class="btn-group navbar-btn">
+										<button type="button" class="btn btn-default btn-icon btn-checkbox-all">
+											<div class="checker"><span><input type="checkbox" class="styled"></span></div>
+										</button>
+
+										<button type="button" class="btn btn-default btn-icon dropdown-toggle" data-toggle="dropdown">
+											<span class="caret"></span>
+										</button>
+
+										<ul class="dropdown-menu">
+											<li><a href="#">Select all</a></li>
+											<li><a href="#">Select read</a></li>
+											<li><a href="#">Select unread</a></li>
+											<li class="divider"></li>
+											<li><a href="#">Clear selection</a></li>
+										</ul>
+									</div>
+
+									<div class="btn-group navbar-btn delete-post">
+										<button type="button" class="btn btn-default"><i class="icon-bin"></i> <span class="hidden-xs position-right">Delete</span></button>
+									</div>
+
+									<div class="navbar-right">
+
+										<div class="btn-group navbar-btn">
+											<form>
+												<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+													<i class="icon-cog3"></i>
+													<span class="caret"></span>
+												</button>
+												<ul class="dropdown-menu dropdown-menu-right">
+													<li><a>Show count <input class="form-control" type="text" name="limit" value=""></a></li>
+												</ul>
+											</form>
+										</div>
+
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="table-responsive">
+							<table class="table table-inbox">
+								<thead>
+									<tr>
+										<th></th>
+										<th>Title</th>
+										<th>User</th>
+										<th>Status</th>
+										<th>Time</th>
+									</tr>
+								</thead>
+								<tbody data-link="row" class="rowlink">
+								</tbody>
+							</table>
+						</div>
+					</div>
+					<!-- /single line -->
 				</div>
 				<!-- /users wrap -->
 

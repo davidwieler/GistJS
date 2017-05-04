@@ -10,6 +10,7 @@ const adminDir = './node_modules/segments-cms/admin';
 const APP = require('./assets/js/core/app.js');
 const Utils = require('./utils.js');
 const Promise = require('bluebird');
+const _ = require('lodash');
 
 (() => {
 
@@ -143,6 +144,10 @@ const Promise = require('bluebird');
 			}
 		},
 
+		checkForUpdates: () => {
+
+		},
+
 		defineHooks: () => {
 			let hooks = {
 				dashboard: {}
@@ -206,7 +211,7 @@ const Promise = require('bluebird');
 				    return sharp( data.path )
 				    	.jpeg({quality: CMS.cmsDetails.jpgQuality})
 				    	.png({quality: CMS.cmsDetails.pngQuality})
-				        .resize( Number(thumb.size[0]), Number(thumb.size[1]), {
+				        .resize( Number(thumb.size.width), Number(thumb.size.height), {
 						    kernel: sharp.kernel.cubic,
 						    interpolator: sharp.interpolator.nohalo
 						})
@@ -215,7 +220,7 @@ const Promise = require('bluebird');
 				    return sharp( data.path )
 				    	.jpeg({quality: CMS.cmsDetails.jpgQuality})
 				    	.png({quality: CMS.cmsDetails.pngQuality})
-				        .resize( Number(thumb.size[0]), Number(thumb.size[1]), {
+				        .resize( Number(thumb.size.width), Number(thumb.size.width), {
 						    kernel: sharp.kernel.cubic,
 						    interpolator: sharp.interpolator.nohalo
 						})
@@ -308,8 +313,6 @@ const Promise = require('bluebird');
 
 		isLoggedIn: (req, res, next) => {
 
-            //sa.page(req.originalUrl)
-
             if (req.isAuthenticated()){
             	CMS.cmsDetails.currentUser = req.user.username;
             	next();
@@ -344,6 +347,7 @@ const Promise = require('bluebird');
 
 					if (deleteInt > CMS.cmsDetails.deleteAfter) {
 						CMS.deletePost(postsLoop[i]._id);
+						CMS.deleteRevision(postsLoop[i]._id);
 					}
 				}
 			})
@@ -368,7 +372,7 @@ const Promise = require('bluebird');
             return false;
 		},
 
-		sendResponse: (res, status, response) => {
+		sendResponse: (res, status, response, done) => {
 
 	        if(typeof response === 'object'){
 	            response = JSON.stringify(response);
@@ -377,6 +381,10 @@ const Promise = require('bluebird');
 	        res.status(status);
 	        res.write(response);
 	        res.end();
+
+	        if (typeof done === 'function') {
+	        	done();
+	        }
 	        return;
 
 	    },
@@ -403,6 +411,20 @@ const Promise = require('bluebird');
 			}
 
 	    },
+
+		errorHandler: (error, res) => {
+			switch (error.type) {
+				case 'postnotfound':
+					CMS.renderAdminTemplate(res, 'error', {type: 'postnotfound'});
+					return;
+				break;
+
+				case 'pagenotfound':
+					CMS.renderAdminTemplate(res, 'error', {type: 'pagenotfound'}, undefined, 404);
+					return;
+				break;
+			};
+		},
 
 	    createContent: (data, type, done) => {
 			const db = CMS.dbData;
@@ -432,9 +454,24 @@ const Promise = require('bluebird');
 			const db = CMS.dbData;
 		    const collection = CMS.dbConn.data.collection;
 
-	    	db[collection].remove({'_id':ObjectId(postId)}, (err, result) => {
+	    	db[collection].remove({'_id': ObjectId(postId)}, (err, result) => {
 	        	if (err) {
-	        		console.log('test');
+	        		done(err);
+	        	}
+
+	        	if (typeof done === 'function') {
+	        		done(null, result);
+	        	}
+	    	})
+
+	    },
+
+	    deleteRevision: (postId, done) => {
+			const db = CMS.dbData;
+		    const collection = CMS.dbConn.data.collection;
+
+	    	db.postrevisions.remove({postId: postId}, (err, result) => {
+	        	if (err) {
 	        		done(err);
 	        	}
 
@@ -550,25 +587,31 @@ const Promise = require('bluebird');
 
 	    createCategory: (data) => {
 	    	CMS.getCategories((result) => {
-	    		let slugs = result.slug;
-	    		let names = result.name;
-	    		let newSlugs = data.slug;
-	    		let newNames = data.name
-
-	    		let sulgsConcat = Utils().arrayUnique(slugs.concat(newSlugs));
-	    		let namesConcat = Utils().arrayUnique(names.concat(newNames));
-
-	    		let categoryList = {
-	    			slug: sulgsConcat,
-	    			name: namesConcat
-	    		}
 
 		    	const db = CMS.dbData;
 		    	const collection = CMS.dbConn.data.collection;
+		    	const query = {contentType: 'categoryList'};
 
-		    	let query = {contentType: 'categoryList'};
+		    	let categoryList;
 
-		    	let updateData = {
+	    		if (result === null) {
+	    			categoryList = data;
+	    		} else {
+		    		const slugs = result.slug;
+		    		const names = result.name;
+		    		const newSlugs = data.slug;
+		    		const newNames = data.name
+
+		    		const sulgsConcat = Utils().arrayUnique(slugs.concat(newSlugs));
+		    		const namesConcat = Utils().arrayUnique(names.concat(newNames));
+
+		    		categoryList = {
+		    			slug: sulgsConcat,
+		    			name: namesConcat
+		    		}
+	    		}
+
+		    	const updateData = {
 		    		categories: categoryList,
 		    		contentType: 'categoryList'
 		    	}
@@ -600,33 +643,57 @@ const Promise = require('bluebird');
 
 			data.updatedUser = data.user;
 			data.updatedUserId = data.userId;
-			data.updatedTimestamp = +new Date();
+			//data.updatedTimestamp = +new Date();
 			delete data.user;
 			delete data.userId;
 
 			if (CMS.cmsDetails.postRevisions === true) {
 
 				CMS.getPostById(postId, (err, res) => {
-					res.postId = data.postId;
-					delete res._id;
-					CMS.createRevision(res);
 
-				    db[collection].update(
-				        {'_id':ObjectId(postId)},
-				        { $set: data},
-				        (err, response) => {
+					// Create a new const to check equality,
+					// remove some of the known constant data points.
+					const equalityCheck = res;
+					delete equalityCheck._id;
+					delete equalityCheck.user;
+					delete equalityCheck.userId;
+					delete equalityCheck.timestamp;
+					delete equalityCheck.updatedTimestamp;
+					delete equalityCheck.contentType;
 
-				        	if (err) {
-				        		done(err);
-				        	}
+					if (_.isEqual(equalityCheck, data)) {
+						// No changes found
+						done(null, {noChange: true});
+					} else {
+						// Changes were found
+						// create a revision and update the post
+						res.postId = data.postId;
+						res.updatedUser = data.updatedUser;
+						res.updatedUserId = data.updatedUserId;
+						delete res._id;
 
-				        	done(null, response);
+						CMS.createRevision(res);
 
-				        }
-				    )
+						data.updatedTimestamp = +new Date();
 
+					    db[collection].update(
+					        {'_id':ObjectId(postId)},
+					        { $set: data},
+					        (err, response) => {
+
+					        	if (err) {
+					        		done(err);
+					        	}
+
+					        	done(null, response);
+
+					        }
+					    )
+					}
 				});
+
 			} else {
+				data.updatedTimestamp = +new Date();
 			    db[collection].update(
 			        {'_id':ObjectId(postId)},
 			        { $set: data},
@@ -653,7 +720,7 @@ const Promise = require('bluebird');
 	        		done(err);
 	        	}
 	        	if (post === null) {
-	        		done('Post id: ' + postId + ' not found');
+	        		done({type: 'postnotfound', message: 'Post id: ' + postId + ' not found', function: 'getPostById'});
 	        		return;
 	        	}
 
@@ -685,6 +752,7 @@ const Promise = require('bluebird');
 	        	if (err) {
 	        		done(err);
 	        	}
+				console.log(post);
 	        	done(null, post);
 	        });
 	    },
@@ -696,11 +764,13 @@ const Promise = require('bluebird');
 			let count = 0;
 			let returnedLimits = {};
 			let limit = findAttachments.limit;
-			let search = {contentType: 'attachment'};
+			let search = {};
 
 			if (typeof findAttachments.search !== 'undefined') {
 				search = findAttachments.search;
 			}
+
+			search.contentType = 'attachment';
 
     		returnedLimits.limit = limit;
     		returnedLimits.offset = Number(findAttachments.offset) || 0;
@@ -727,9 +797,6 @@ const Promise = require('bluebird');
 
 				}
 
-				console.log(attachments);
-
-				console.log(attachments.length);
 				done(null, {attachmentCount: attachments.length, attachments: returnedAttachments, limits: returnedLimits});
 			});
 	    },
@@ -745,6 +812,17 @@ const Promise = require('bluebird');
 
 			if (typeof findPosts.search !== 'undefined') {
 				search = findPosts.search;
+			}
+
+			if (findPosts.multiId) {
+				// Working here
+				// loop through ids, adding ObjectID string to searches
+				const multi = [];
+					for (var i = postId.length - 1; i >= 0; i--) {
+					multi.push(ObjectID(postId[i]))
+				}
+
+				search._id = {$in: multi};
 			}
 
     		returnedLimits.limit = limit;
@@ -832,6 +910,29 @@ const Promise = require('bluebird');
 		        });
 	    },
 
+	    loopQuery: (data) => {
+
+	    	for (let i in data) {
+
+		    	// Category loop query -----
+
+		    	if (i.includes('category')) {
+		    		if (_.isArray(data[i])) {
+		    			data[i] = { $all: data[i] }
+		    		} else {
+		    			data[i] = data[i];
+		    		}
+		    	}
+
+		    	if (i.includes('postMeta')) {
+		    		//console.log('test poistMeta');
+		    	}
+
+	    	}
+
+	    	return data;
+	    },
+
 	    renderTemplate: (res, templateData) => {
 	    	console.log('loading front template');
 
@@ -842,7 +943,16 @@ const Promise = require('bluebird');
 
 	        let render = {
 	            data: templateData,
-	        	plugins: CMS.activePlugins.user
+	        	plugins: CMS.activePlugins.user,
+	        	site: {
+	        		url: CMS.cmsDetails.url,
+	        		name: CMS.cmsDetails.name,
+	        		title: CMS.cmsDetails.title,
+	        		tagline: CMS.cmsDetails.tagline,
+	        		currentUser: CMS.cmsDetails.currentUser,
+	        		adminLocation: CMS.cmsDetails.adminLocation,
+	        		cmsLocation: CMS.cmsDetails.cmsLocation,
+	        	}
 	        }
 
 	        if (typeof templateData === 'undefined') {
@@ -919,9 +1029,37 @@ const Promise = require('bluebird');
 						onPageNumber = pageNumber;
 					}
 
+					let loopArrayPromises = [CMS.getPostsPromise(limit)];
 
-		            db[collection].find(value.find).toArray((err, posts) => {
-		            	//console.log(posts);
+					if (value.getMedia) {
+						//loopArrayPromises.push(CMS.getAttachmentsPromise({limit:4}));
+					}
+
+
+
+					CMS.Promise.all(loopArrayPromises)
+					.then((result) => {
+						// NEED ASYCN FUNCTION TO GET ATTACHMENTS IF REQUESTED BEFORE RETURNING RESULTS
+
+						if (value.getMedia) {
+							for (var i = 0; i < result[0].postCount; i++) {
+								const postDetails = result[0].posts[i];
+								const search = {
+									postId: postDetails._id
+								}
+
+								CMS.getAttachments({search: search}, (err, attachment) => {
+									console.log(attachment);
+								});
+							}
+						}
+						console.log(result);
+					})
+					.catch((e) => {
+						CMS.errorHandler(e, res);
+					});
+
+		            db[collection].find(CMS.loopQuery(value.find)).toArray((err, posts) => {
 
 						for (var i = 0; i < posts.length; i++) {
 
@@ -1006,8 +1144,7 @@ const Promise = require('bluebird');
             CMS.sendResponse(res, 200, rendered);
 	    },
 
-	    renderAdminTemplate: (res, type, urlParams, msg) => {
-
+	    renderAdminTemplate: (res, type, urlParams, msg, status) => {
 	        let options = {
 	        	filename: path.join(adminDir, 'templates', type + '.ejs')
 	        };
@@ -1040,23 +1177,31 @@ const Promise = require('bluebird');
 	    	let data = fs.readFileSync(options.filename, 'utf-8');
 
 	    	let rendered;
+
+			if (typeof status === 'undefined') {
+				status = 200
+			}
 	    	switch (type) {
 	    		case 'edit' :
 			        if (typeof urlParams !== 'undefined') {
 
 				    	let id = urlParams.id.toString();
-
 						CMS.Promise.join(CMS.getPostByIdPromise(id), CMS.getCategoriesPromise(), CMS.getRevisionsPromise(id), (post, cats, revisions) => {
-				    		render.postData = post;
-				    		render.categoryList = cats || undefined;
-				    		render.postRevisions = revisions
-				        	let rendered = ejs.render(data, render, options);
-				            CMS.sendResponse(res, 200, rendered);
-						});
+							render.postData = post;
+							render.categoryList = cats || undefined;
+							render.postRevisions = revisions
+							let rendered = ejs.render(data, render, options);
+							CMS.sendResponse(res, status, rendered);
+						})
+		    			.catch((e) => {
+		    				CMS.errorHandler(e, res);
+		    			});
+
+
 
 			        } else {
 			        	rendered = ejs.render(data, render, options);
-			            CMS.sendResponse(res, 200, rendered);
+			            CMS.sendResponse(res, status, rendered);
 			        }
 	    		break;
 
@@ -1086,17 +1231,18 @@ const Promise = require('bluebird');
 	    				render.revision = diff;
 	    				render.postData = post;
 			        	rendered = ejs.render(data, render, options);
-			            CMS.sendResponse(res, 200, rendered);
+			            CMS.sendResponse(res, status, rendered);
 	    			})
 	    			.catch((e) => {
-	    				console.log(e);
+	    				CMS.errorHandler(e, res);
 	    			})
 
 	    		break;
 
 	    		default :
 		        	rendered = ejs.render(data, render, options);
-		            CMS.sendResponse(res, 200, rendered);
+		            CMS.sendResponse(res, status, rendered);
+					return;
 	    		break;
 	    	}
 

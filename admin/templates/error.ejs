@@ -1,0 +1,65 @@
+<% include includes/header %>
+<% include includes/pageheader %>
+	<!-- Page container -->
+	<div class="page-container">
+
+		<!-- Page content -->
+		<div class="page-content">
+
+			<!-- Main sidebar -->
+			<div class="sidebar sidebar-main sidebar-default">
+				<div class="sidebar-content">
+
+					<!-- Main navigation -->
+					<div class="sidebar-category sidebar-category-visible">
+						<div class="category-title h6">
+							<span>Navigation</span>
+						</div>
+
+						<div class="category-content no-padding">
+							<% include includes/navigation %>
+						</div>
+					</div>
+					<!-- /main navigation -->
+
+				</div>
+			</div>
+			<!-- /main sidebar -->
+
+
+			<!-- Main content -->
+			<div class="content-wrapper text-center">
+				<%
+					switch (data.type) {
+						case 'pagenotfound':
+							%>
+								<h2>Error 404</h2>
+								<p>
+								page not found
+								</p>
+							<%
+						break;
+						case 'postnotfound':
+							%>
+								<h2>Could not find that post</h2>
+								<p>
+								page not found
+								</p>
+							<%
+						break;
+						default:
+
+					}
+				%>
+			</div>
+
+			</div>
+			<!-- /main content -->
+
+		</div>
+		<!-- /page content -->
+
+	</div>
+	<!-- /page container -->
+
+<% include includes/footer %>

@@ -9,9 +9,9 @@ $(document).ready(function() {
                 clearTimeout(timeoutId);
                 timeoutId = setTimeout(function() {
                     // Runs 1 second (1000 ms) after the last change
-                    $('input[name="postContent"], input[name="autoSave"]').remove();
+                    $('textarea[name="postContent"], input[name="autoSave"]').remove();
                     var content = $('#editor').html();
-                    $('.edit-form').append('<input type="hidden" value="'+ content + '" name="postContent"><input type="hidden" value="true" name="autoSave">')
+                    $('.edit-form').append('<textarea style="display:none;" name="postContent">' + content + '</textarea><input type="hidden" value="true" name="autoSave">')
                     autoSave($('.edit-form'));
                 }, autoSaveTimer);
             }
@@ -106,13 +106,23 @@ $(document).ready(function() {
             $('.submit-editor').prop('disabled', true);
             return;
         } else {
-            $('input[name="postContent"]').remove();
-            var content = $('#editor').html();
+			var type = $('.editor-mode.btn-info').data('mode');
+            $('textarea[name="postContent"]').remove();
+
+			switch (type) {
+				case 'html':
+					var content = $('.html-editor').val();
+				break;
+				case 'visual':
+					var content = $('#editor').html();
+				break;
+			}
+
             if (content === 'Start entering your content') {
                 content = '';
             }
             $('input[name="postContent"], input[name="autoSave"]').remove();
-            $('.edit-form').append('<input type="hidden" value="'+ content + '" name="postContent">')
+            $('.edit-form').append('<textarea style="display:none;" name="postContent">' + content + '</textarea>');
             $('.edit-form').submit();
         }
     });
@@ -189,6 +199,35 @@ $(document).ready(function() {
 
     });
 
+    // bulk operations --------
+
+    $('body').on('click', '.bulk-selection a', function(e) {
+
+        var toDo = $(this).data('do');
+        e.preventDefault();
+
+        const checked = bulkCheckboxValues();
+        console.log(checked);
+
+        switch (toDo) {
+            case 'bulk-edit' :
+
+                let editContent = [];
+
+                for (var i = checked.length - 1; i >= 0; i--) {
+                    getPosts(function(res){
+                        editContent.push(res);
+                    }, $('input[name="limit"]').val(), checked, 0, undefined, true);
+                }
+
+                console.log(editContent);
+
+                var modal = $('#quickeditposts');
+                modal.modal('toggle');
+            break;
+        }
+    });
+
     $('body').on('click', '.delete-post', function() {
         //$('#table-form').submit();
         var checked = $('.checker').children('.checked');
@@ -224,7 +263,51 @@ $(document).ready(function() {
     });
 
     $('body').on('click', '.insert-selected-images', function() {
+		showSelectedImages();
 
+		$selectedImages = $('.media-item-wrap.selected');
+		const imageSize = $('.insert-settings select option:selected').val();
+		const attachmentUrl = $('.link-settings select option:selected').val();
+
+		$selectedImages.each(function(i, el) {
+			let str = '';
+			let link;
+			let image;
+			let imageData = $(this).children('.panel').data();
+
+			if (imageSize === 'original') {
+				image = imageData.location;
+			} else {
+				image = '/uploads/' + imageData.thumbnails[imageSize];
+			}
+
+			switch (attachmentUrl) {
+				case 'none' :
+					link = null;
+				break;
+				case 'attachment' :
+					link = image;
+				break;
+				default:
+					link = '{{POSTURL}}'
+				break;
+			}
+
+			if (link !== null) {
+				str += '<a href="' + link + '" class="image-link">';
+				str += '<img src="' + image + '" />';
+				str += '</a>';
+			} else {
+				str += '<img src="' + image + '" />';
+			}
+
+			console.log(str);
+
+			insertIntoEditor(str);
+		});
+
+		var modal = $('#fileuploadsmodal');
+		modal.modal('toggle');
     });
 
     $('body').on('click', '.uploads-modal .edit-image-toggle', function() {
@@ -244,6 +327,7 @@ $(document).ready(function() {
             var modal = $('#linksinsertmodal');
             modal.modal('toggle');
             var posts = JSON.parse(res);
+            console.log(posts);
             posts = posts.posts.posts;
 
             if (isEditorLinkClicked) {
@@ -254,7 +338,7 @@ $(document).ready(function() {
                 var blank = self.attr('target');
                 $('.links-modal .link-selection').show();
                 $('.links-modal .existing-posts').hide();
-                $('.external-url-toggle').addClass('on').text('use your published posts');
+                $('.external-url-toggle').text('use your published posts');
                 $('.links-modal input.link-title').val(title);
                 $('.links-modal input.link-url').val(href);
                 if (nofollow) {
@@ -343,7 +427,11 @@ $(document).ready(function() {
         modal.modal('toggle');
     });
 
-
+    $('body').on('click', '.check-updates-toggle', function(e) {
+		e.preventDefault();
+        $(this).find('.icon-sync').addClass('spinner');
+		checkUpdates();
+    });
 
     // Upload drag and drop handlers
     $('body').on('click', '.upload-file-handler', function() {
@@ -474,7 +562,7 @@ $(function() {
     $('.panel [data-action=reload]').click(function (e) {
         e.preventDefault();
         var block = $(this).parent().parent().parent().parent().parent();
-        $(block).block({ 
+        $(block).block({
             message: '<i class="icon-spinner2 spinner"></i>',
             overlayCSS: {
                 backgroundColor: '#fff',
@@ -492,7 +580,7 @@ $(function() {
         // For demo purposes
         window.setTimeout(function () {
            $(block).unblock();
-        }, 2000); 
+        }, 2000);
     });
 
 
@@ -500,7 +588,7 @@ $(function() {
     $('.category-title [data-action=reload]').click(function (e) {
         e.preventDefault();
         var block = $(this).parent().parent().parent().parent();
-        $(block).block({ 
+        $(block).block({
             message: '<i class="icon-spinner2 spinner"></i>',
             overlayCSS: {
                 backgroundColor: '#000',
@@ -519,15 +607,15 @@ $(function() {
         // For demo purposes
         window.setTimeout(function () {
            $(block).unblock();
-        }, 2000); 
-    }); 
+        }, 2000);
+    });
 
 
     // Light sidebar categories
     $('.sidebar-default .category-title [data-action=reload]').click(function (e) {
         e.preventDefault();
         var block = $(this).parent().parent().parent().parent();
-        $(block).block({ 
+        $(block).block({
             message: '<i class="icon-spinner2 spinner"></i>',
             overlayCSS: {
                 backgroundColor: '#fff',
@@ -545,8 +633,8 @@ $(function() {
         // For demo purposes
         window.setTimeout(function () {
            $(block).unblock();
-        }, 2000); 
-    }); 
+        }, 2000);
+    });
 
 
 
@@ -657,7 +745,7 @@ $(function() {
     // Add active state to all dropdown parent levels
     $('.dropdown-menu:not(.dropdown-content), .dropdown-menu:not(.dropdown-content) .dropdown-submenu').has('li.active').addClass('active').parents('.navbar-nav .dropdown:not(.language-switch), .navbar-nav .dropup:not(.language-switch)').addClass('active');
 
-    
+
 
     // Main navigation tooltips positioning
     // -------------------------
@@ -686,7 +774,7 @@ $(function() {
         }
     });
 
-        
+
     // Alternate navigation
     $('.navigation-alt').find('li').has('ul').children('a').on('click', function (e) {
         e.preventDefault();
@@ -698,7 +786,7 @@ $(function() {
         if ($('.navigation-alt').hasClass('navigation-accordion')) {
             $(this).parent('li').not('.disabled').siblings(':has(.has-ul)').removeClass('active').children('ul').slideUp(200);
         }
-    }); 
+    });
 
 
 
@@ -794,7 +882,7 @@ $(function() {
 
         // Opposite sidebar visibility
         $('body').toggleClass('sidebar-opposite-visible');
-        
+
         // If visible
         if ($('body').hasClass('sidebar-opposite-visible')) {
 

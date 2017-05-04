@@ -26,10 +26,21 @@
 	<script type="text/javascript" src="/assets/js/plugins/ui/nicescroll.min.js"></script>
 	<script type="text/javascript" src="/assets/js/plugins/ui/drilldown.js"></script>
 	<script type="text/javascript" src="/assets/js/plugins/loaders/pace.min.js"></script>
+	<script type="text/javascript" src="/assets/js/plugins/tidyhtml.js"></script>
+	<script type="text/javascript" src="/assets/js/plugins/tomarkdown.js"></script>
 	<script type="text/javascript" src="/assets/js/core/app.js"></script>
 	<script type="text/javascript" src="/assets/js/core/handlers.js"></script>
 	<script type="text/javascript" src="/assets/js/core/helperFunctions.js"></script>
+	<script src="https://cdn.rawgit.com/showdownjs/showdown/1.6.3/dist/showdown.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/js/bootstrap-select.min.js"></script>
+	<script>
+		const postMeta = '<%- JSON.stringify(postData.postMeta); %>';
+		const adminLocation = '<%- adminLocation%>';
+		const siteUrl = '<%- cms.cmsDetails.url%>';
+		const postId = '<%- postData._id%>';
+		const autoSaveTimer = '<%- cms.cmsDetails.autoSaveTimer%>';
+		const coreVersion = '<%- cms.cmsDetails.coreVersion%>';
+	</script>
 	<!-- /core JS files -->
 
 	<!-- Plugin CSS & JS files -->
@@ -70,12 +81,10 @@
 				<li><a class="sidebar-control sidebar-main-toggle hidden-xs"><i class="icon-paragraph-justify3"></i></a></li>
 
 				<li class="dropdown">
+					<p class="navbar-text"><span class="label bg-success-400">Updates (2)</span></p>
 					<a href="#" class="dropdown-toggle" data-toggle="dropdown">
-						<i class="icon-git-compare"></i>
-						<span class="visible-xs-inline-block position-right">Git updates</span>
-						<span class="badge bg-warning-400">9</span>
 					</a>
-					
+
 					<div class="dropdown-menu dropdown-content">
 						<div class="dropdown-content-heading">
 							Git updates
@@ -100,7 +109,7 @@
 								<div class="media-left">
 									<a href="#" class="btn border-warning text-warning btn-flat btn-rounded btn-icon btn-sm"><i class="icon-git-commit"></i></a>
 								</div>
-								
+
 								<div class="media-body">
 									Add full font overrides for popovers and tooltips
 									<div class="media-annotation">36 minutes ago</div>
@@ -111,7 +120,7 @@
 								<div class="media-left">
 									<a href="#" class="btn border-info text-info btn-flat btn-rounded btn-icon btn-sm"><i class="icon-git-branch"></i></a>
 								</div>
-								
+
 								<div class="media-body">
 									<a href="#">Chris Arney</a> created a new <span class="text-semibold">Design</span> branch
 									<div class="media-annotation">2 hours ago</div>
@@ -122,7 +131,7 @@
 								<div class="media-left">
 									<a href="#" class="btn border-success text-success btn-flat btn-rounded btn-icon btn-sm"><i class="icon-git-merge"></i></a>
 								</div>
-								
+
 								<div class="media-body">
 									<a href="#">Eugene Kopyov</a> merged <span class="text-semibold">Master</span> and <span class="text-semibold">Dev</span> branches
 									<div class="media-annotation">Dec 18, 18:36</div>
@@ -133,7 +142,7 @@
 								<div class="media-left">
 									<a href="#" class="btn border-primary text-primary btn-flat btn-rounded btn-icon btn-sm"><i class="icon-git-pull-request"></i></a>
 								</div>
-								
+
 								<div class="media-body">
 									Have Carousel ignore keyboard events
 									<div class="media-annotation">Dec 12, 05:46</div>
@@ -142,13 +151,11 @@
 						</ul>
 
 						<div class="dropdown-content-footer">
-							<a href="#" data-popup="tooltip" title="All activity"><i class="icon-menu display-block"></i></a>
+							<a href="/<%- adminLocation;%>/updates" data-popup="tooltip" title="All activity"><i class="icon-menu display-block"></i></a>
 						</div>
 					</div>
 				</li>
 			</ul>
-
-			<p class="navbar-text"><span class="label bg-success-400">Updates (2)</span></p>
 
 			<ul class="nav navbar-nav navbar-right">
 				<li class="dropdown">
@@ -228,14 +235,14 @@
 										<span class="text-semibold">Richard Vango</span>
 										<span class="media-annotation pull-right">Mon</span>
 									</a>
-									
+
 									<span class="text-muted">Other travelling salesmen live a life of luxury...</span>
 								</div>
 							</li>
 						</ul>
 
 						<div class="dropdown-content-footer">
-							<a href="#" data-popup="tooltip" title="All messages"><i class="icon-menu display-block"></i></a>
+							<a href="/<%- adminLocation;%>/notifications" data-popup="tooltip" title="All messages"><i class="icon-menu display-block"></i></a>
 						</div>
 					</div>
 				</li>

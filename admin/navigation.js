@@ -13,6 +13,11 @@ module.exports = [
 		icon: 'icon-stack'
 	},
 	{
+		slug: 'Pages',
+		url: 'pages',
+		icon: 'icon-stack'
+	},
+	{
 		slug: 'Media',
 		url: 'media',
 		icon: 'icon-image2'
@@ -45,6 +50,7 @@ module.exports = [
 	{
 		slug: 'Users',
 		icon: 'icon-footprint',
+		priviledge: 'administrator',
 		subMenu: [
 			{
 				slug: 'View all',

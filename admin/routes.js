@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const Events = require('./events.js');
 module.exports = (CMS, router, passport, settings) => {
 
 	router.get('/' + CMS.adminLocation + '/install', (req, res) => {
@@ -14,6 +15,7 @@ module.exports = (CMS, router, passport, settings) => {
 		if (fs.existsSync(__dirname + '/admin/.install')) {
 			res.redirect('/' + CMS.adminLocation + '/install');
 		} else {
+			res.clearCookie(global.cms.cookieName);
 			CMS.renderAdminTemplate(res, 'login', { message: ''});
 		}
 
@@ -40,8 +42,12 @@ module.exports = (CMS, router, passport, settings) => {
 	});
 
 	router.get('/' + CMS.adminLocation + '/logout', function(req, res){
-	    req.logout();
-	    res.redirect('/' + CMS.adminLocation + '/login');
+
+		req.session.destroy(function() {
+		    res.clearCookie(global.cms.cookieName);
+		    res.redirect('/' + CMS.adminLocation + '/login');
+		});
+
 	});
 
 	router.get('/' + CMS.adminLocation + '/forgot-password', (req, res) => {
@@ -50,8 +56,11 @@ module.exports = (CMS, router, passport, settings) => {
 	});
 
 	router.post('/' + CMS.adminLocation + '/forgot-password', (req, res) => {
-		console.log(req.body);
 
+		if (req.body.user === '') {
+			CMS.renderAdminTemplate(res, 'forgot-password', {message: 'Please enter your username or email'});
+			return;
+		}
 	});
 
 	router.get(['/' + CMS.adminLocation + '/dashboard', '/' + CMS.adminLocation + '/'], CMS.isLoggedIn, (req, res) => {
@@ -115,6 +124,10 @@ module.exports = (CMS, router, passport, settings) => {
 		CMS.renderAdminTemplate(res, 'edit');
 	});
 
+	router.get('/' + CMS.adminLocation + '/updates', CMS.isLoggedIn, (req, res) => {
+		CMS.renderAdminTemplate(res, 'updates');
+	});
+
 	router.get('/' + CMS.adminLocation + '/pages', CMS.isLoggedIn, (req, res) => {
 		CMS.renderAdminTemplate(res, 'pages');
 	});
@@ -148,7 +161,11 @@ module.exports = (CMS, router, passport, settings) => {
 			delete req.body.autoSave;
 		}
 		CMS.updatePost(req.body, req.body.postId, (err, result) => {
-			console.log(result);
+
+			if (result.noChange === true) {
+				res.redirect('/' + CMS.adminLocation + '/edit/' + postId + '?msg=5');
+				return;
+			}
 
 			if (result.ok === 1) {
 				if (autoSave === true) {
@@ -173,7 +190,6 @@ module.exports = (CMS, router, passport, settings) => {
 	});
 
 	router.post('/' + CMS.adminLocation + '/settings', CMS.isLoggedIn, (req, res) => {
-		console.log(req.body.thumbnails);
 		res.redirect('/' + CMS.adminLocation + '/settings?msg=1');
 	});
 
@@ -237,7 +253,6 @@ module.exports = (CMS, router, passport, settings) => {
 				name: file.name,
 				originalName: file.name,
 				size: file.size,
-				realPath: '/uploads/' + file.name,
 				fileType: file.type,
 				postId: field || ''
 			}
@@ -253,6 +268,7 @@ module.exports = (CMS, router, passport, settings) => {
 				}
 
 				data.name = named + '.' + fileExt;
+				data.realPath = '/uploads/' + data.name
 
 				fs.rename(file.path, path.join(form.uploadDir, data.name), () => {
 					let image = {
@@ -267,7 +283,9 @@ module.exports = (CMS, router, passport, settings) => {
 							});
 					} else {
 						CMS.generateThumbnail(image, (err, result) => {
-							data.thumbnails = result
+							data.thumbnails = result;
+
+							console.log(data);
 
 							CMS.createContent(data, 'attachment', (id) => {
 								data._id = id;
@@ -323,7 +341,11 @@ module.exports = (CMS, router, passport, settings) => {
 			findPosts.search = req.body.search;
 		}
 
-		CMS.getPosts(findPosts, (result) => {
+		if (req.body.multiId) {
+			findPosts.multiId = true;
+		}
+
+		CMS.getPosts(findPosts, (err, result) => {
 			CMS.sendResponse(res, 200, {posts: result, limit: findPosts.limit});
 		});
 
@@ -431,7 +453,6 @@ module.exports = (CMS, router, passport, settings) => {
 					}
 
 					if (!install) {
-						console.log(info);
 						CMS.sendResponse(res, 200, info);
 						return;
 					}
@@ -439,9 +460,45 @@ module.exports = (CMS, router, passport, settings) => {
 					// Reinitialize the CMS with all the new data
 					CMS.init(settings);
 					CMS.sendResponse(res, 200, 'success');
+
+					setTimeout(() => {
+						var events = Events();
+						events.restartServer();
+					}, 1500);
+
 		        })(req, res, next);
 			break;
 		}
+	});
+
+	// TEMP UPDATE ROUTES!!! move to production server
+
+	router.post('/' + CMS.adminLocation + '/api/updates', (req, res) => {
+
+		const coreVersion = 0.5;
+		const sentVersion = req.body.version;
+		let msg;
+
+		if (!isNaN(parseInt(sentVersion))) {
+			if (coreVersion > sentVersion) {
+				msg = 'update available';
+			} else {
+				msg = 'no update available';
+			}
+		} else {
+			msg = 'invalid version sent';
+		}
+
+		console.log(msg);
+
+		CMS.sendResponse(res, 200, msg);
+		return;
+
+	});
+
+	router.get('/' + CMS.adminLocation + '/*', CMS.isLoggedIn, (req, res) => {
+		let msg = req.query.msg;
+		CMS.errorHandler({type: 'pagenotfound'}, res);
 	});
 
 	return router;

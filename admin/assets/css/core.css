@@ -2448,7 +2448,7 @@ input[class*=bg-]+.form-control-feedback {
     left: 0;
     background-color: #fff;
     width: 0px;
-    
+
 }
 @media (min-width:769px) {
     .navbar-nav>.active>a: after {
@@ -4878,7 +4878,6 @@ a.panel-title {
 .uploads-modal .modal-header .close {
     position: absolute;
     right: 20px;
-    top: 50%;
     margin-top: 0;
 }
 
@@ -4924,6 +4923,20 @@ a.panel-title {
 .uploads-modal .uploads-sidebar{
     background: #eee;
     height: 100%;
+}
+.uploads-modal .uploads-sidebar .sidebar-image-preview{
+	text-align: center;
+	display: none;
+}
+.uploads-modal .uploads-sidebar .sidebar-image-preview img{
+    max-height:120px;
+	width: auto;
+}
+
+.image-meta label,
+.image-meta input,
+.image-meta textarea{
+	margin-top: 10px;
 }
 
 .drag-overlay.off{

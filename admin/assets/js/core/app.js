@@ -21,6 +21,10 @@
 				className = 'alert-info';
 				text = '<strong>Post has been trashed.</strong>';
 			break;
+			case '5' :
+				className = 'alert-info';
+				text = '<strong>No changes were made.</strong>';
+			break;
 			case '99' :
 				className = 'alert-danger';
 				text = '<strong>Post not found. Starting over.</strong>';

@@ -1,5 +1,7 @@
 <ul class="navigation navigation-main navigation-accordion">
-
+<%
+	
+%>
 	<%
 		let nav = cms.navigation;
 		for (var i = 0; i < nav.length; i++) {
@@ -8,6 +10,7 @@
 			let icon = nav[i].icon;
 			let menuName = nav[i].menuName;
 			let subMenu = nav[i].subMenu;
+			let priv = nav[i].priviledge;
 
 			if (menuName) {
 				%><li class="navigation-header"><span><%- menuName; %></span></li><%

@@ -26,6 +26,10 @@ module.exports = function(passport, CMS) {
     // passport needs ability to serialize and unserialize users out of session
 
     // initialize accounts dbs
+
+    if (typeof CMS.dbConn === 'undefined') {
+        return;
+    }
     const dbConn = db(mongojs, CMS.dbConn).accountInit();
     const collection = CMS.dbConn.accounts.collection;
 
@@ -40,7 +44,9 @@ module.exports = function(passport, CMS) {
 
     	var ident = id.id.toString();
         dbConn[collection].findOne({'_id':ObjectId(ident)}, function(err, user) {
-            delete user.pass;
+            if (typeof user !== 'undefined') {
+                delete user.pass;
+            }
             return done(err, user);
         });
     });
@@ -132,12 +138,14 @@ module.exports = function(passport, CMS) {
 
 	        // find a user whose email is the same as the forms email
 	        // we are checking to see if the user trying to login already exists
-	        dbConn[collection].findOne({'username':username}, function(err, user){
+	        dbConn[collection].find({ $or: [ {'username': username}, {'email': username} ]} , function(err, user){
 
 	            // if there are any errors, return the error before anything else
 	            if (err){
 	                return done(err);
                 }
+
+                user = user[0];
 
 	            // if no user is found, return the message
 	            if (!user || user === null){

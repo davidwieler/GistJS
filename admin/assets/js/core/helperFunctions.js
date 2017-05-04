@@ -1,17 +1,87 @@
+let bulkCheckboxValues = function() {
+    var checked = $('.checker').children('.checked');
+    var checkedBoxes = [];
+
+    checked.each(function(i){
+        var value = $(this).find('input[type="checkbox"]').val();
+
+        if (value !== 'on') {
+            checkedBoxes.push(value);
+        }
+    });
+
+    return checkedBoxes;
+};
+
 let changeEditorMode = function(type) {
 
-    console.log(type);
+	var fromType = $('.editor-mode.btn-info').data('mode');
+
     switch(type) {
         case 'visual' :
-            var HTML_from_editor = editor.getValue(); // true means that code parsing is executed to ensure cleaner code
-            console.log(HTML_from_editor);
+
+			if (fromType === 'markdown') {
+				var converter = new showdown.Converter();
+				var html = converter.makeHtml($('.markdown-editor').val());
+			}
+
+			if (fromType === 'html') {
+				var html = $('.html-editor').val();
+			}
+			editor.setValue(html)
+			$('.wysihtml5-editor').show();
+			$('.html-editor, .markdown-editor').hide();
         break;
         case 'html' :
-            var html = editor.getValue(true); // true means that code parsing is executed to ensure cleaner code
-            console.log(html);
+
+			var html = editor.getValue(true);
+
+			if (fromType === 'markdown') {
+				var converter = new showdown.Converter();
+				var html = converter.makeHtml($('.markdown-editor').val());
+			}
+
+            var html = tidy_html5(html, {
+				'indent': 'auto',
+				'indent-spaces': 2,
+				'wrap': 80,
+				'markup': true,
+				'output-xml': false,
+				'numeric-entities': true,
+				'quote-marks': true,
+				'quote-nbsp': false,
+				'show-body-only': true,
+				'quote-ampersand': false,
+				'break-before-br': true,
+				'uppercase-tags': false,
+				'uppercase-attributes': false,
+				'drop-font-tags': true,
+				'tidy-mark': false,
+				'show-info': false,
+				'show-warnings': false,
+				'show-errors': 0
+			});
+			$('.html-editor, .markdown-editor').remove();
+			$('.wysihtml5-editor').hide();
+			$('.editor-panel #editor').after('<textarea class="wysihtml5-sandbox html-editor">' + html + '</textarea>');
         break;
         case 'markdown' :
 
+			if (fromType === 'visual') {
+				var markDown = toMarkdown(editor.getValue(true));
+			}
+
+			if (fromType === 'html') {
+				var markDown = toMarkdown($('.html-editor').val());
+			}
+
+			if (fromType === 'markdown') {
+				return;
+			}
+
+			$('.html-editor, .markdown-editor').remove();
+			$('.wysihtml5-editor').hide();
+			$('.editor-panel #editor').after('<textarea class="wysihtml5-sandbox markdown-editor">' + markDown + '</textarea>');
         break;
     }
 };
@@ -88,6 +158,17 @@ let showAttachmentDetails = function(data) {
     $('.file-name').html(attachmentData.name);
     $('.upload-date').html(attachmentData.date);
     $('.file-size').html(attachmentData.size);
+
+	if (attachmentData.thumbnails) {
+
+		$('.insert-settings .image-size').empty();
+		$('.sidebar-image-preview').html('<img src="' + attachmentData.location + '">');
+
+		$('.insert-settings .image-size').append('<option value="original">Original Image</option>')
+		$.each(attachmentData.thumbnails, function(key, val) {
+			$('.insert-settings .image-size').append('<option value="' + key + '">' + key + '</option>');
+		});
+	}
 };
 
 let showSelectedImages = function() {
@@ -104,16 +185,23 @@ let showSelectedImages = function() {
     }
 };
 
+let checkUpdates = function() {
+	$.post('/spry-admin/api/updates', {version: coreVersion}, function (response) {
+		$('.check-updates-toggle').find('.icon-sync').removeClass('spinner');
+		callback(response);
+	});
+};
+
 let insertSelectedImages = function() {
 
 };
 
 let insertIntoEditor = function(string) {
+	editor.focus();
     editor.composer.commands.exec('insertHTML', string);
-
 };
 
-let getPosts = function(callback, limit, postId, offset, search) {
+let getPosts = function(callback, limit, postId, offset, search, multiId) {
 
     let data = {};
     if (offset) {
@@ -123,7 +211,10 @@ let getPosts = function(callback, limit, postId, offset, search) {
         data.limit = limit;
     }
     if (postId) {
-        data.search = {postId: postId}
+        data.id = postId;
+    }
+    if (multiId) {
+        data.multiId = true;
     }
     $.post('/' + adminLocation + '/api/posts', data, function (response) {
         callback(response);
@@ -171,7 +262,8 @@ let appendAttachments = function(res, empty) {
                 'date': app.timeAgo(a[i].timestamp, 'ddd, mmm ddS yyyy h:MMtt'),
                 'location': a[i].realPath,
                 'type': a[i].fileType,
-                'timestamp': a[i].timestamp
+                'timestamp': a[i].timestamp,
+				'thumbnails': a[i].thumbnails
             });
     }
 };
