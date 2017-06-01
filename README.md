@@ -20,34 +20,14 @@ var express = require('express');
 var path = require('path');
 var cms = require('segments-cms');
 var app = express();
-var port = 7637;
+var port = 3000;
 
 var cmsSettings = {
-    adminLocation: 'spry-admin',
     themeDir: path.join(__dirname + '/themes'),
     pluginDir: path.join(__dirname + '/plugins'),
     uploadDir: path.join(__dirname + '/uploads'),
-    db: {
-        data: {
-            url: 'localhost:27017/cms',
-            collection: 'data'
-        },
-        accounts: {
-            url: 'localhost:27017/cms',
-            collection: 'accounts'
-        }
-    },
-    sessions: {
-        url: 'localhost:27017/cms',
-        secret: 'storethesegmentsessions',
-        cookieName: 'chooseacookiename'
-    }
 }
 
-app.use("/assets", express.static(path.join(__dirname + '/node_modules/segments-cms/admin/assets') ));
-app.use("/uploads", express.static(cmsSettings.uploadDir ));
-app.use("/plugins", express.static(cmsSettings.pluginDir ));
-app.use("/themes", express.static(cmsSettings.themeDir ));
 app.use('/', cms(cmsSettings, app));
 
 app.listen(port);
@@ -55,6 +35,4 @@ app.listen(port);
 ```
 
 ### The Install
-Navigate to `localhost:7367/cms-admin`.
-The first time you run the app, you'll be taken to an install screen.
-Eventually this screen will allow you to add and create the database connections, as well as a few other fun things.
+Navigate to `localhost:7367/install`.
