@@ -3,7 +3,6 @@
 ### Requirements
 * NodeJS 4.4+ . **Works best on NodeJS 7.6.**
 * Express 4 framework
-* body-parser NPM module
 * MongoDB
 
 ##NOTE
