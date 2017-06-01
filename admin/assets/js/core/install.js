@@ -13,10 +13,16 @@ $(document).ready(() => {
 		$('.connection-details').removeClass('hidden').show();
 	});
 
+	$('.email').on('click', (e) => {
+		e.preventDefault();
+		$('.connection-details').hide();
+		$('.email-settings').removeClass('hidden').show();
+	});
+
 	$('.confirm').on('click', (e) => {
 		e.preventDefault();
 
-		$('.connection-details').hide();
+		$('.email-settings').hide();
 		$('.confirm-settings').removeClass('hidden').show();
 		window.configData = {
 			dbUsername: 	{key: 'DB Username', value: $('.connection-details input[name="dbusername"]').val()},

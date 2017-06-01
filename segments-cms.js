@@ -69,8 +69,6 @@ module.exports = (settings, app) => {
 
 	router.use( (req, res, next) => {
 
-		CMS.deleteTrashed();
-
 		let requestUrl = req.url;
 
 		if (requestUrl === '/segment-cms/api/install') {
@@ -86,7 +84,7 @@ module.exports = (settings, app) => {
 
 		// Show the install template if URL is "/install",
 		// and stop all other processing.
-		if (requestUrl === '/install') {
+		if (fs.existsSync(__dirname + '/admin/.install') && requestUrl === '/install') {
 			CMS.renderInstallTemplate(res, 'install');
 			return;
 		}
@@ -96,6 +94,8 @@ module.exports = (settings, app) => {
 			CMS.sendResponse(res, 204);
 			return;
 		}
+
+		CMS._utilities.deleteTrashed();
 
 		// Use Helmet by default to make the CMS more secure.
 		// Disable by setting helmet: false in the settings.
@@ -117,7 +117,14 @@ module.exports = (settings, app) => {
 		}
 
 		// Check if the requested URL is coming from the admin panel
-		if (CMS.passThroughUrl(requestUrl) === true) {
+		if (CMS.passThroughUrl(requestUrl, req, res) === true) {
+
+
+
+			if (CMS.cmsDetails.localEditing === false) {
+				CMS.error(res, 404, 'Page not found');
+				return;
+			}
 
 			// clear plugin navigation additions
 			CMS.navigation = require('./admin/navigation.js');
@@ -195,6 +202,7 @@ module.exports = (settings, app) => {
 
 				URLPath.push(paginate[i]);
 			}
+			console.log(URLPath);
 
 			requestUrl = '/' + path.join.apply(null, URLPath);
 		} else {

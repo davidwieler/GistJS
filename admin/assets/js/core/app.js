@@ -25,6 +25,22 @@
 				className = 'alert-info';
 				text = '<strong>No changes were made.</strong>';
 			break;
+			case '95' :
+				className = 'alert-warning';
+				text = '<strong>Username, email and password are required to create a new user</strong>';
+			break;
+			case '96' :
+				className = 'alert-danger';
+				text = '<strong>A user with that username already exists</strong>';
+			break;
+			case '97' :
+				className = 'alert-danger';
+				text = '<strong>Problem creating user</strong>';
+			break;
+			case '98' :
+				className = 'alert-info';
+				text = '<strong>User created</strong>';
+			break;
 			case '99' :
 				className = 'alert-danger';
 				text = '<strong>Post not found. Starting over.</strong>';
@@ -549,6 +565,14 @@
 	    }
 	    while (Math.abs(bytes) >= thresh && u < units.length - 1);
 	    return bytes.toFixed(1)+' '+units[u];
+	};
+
+	exports.capitalizeFirstLetter = function(string) {
+		if (typeof string === 'undefined') {
+			return;
+		}
+
+		return string.charAt(0).toUpperCase() + string.slice(1);
 	};
 
 }(typeof exports === 'undefined' ? this.app = {} : exports));

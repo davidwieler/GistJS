@@ -86,7 +86,7 @@
 				<!-- Single line -->
 				<div class="panel panel-white">
 					<div class="panel-heading">
-						<h6 class="panel-title">My Content</h6>
+						<h6 class="panel-title">My Content <a href="/<%- adminLocation%>/edit" class="btn btn-link btn-float has-text"><i class="icon-pencil7 text-primary"></i><span>New Post</span></a></h6>
 					</div>
 
 					<div class="panel-toolbar panel-toolbar-inbox">
@@ -149,6 +149,10 @@
 										let hrefPrev = '/' + adminLocation + '/posts?limit=' + limit + '&offset=' + prevOffset;
 										let hrefNext = '/' + adminLocation + '/posts?limit=' + limit + '&offset=' + nextOffset;
 
+										if (postCount === 0) {
+											startCount = 0;
+										}
+
 									%>
 									<p class="navbar-text"><span class="text-semibold"><%- startCount;%>-<%- shownLimit; %></span> of <span class="text-semibold"><%- postCount; %></span></p>
 
@@ -210,7 +214,7 @@
 								<%
 									for (var i = 0; i < returnedPosts.length; i++) {
 										var title = returnedPosts[i].postTitle;
-										var user = returnedPosts[i].user || 'david wieler';
+										var user = returnedPosts[i].user;
 										var postId = returnedPosts[i]._id;
 										var status = returnedPosts[i].status;
 										%>

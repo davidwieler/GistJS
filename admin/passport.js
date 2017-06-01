@@ -93,8 +93,7 @@ module.exports = function(passport, CMS) {
                         pass : bcrypt.hashSync(password),
                         email : email,
                         username: username,
-                        accounttype: 'administrator',
-                        accountid: generateAccountId()
+                        accounttype: 'administrator'
                     };
 
                     fs.unlink(__dirname + '/.install', (err) => {
@@ -262,7 +261,7 @@ module.exports = function(passport, CMS) {
                 user.facebook.id    = profile.id;
                 user.facebook.token = token;
                 user.facebook.name  = profile.name.givenName + ' ' + profile.name.familyName;
-                user.facebook.email = profile.emails[0].value; 
+                user.facebook.email = profile.emails[0].value;
 
                 db.accounts.update({accountid: req.user.accountid}, user, function(err) {
                     if (err)
@@ -376,14 +375,14 @@ module.exports = function(passport, CMS) {
                 user.twitter.token = token;
                 user.twitter.name  = profile.username;
                 user.twitter.displayName = profile.displayName
-                ///user.twitter.email = profile.emails[0].value; 
+                ///user.twitter.email = profile.emails[0].value;
 
                 dbConn[collection].update({accountid: req.user.accountid}, user, function(err) {
                     if (err)
                         throw err;
 
                     return done(null, user);
-                });  
+                });
 
             }
         });
@@ -485,7 +484,7 @@ module.exports = function(passport, CMS) {
                 user.google.id    = profile.id;
                 user.google.token = token;
                 user.google.displayName = profile.displayName
-                user.google.email = profile.emails[0].value; 
+                user.google.email = profile.emails[0].value;
 
                 dbConn[collection].update({accountid: req.user.accountid}, user, function(err) {
                     if (err)
@@ -619,16 +618,6 @@ var validPassword = function(password, hash){
 	return bcrypt.compareSync(password, hash);
 
 };
-
-function generateAccountId() {
-    var date = +new Date();
-
-    var random = Math.random() * (111111111 - date) + date;
-
-    var num = random * Math.random() * (1 - 4) + 1;
-
-    return 'AC'+Math.abs(num.toFixed(0));
-}
 
 function generatePasswordHash(password){
 

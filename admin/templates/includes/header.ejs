@@ -79,7 +79,7 @@
 		<div class="navbar-collapse collapse" id="navbar-mobile">
 			<ul class="nav navbar-nav">
 				<li><a class="sidebar-control sidebar-main-toggle hidden-xs"><i class="icon-paragraph-justify3"></i></a></li>
-
+				<% if (cms.currentUser.caps['updateCore'] === true) { %>
 				<li class="dropdown">
 					<p class="navbar-text"><span class="label bg-success-400">Updates (2)</span></p>
 					<a href="#" class="dropdown-toggle" data-toggle="dropdown">
@@ -155,6 +155,8 @@
 						</div>
 					</div>
 				</li>
+
+				<% } %>
 			</ul>
 
 			<ul class="nav navbar-nav navbar-right">
@@ -249,12 +251,12 @@
 
 				<li class="dropdown dropdown-user">
 					<a class="dropdown-toggle" data-toggle="dropdown">
-						<span><%- cmsInfo.currentUser%></span>
+						<span><%- currentUser.username%></span>
 						<i class="caret"></i>
 					</a>
 
 					<ul class="dropdown-menu dropdown-menu-right">
-						<li><a href="#"><i class="icon-user-plus"></i> My profile</a></li>
+						<li><a href="/<%- CMS.adminLocation%>/user/edit/<%- cms.currentUser._id;%>"><i class="icon-user-plus"></i> My profile</a></li>
 						<li><a href="#"><i class="icon-coins"></i> My balance</a></li>
 						<li><a href="#"><span class="badge bg-teal-400 pull-right">58</span> <i class="icon-comment-discussion"></i> Messages</a></li>
 						<li class="divider"></li>

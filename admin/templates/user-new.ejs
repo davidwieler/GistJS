@@ -1,0 +1,126 @@
+<% include includes/header %>
+<% include includes/pageheader %>
+	<!-- Page container -->
+	<div class="page-container">
+
+		<!-- Page content -->
+		<div class="page-content">
+
+			<!-- Main sidebar -->
+			<div class="sidebar sidebar-main sidebar-default">
+				<div class="sidebar-content">
+
+					<!-- Main navigation -->
+					<div class="sidebar-category sidebar-category-visible">
+						<div class="category-title h6">
+							<span>Navigation</span>
+						</div>
+
+						<div class="category-content no-padding">
+							<% include includes/navigation %>
+						</div>
+					</div>
+					<!-- /main navigation -->
+
+				</div>
+			</div>
+			<!-- /main sidebar -->
+
+
+			<!-- Main content -->
+			<div class="content-wrapper">
+				<% if (typeof msg !== 'undefined') { %>
+					<%- app.alert(msg);%>
+				<% } %>
+				<!-- Single line -->
+				<div class="panel panel-white">
+					<div class="panel-heading">
+						<h6 class="panel-title">New user </h6>
+					</div>
+
+					<div class="panel-body">
+						<div class="col-md-12">
+							<form class="form-horizontal" action="/<%- adminLocation;%>/update-user" method="POST">
+								<input type="hidden" name="formType" value="new">
+								<legend class="text-bold">User Details</legend>
+								<div class="form-group">
+									<label class="control-label col-lg-2">Username</label>
+									<div class="col-lg-10">
+										<input type="text" class="form-control" name="username" value="">
+										<span class="help-block">This users Username</span>
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="control-label col-lg-2">Email address</label>
+									<div class="col-lg-10">
+										<input type="text" class="form-control" name="email" value="">
+										<span class="help-block">Email address of the user</span>
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="control-label col-lg-2">Name</label>
+									<div class="col-lg-10">
+										<input type="text" class="form-control" name="realname" value="">
+										<span class="help-block">The real name of the user</span>
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="control-label col-lg-2">Display name</label>
+									<div class="col-lg-10">
+										<input type="text" class="form-control" name="displayname" value="">
+										<span class="help-block">How the site will display the user's name</span>
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="control-label col-lg-2">Display this name</label>
+									<div class="col-lg-3">
+										<select class="form-control" name="displaytype">
+											<option value="username">Username</option>
+											<option value="realname">Real name</option>
+											<option value="displayname">Display name</option>
+										</select>
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="control-label col-lg-2">Role</label>
+									<div class="col-lg-3">
+										<select class="form-control" name="role">
+											<% for (var i = 0; i < data.roles.length; i++) { %>
+												<option><%- app.capitalizeFirstLetter(data.roles[i]);%></option>
+											<% } %>
+										</select>
+									</div>
+								</div>
+								<div class="form-group has-feedback">
+									<label class="control-label col-lg-2">Password</label>
+									<div class="col-lg-3">
+										<input type="password" class="form-control" name="password">
+										<div class="form-control-feedback show-password">
+											<i class="icon-eye"></i>
+										</div>
+										<span class="help-block">Create a password</span>
+									</div>
+									<div class="col-md-2">
+										<button class="btn btn-info generateRandomPassword">Generate</button>
+									</div>
+								</div>
+
+								<button class="btn btn-success">Create</button>
+    						</form>
+    					</div>
+					</div>
+				</div>
+				<!-- /single line -->
+
+			</div>
+
+			</div>
+			<!-- /main content -->
+
+		</div>
+		<!-- /page content -->
+
+	</div>
+	<!-- /page container -->
+
+<% include includes/footer %>

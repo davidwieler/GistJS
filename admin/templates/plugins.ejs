@@ -89,52 +89,6 @@
 
 									<div class="navbar-right">
 
-										<%
-											let offset = Number(data.limits.offset);
-											let limit = Number(data.limits.limit);
-											let shownLimit = limit
-											let postCount = Number(data.userCount);
-											let startCount = 1;
-											let nextOffset = limit;
-											let prevOffset = 0
-
-											if (offset > 0) {
-												startCount = offset + 1;
-												nextOffset = offset + limit;
-												prevOffset = offset - limit;
-												shownLimit = limit + offset;
-											}
-
-											if (limit > postCount) {
-												shownLimit = postCount
-											}
-
-											let hrefPrev = '/' + adminLocation + '/users?limit=' + limit + '&offset=' + prevOffset;
-											let hrefNext = '/' + adminLocation + '/users?limit=' + limit + '&offset=' + nextOffset;
-
-										%>
-										<p class="navbar-text"><span class="text-semibold"><%- startCount;%>-<%- shownLimit; %></span> of <span class="text-semibold"><%- postCount; %></span></p>
-
-										<%
-											if (Number(limit) < postCount) {
-												let nextDisabled = '';
-												let prevDisabled = '';
-
-												if (nextOffset >= postCount) {
-													nextDisabled = 'disabled';
-												}
-
-												if (prevOffset === 0 && startCount <= 1) {
-													prevDisabled = 'disabled';
-												}
-												%>
-												<div class="btn-group navbar-left navbar-btn">
-													<a href="<%- hrefPrev;%>" type="button" class="btn btn-default btn-icon <%- prevDisabled;%>"><i class="icon-arrow-left12"></i></a>
-							                    	<a href="<%- hrefNext;%>" type="button" class="btn btn-default btn-icon <%- nextDisabled;%>"><i class="icon-arrow-right13"></i></a>
-												</div>
-												<%
-											}
-										%>
 
 										<div class="btn-group navbar-btn">
 											<form>
@@ -158,37 +112,42 @@
 								<thead>
 									<tr>
 										<th></th>
-										<th>User</th>
-										<th>Type</th>
-										<th>Email</th>
+										<th>Plugin</th>
+										<th>Description</th>
 									</tr>
 								</thead>
 								<tbody data-link="row" class="rowlink">
 									<%
+										for (var i = 0; i < plugins.length; i++) {
 
-										var users = data.users;
-										for (var i = 0; i < users.length; i++) {
-											var username = users[i].username;
-											var email = users[i].email;
-											var id = users[i]._id;
-											var accounttype = users[i].accounttype;
+											var name = plugins[i].pluginInfo.name;
+											var creator = plugins[i].pluginInfo.creator || 'unknown';
+											var url = plugins[i].pluginInfo.url || 'unknown';
+											var description = plugins[i].pluginInfo.description || 'n/a';
+											var version = plugins[i].pluginInfo.version || 'unknown';
+											var active = plugins[i].pluginInfo.active;
+
 											%>
 											<tr class="unread">
 												<td class="table-inbox-checkbox rowlink-skip" width="25px">
-													<div class="checker"><span><input type="checkbox" class="styled" value="<%-id%>"></span></div>
+													<div class="checker"><span><input type="checkbox" class="styled" value="<%-name%>"></span></div>
 												</td>
 												<td class="table-inbox-message">
-													<a href="/<%-adminLocation%>/user/edit/<%-id%>"><strong><%- username%></strong></a>
+													<a href="/<%-adminLocation%>/user/edit/<%-name%>"><strong><%- name%></strong></a>
 												</td>
 												<td class="table-inbox-name">
 													<a href="#">
-														<div class="letter-icon-title text-default"><%- app.capitalizeFirstLetter(accounttype)%></div>
+														<div class="letter-icon-title text-default"><%- description%></div>
 													</a>
-												</td>
-												<td class="table-inbox-name">
-													<a href="#">
-														<div class="letter-icon-title text-default"><%- email%></div>
-													</a>
+													<br />
+													<strong>Version:</strong> <%- version%> | <strong>By:</strong> <%- creator%> | <a href="<%- url%>" target="_blank"><%- url%></a>
+													<br />
+													<% if (active === true) { %>
+														<a href="/<%-adminLocation%>/plugin/disable/<%-name%>">Disable</a>
+													<% } else { %>
+														<a href="/<%-adminLocation%>/plugin/enable/<%-name%>">Enable</a>
+													<% } %>
+													| <a href="/<%-adminLocation%>/plugin/delete/<%-name%>">Delete</a>
 												</td>
 											</tr>
 											<%

@@ -173,7 +173,7 @@ module.exports = (CMS, router, passport, settings) => {
 					return;
 				}
 				if (req.body.status === 'trash') {
-					res.redirect('/' + CMS.adminLocation + '/posts?msg=3');
+					res.redirect('/' + CMS.adminLocation + '/posts?msg=4');
 					return;
 				} else {
 					res.redirect('/' + CMS.adminLocation + '/edit/' + postId + '?msg=2');
@@ -209,16 +209,88 @@ module.exports = (CMS, router, passport, settings) => {
 		});
 	});
 
-	// User routes
-	router.get('/' + CMS.adminLocation + '/users', CMS.isLoggedIn, (req, res) => {
+	// Plugin routes
+	router.get('/' + CMS.adminLocation + '/plugins', CMS.isLoggedIn, (req, res) => {
 		let msg = req.query.msg;
-		CMS.renderAdminTemplate(res, 'users', req.params, msg);
+		CMS.renderAdminTemplate(res, 'plugins', req.params, msg);
 	});
 
-	router.post('/' + CMS.adminLocation + '/themes', CMS.isLoggedIn, (req, res) => {
+	router.post('/' + CMS.adminLocation + '/plugins', CMS.isLoggedIn, (req, res) => {
 		CMS.themeSwitch(req.body.themeId, res, (newTheme) => {
 			res.redirect('/' + CMS.adminLocation + '/themes?msg=1');
 		});
+	});
+
+	router.get('/' + CMS.adminLocation + '/plugin/:action/:plugin', CMS.isLoggedIn, (req, res) => {
+		console.log(req.params.action);
+		console.log(req.params.plugin);
+	});
+
+	// User routes
+	router.get('/' + CMS.adminLocation + '/users', CMS.isLoggedIn, (req, res) => {
+		let msg = req.query.msg;
+
+		CMS.getUsers({}, (err, results) => {
+			CMS.renderAdminTemplate(res, 'users', results, msg);
+		});
+	});
+
+	router.get('/' + CMS.adminLocation + '/user/edit/:id', CMS.isLoggedIn, (req, res) => {
+		let msg = req.query.msg;
+
+		const search = {
+			_id: req.params.id
+		}
+
+		CMS.getUsers({search}, (err, results) => {
+			results.roles = CMS.rolesAndCaps.getRoleTypes();
+			CMS.renderAdminTemplate(res, 'user-edit', results, msg);
+		});
+	});
+
+	router.get('/' + CMS.adminLocation + '/users/add', CMS.isLoggedIn, (req, res) => {
+		let msg = req.query.msg;
+		const results = {
+			roles: CMS.rolesAndCaps.getRoleTypes()
+		};
+		CMS.renderAdminTemplate(res, 'user-new', results, msg);
+	});
+
+	router.post('/' + CMS.adminLocation + '/update-user', CMS.isLoggedIn, (req, res) => {
+		const data = {
+			roles: CMS.rolesAndCaps.getRoleTypes(),
+			formData: req.body
+		};
+
+		switch (req.body.formType) {
+			case 'new':
+
+				if (req.body.username === '' || req.body.email === '' || req.body.password === '') {
+					res.redirect('/' + CMS.adminLocation + '/users/add?msg=95');
+					return;
+				}
+
+				CMS.createUser(req.body)
+				.then((user) => {
+					res.redirect('/' + CMS.adminLocation + '/user/edit/' + user._id + '?msg=98');
+				})
+				.catch((e) => {
+					delete req.body.formType;
+					delete req.body.password;
+					if (e.message === 'user exists') {
+						res.redirect('/' + CMS.adminLocation + '/users/add?msg=96&' + CMS._utilities.serialize(req.body));
+					} else {
+						res.redirect('/' + CMS.adminLocation + '/users/add?msg=97');
+					}
+				});
+			break;
+			case 'update':
+
+			break;
+
+		}
+
+
 	});
 
 	//File uploads
@@ -284,8 +356,6 @@ module.exports = (CMS, router, passport, settings) => {
 					} else {
 						CMS.generateThumbnail(image, (err, result) => {
 							data.thumbnails = result;
-
-							console.log(data);
 
 							CMS.createContent(data, 'attachment', (id) => {
 								data._id = id;
@@ -377,7 +447,6 @@ module.exports = (CMS, router, passport, settings) => {
 		}
 
 		CMS.getAttachments(findAttachments, (err, result) => {
-			console.log(result);
 			CMS.sendResponse(res, 200, result);
 		});
 
@@ -488,8 +557,6 @@ module.exports = (CMS, router, passport, settings) => {
 		} else {
 			msg = 'invalid version sent';
 		}
-
-		console.log(msg);
 
 		CMS.sendResponse(res, 200, msg);
 		return;

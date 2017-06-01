@@ -863,6 +863,10 @@ select[multiple].form-group-xs .form-control, textarea.form-group-xs .form-contr
     color: #333;
     z-index: 3;
 }
+.form-control-feedback.show-password {
+    pointer-events: initial;
+}
+
 input[class*=bg-]+.form-control-feedback {
     color: #fff;
 }

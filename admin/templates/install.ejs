@@ -70,7 +70,7 @@
 							<h5>Some details</h5>
 							<div class="form-group has-feedback has-feedback-left">
 								<label for="">Site name <i class="fa fa-question-circle text-muted"></i></label>
-								<input type="text" class="form-control" placeholder="My Fancy Site" name="name" value="site test">
+								<input type="text" class="form-control" placeholder="My Site" name="name" value="">
 								<div class="form-control-feedback">
 									<i class="icon-user text-muted"></i>
 								</div>
@@ -83,23 +83,39 @@
 									<i class="icon-lock2 text-muted"></i>
 								</div>
 							</div>
-							<h5>Create your first user</h5>
+
 							<div class="form-group has-feedback has-feedback-left">
-								<input type="text" class="form-control" placeholder="Username" name="username" value="test">
+								<label for="">Site title <i class="fa fa-question-circle text-muted"></i></label>
+								<input type="text" class="form-control" placeholder="My Fancy Site" name="title" value="">
 								<div class="form-control-feedback">
 									<i class="icon-user text-muted"></i>
 								</div>
 							</div>
 
 							<div class="form-group has-feedback has-feedback-left">
-								<input type="email" class="form-control" placeholder="Email" name="email" value="davidw@focuswebmedia.com">
+								<label for="">Site tagline <i class="fa fa-question-circle text-muted"></i></label>
+								<input type="text" class="form-control" placeholder="Another site by me" name="tagline" value="">
+								<div class="form-control-feedback">
+									<i class="icon-lock2 text-muted"></i>
+								</div>
+							</div>
+							<h5>Create your first user</h5>
+							<div class="form-group has-feedback has-feedback-left">
+								<input type="text" class="form-control" placeholder="Username" name="username" value="">
+								<div class="form-control-feedback">
+									<i class="icon-user text-muted"></i>
+								</div>
+							</div>
+
+							<div class="form-group has-feedback has-feedback-left">
+								<input type="email" class="form-control" placeholder="Email" name="email" value="">
 								<div class="form-control-feedback">
 									<i class="icon-envelope text-muted"></i>
 								</div>
 							</div>
 
 							<div class="form-group has-feedback has-feedback-left">
-								<input type="password" class="form-control" placeholder="Password" name="password" value="test">
+								<input type="password" class="form-control" placeholder="Password" name="password" value="">
 								<div class="form-control-feedback">
 									<i class="icon-lock2 text-muted"></i>
 								</div>
@@ -114,7 +130,7 @@
 							<h5>Site Configuration</h5>
 							<div class="form-group has-feedback has-feedback-left">
 								<label for="">Admin location <i class="fa fa-question-circle text-muted"></i></label>
-								<input type="text" class="form-control" placeholder="cms-admin" name="admin" value="spry-admin">
+								<input type="text" class="form-control" placeholder="cms-admin" name="admin" value="">
 								<div class="form-control-feedback">
 									<i class="icon-user text-muted"></i>
 								</div>
@@ -122,7 +138,7 @@
 
 							<div class="form-group has-feedback has-feedback-left">
 								<label for="">Site location <i class="fa fa-question-circle text-muted"></i></label>
-								<input type="text" class="form-control" placeholder="Site URL" name="site" value="blog">
+								<input type="text" class="form-control" placeholder="Site URL" name="site" value="">
 								<div class="form-control-feedback">
 									<i class="icon-lock2 text-muted"></i>
 								</div>
@@ -130,7 +146,7 @@
 							<h5>Database connections</h5>
 							<div class="form-group">
 								<div class="radio quick-db">
-									<label><input type="radio" name="optradio" checked>Quick settings <small>(basic database settings using localhost)</small></label>
+									<label><input type="radio" name="optradio" checked>Quick settings <small>(basic database settings using localhost, <strong>NOT SECURE</strong>)</small></label>
 								</div>
 								<div class="radio custom-db">
 									<label><input type="radio" name="optradio">Custom settings <small>(customize your database settings)</small></label>
@@ -208,19 +224,95 @@
 
 							</div>
 							<div class="form-group">
-								<button class="btn bg-slate-400 back" data-step="1"><i class="icon-circle-left2 position-left"></i> back</button> 
+								<button class="btn bg-slate-400 back" data-step="1"><i class="icon-circle-left2 position-left"></i> back</button>
+								<button class="btn bg-green-400 email pull-right">Email settings <i class="icon-circle-right2 position-right"></i></button>
+							</div>
+						</div>
+
+						<div class="email-settings step step-3 hidden">
+							<h5>Setup email</h5>
+							<p>
+								Select a preconfigured service to instantly set up email sending.
+							</p>
+							<p>
+								If you want to set up a custom email service, you can do so once the install process is complete, as it's more involved and needs custom setup.
+							</p>
+							<h5>Email settings</h5>
+							<div class="form-group has-feedback has-feedback-left">
+								<label for="">Preconfigured services <i class="fa fa-question-circle text-muted"></i></label>
+								<select class="form-control" name="email-service">
+									<option value="126">126</option>
+									<option value="163">163</option>
+									<option value="1und1">1und1</option>
+									<option value="AOL">AOL</option>
+									<option value="DebugMail">DebugMail</option>
+									<option value="DynectEmail">DynectEmail</option>
+									<option value="FastMail">FastMail</option>
+									<option value="GandiMail">GandiMail</option>
+									<option value="Gmail" selected>Gmail</option>
+									<option value="Godaddy">Godaddy</option>
+									<option value="GodaddyAsia">GodaddyAsia</option>
+									<option value="GodaddyEurope">GodaddyEurope</option>
+									<option value="hot.ee">hot.ee</option>
+									<option value="Hotmail">Hotmail</option>
+									<option value="iCloud">iCloud</option>
+									<option value="mail.ee">mail.ee</option>
+									<option value="Mail.ru">Mail.ru</option>
+									<option value="Maildev">Maildev</option>
+									<option value="Mailgun">Mailgun</option>
+									<option value="Mailjet">Mailjet</option>
+									<option value="Mailosaur">Mailosaur</option>
+									<option value="Mandrill">Mandrill</option>
+									<option value="Naver">Naver</option>
+									<option value="OpenMailBox">OpenMailBox</option>
+									<option value="Outlook365">Outlook365</option>
+									<option value="Postmark">Postmark</option>
+									<option value="QQ">QQ</option>
+									<option value="QQex">QQex</option>
+									<option value="SendCloud">SendCloud</option>
+									<option value="SendGrid">SendGrid</option>
+									<option value="SendinBlue">SendinBlue</option>
+									<option value="SendPulse">SendPulse</option>
+									<option value="SES">SES</option>
+									<option value="SES-US-EAST-1">SES-US-EAST-1</option>
+									<option value="SES-US-WEST-2">SES-US-WEST-2</option>
+									<option value="SES-EU-WEST-1">SES-EU-WEST-1</option>
+									<option value="Sparkpost">Sparkpost</option>
+									<option value="Yahoo">Yahoo</option>
+									<option value="Yandex">Yandex</option>
+									<option value="Zoho">Zoho</option>
+									<option value="qiye.aliyun">qiye.aliyun</option>
+								</select>
+							</div>
+							<div class="form-group has-feedback has-feedback-left">
+								<label for="">Authication Username <i class="fa fa-question-circle text-muted"></i></label>
+								<input type="text" class="form-control" placeholder="" name="email-username" value="">
+								<div class="form-control-feedback">
+									<i class="icon-lock2 text-muted"></i>
+								</div>
+							</div>
+							<div class="form-group has-feedback has-feedback-left">
+								<label for="">Authication Password <i class="fa fa-question-circle text-muted"></i></label>
+								<input type="password" class="form-control" placeholder="" name="email-password" value="">
+								<div class="form-control-feedback">
+									<i class="icon-lock2 text-muted"></i>
+								</div>
+							</div>
+
+							<div class="form-group">
+								<button class="btn bg-slate-400 back" data-step="2"><i class="icon-circle-left2 position-left"></i> back</button>
 								<button class="btn bg-green-400 confirm pull-right">Confirm settings <i class="icon-circle-right2 position-right"></i></button>
 							</div>
 						</div>
 
-						<div class="confirm-settings step step-3 hidden">
+						<div class="confirm-settings step step-4 hidden">
 							<h5>Review your settings</h5>
 							<div class="settings form-group"></div>
 							<div class="clearfix"></div>
 							<br />
 							<div class="form-group">
-								<button class="btn bg-slate-400 back" data-step="2"><i class="icon-circle-left2 position-left"></i> back</button> 
-								<button class="btn bg-green-400 configure pull-right">Configure <i class="icon-circle-right2 position-right"></i></button>
+								<button class="btn bg-slate-400 back" data-step="2"><i class="icon-circle-left2 position-left"></i> back</button>
+								<button class="btn bg-green-400 configure pull-right">Install <i class="icon-circle-right2 position-right"></i></button>
 							</div>
 						</div>
 

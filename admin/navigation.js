@@ -10,7 +10,8 @@ module.exports = [
 	{
 		slug: 'Posts',
 		url: 'posts',
-		icon: 'icon-stack'
+		icon: 'icon-stack',
+		priviledge: 'read',
 	},
 	{
 		slug: 'Pages',
@@ -20,7 +21,8 @@ module.exports = [
 	{
 		slug: 'Media',
 		url: 'media',
-		icon: 'icon-image2'
+		icon: 'icon-image2',
+		priviledge: 'editFiles',
 	},
 	{
 		menuName: 'Settings'
@@ -28,45 +30,52 @@ module.exports = [
 	{
 		slug: 'Themes',
 		icon: 'icon-pencil3',
+		priviledge: 'updateThemes',
 		subMenu: [
 			{
 				slug: 'Manage',
 				url: 'themes',
-				icon: 'icon-image2'
+				icon: 'icon-image2',
+				priviledge: 'switchThemes',
 			}
 		]
 	},
 	{
 		slug: 'Plugins',
 		icon: 'icon-file-css',
+		priviledge: 'updatePlugins',
 		subMenu: [
 			{
 				slug: 'Manage',
-				url: 'themes',
-				icon: 'icon-image2'
+				url: 'plugins',
+				icon: 'icon-image2',
+				priviledge: 'updatePlugins',
 			}
 		]
 	},
 	{
 		slug: 'Users',
 		icon: 'icon-footprint',
-		priviledge: 'administrator',
+		priviledge: 'editUsers',
 		subMenu: [
 			{
 				slug: 'View all',
 				url: 'users',
-				icon: 'icon-image2'
+				icon: 'icon-image2',
+				priviledge: 'listUsers',
 			},
 			{
 				slug: 'Add new',
 				url: 'users/add',
-				icon: 'icon-image2'
+				icon: 'icon-image2',
+				priviledge: 'addUsers',
 			}
 		]
 	},
 	{
 		slug: 'Settings',
 		icon: 'icon-spell-check',
+		priviledge: 'editSettings',
 		url: 'settings',
 		navItemName: 'settings'
 	}

@@ -1,8 +1,8 @@
 {
 	"name": "site test",
 	"url": "http://localhost:7637",
-	"title": "",
-	"tagline": "",
+	"title": "Test Site",
+	"tagline": "Nothing to see here",
 	"adminEmail": "davidw@focuswebmedia.com",
 	"custom404": true,
 	"custom500": false,
@@ -56,6 +56,5 @@
 	"dbPort": "27017",
 	"dbData": "data",
 	"dbAccounts": "accounts",
-	"dbSessions": "sessions",
-	"currentUser": "test"
+	"dbSessions": "sessions"
 }

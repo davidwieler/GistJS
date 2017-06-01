@@ -316,6 +316,25 @@ $(document).ready(function() {
         $('.clear-selected-images').click();
     });
 
+    $('body').on('click', '.generateRandomPassword', function(e) {
+        e.preventDefault();
+        $('input[name="password"]').val(passwordGenerator(16));
+    });
+
+	$('body').on('click', '.show-password', function(e) {
+
+		if ($(this).hasClass('shown')) {
+			$(this).removeClass('shown');
+			$('input[name="password"]').attr('type', 'password');
+			$(this).children('i').removeClass('icon-eye-blocked');
+		} else {
+			$(this).addClass('shown');
+			$('input[name="password"]').attr('type', 'text');
+			$(this).children('i').addClass('icon-eye-blocked');
+		}
+
+	});
+
     // Editor on click content events
 
     $('body').on('click', '.wysihtml5-editor a, .insert-link', function() {

@@ -1,3 +1,12 @@
+let passwordGenerator = function(len) {
+    var possible = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789![]{}()%&*$#^<>~@|';
+    var text = '';
+    for(var i=0; i < len; i++) {
+      text += possible.charAt(Math.floor(Math.random() * possible.length));
+    }
+    return text;
+};
+
 let bulkCheckboxValues = function() {
     var checked = $('.checker').children('.checked');
     var checkedBoxes = [];
