@@ -35,4 +35,5 @@ app.listen(port);
 ```
 
 ### The Install
-Navigate to `localhost:7367/install`.
+Navigate to `localhost:3000/`.
+Which will launch the install process.
