@@ -5,7 +5,7 @@
 * Express 4 framework
 * MongoDB
 
-##NOTE
+## **NOTE**
 This is a dev version that is currently an alpha.
 
 Version 0.1 will soon be on NPM.
