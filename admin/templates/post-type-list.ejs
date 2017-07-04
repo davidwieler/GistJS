@@ -1,7 +1,11 @@
 <% include includes/header %>
 
 <% include includes/pageheader %>
-<% var posts = data.posts;%>
+<%
+	var posts = data.posts;
+	var location = `/${adminLocation}/${data.postTypeData.url}`;
+%>
+
 
 	<div class="modal fade quick-edit-posts" id="quickeditposts" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
 		<div class="modal-dialog" role="document">
@@ -82,11 +86,18 @@
 				<% if (typeof data.msg !== 'undefined') { %>
 					<%- app.alert(data.msg);%>
 				<% } %>
-
 				<!-- Single line -->
 				<div class="panel panel-white">
 					<div class="panel-heading">
-						<h6 class="panel-title">My Content <a href="/<%- adminLocation%>/edit" class="btn btn-link btn-float has-text"><i class="icon-pencil7 text-primary"></i><span>New Post</span></a></h6>
+						<div class="row">
+							<div class="col-md-6">
+								<h3 class="panel-title">My <%- app.capitalizeFirstLetter(data.postTypeData.slug);%></h3>
+							</div>
+							<div class="col-md-6">
+								<a href="/<%- adminLocation%>/edit?type=<%- data.postTypeData.contentType;%>" class="btn btn-info btn-labeled btn-xs pull-right"><b><i class="icon-pencil7"></i></b> New <%- app.capitalizeFirstLetter(data.postTypeData.contentType);%></a>
+							</div>
+						</div>
+
 					</div>
 
 					<div class="panel-toolbar panel-toolbar-inbox">
@@ -122,16 +133,20 @@
 									<%
 
 										if (!queryVars.status) {
-											%><a href="/<%- adminLocation;%>/posts" class="btn btn-default btn-info">All</span></a><%
+											%><a href="<%- location;%>" class="btn btn-default btn-info">All</span></a><%
 										} else {
-											%><a href="/<%- adminLocation;%>/posts" class="btn btn-default">All</span></a><%
+											%><a href="<%- location;%>" class="btn btn-default">All</span></a><%
 										}
-											%><a href="/<%- adminLocation;%>/posts" class="btn btn-default">Mine</span></a><%
+										if (queryVars.status === 'mine') {
+											%><a href="/<%- adminLocation;%>/posts?status=mine" class="btn btn-default btn-info">Mine</span></a><%
+										} else {
+											%><a href="/<%- adminLocation;%>/posts?status=mine" class="btn btn-default">Mine</span></a><%
+										}
 										for (var i in statusTypes) {
 											if (statusTypes.hasOwnProperty(i)) {
 												const type = i;
 												const named = statusTypes[i];
-												const href = `/${adminLocation}/posts?status=${type}`;
+												const href = `${location}?status=${type}`;
 												let active = '';
 
 												if (queryVars.status === i) {
@@ -166,8 +181,8 @@
 											shownLimit = postCount
 										}
 
-										let hrefPrev = `/${adminLocation}/posts?limit=${limit}&offset=${prevOffset}`;
-										let hrefNext = `/${adminLocation}/posts?limit=${limit}&offset=${nextOffset}`;
+										let hrefPrev = `${location}?limit=${limit}&offset=${prevOffset}`;
+										let hrefNext = `${location}?limit=${limit}&offset=${nextOffset}`;
 
 										if (queryVars.status) {
 											hrefPrev = `${hrefPrev}&status=${queryVars.status}`;
@@ -235,6 +250,14 @@
 									<th>User</th>
 									<th>Status</th>
 									<th>Time</th>
+									<%
+										for (var i = 0; i < postTypeColumns.length; i++) {
+											if (data.postTypeData.contentType === postTypeColumns[i].postType) {
+												%><th><%- postTypeColumns[i].columnName;%></th><%
+											}
+										}
+
+									%>
 								</tr>
 							</thead>
 							<tbody data-link="row" class="rowlink">
@@ -280,6 +303,29 @@
 											%>
 											</td>
 											<td><%- app.timeAgo(returnedPosts[i].timestamp, 'ddd, mmm ddS yyyy h:MMtt'); %></td>
+											<%
+												for (var pi = 0; pi < postTypeColumns.length; pi++) {
+													if (data.postTypeData.contentType === postTypeColumns[pi].postType) {
+														var attributes = postTypeColumns[pi].postAttribute;
+														var returns = returnedPosts[i][attributes] || '';
+														if (attributes.constructor === Array && typeof postTypeColumns[pi].callback === 'function') {
+															%><td><%- postTypeColumns[pi].callback(attributes, returnedPosts[i]) %></td><%
+														} else {
+
+															if (typeof postTypeColumns[pi].callback === 'undefined') {
+																%><td><%- returns %></td><%
+															}
+
+															if (typeof postTypeColumns[pi].callback === 'function') {
+																%><td><%- postTypeColumns[pi].callback(returns) %></td><%
+															}
+														}
+
+
+													}
+												}
+
+											%>
 										</tr>
 										<%
 									}
@@ -290,7 +336,7 @@
 							} else {
 						%>
 							<div class="text-center text-block">
-								<a href="/<%- adminLocation%>/edit" class="btn btn-link btn-float has-text"><i class="icon-pencil7 text-primary"></i><span>Create a New Post</span></a>
+								<a href="/<%- adminLocation%>/edit" class="btn btn-link btn-float has-text"><i class="icon-pencil7 text-primary"></i><span>Create a New <%- app.capitalizeFirstLetter(data.postTypeData.contentType);%></span></a>
 							</div>
 						<%
 							}

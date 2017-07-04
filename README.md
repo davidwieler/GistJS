@@ -1,4 +1,4 @@
-# segments-cms
+# Gist JS
 
 ### Requirements
 * NodeJS 4.4+ . **Works best on NodeJS 7.6.**
@@ -18,7 +18,7 @@ Clone/download this repo into your `node_modules` folder, `cd` into the director
 ```
 var express = require('express');
 var path = require('path');
-var cms = require('segments-cms');
+var cms = require('gist-js');
 var app = express();
 var port = 3000;
 

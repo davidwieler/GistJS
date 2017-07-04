@@ -1,3 +1,77 @@
+let enableDistractionFree = function(self) {
+	var panel = $('.editor-panel');
+	var panelFooter = panel.find('.panel-footer');
+	var panelEditor = panel.find('.wysihtml5-editor');
+
+	if (panel.hasClass('is-distration-free')) {
+		self.removeClass('btn-info');
+		panel.removeClass('distraction-free is-distration-free');
+		panelFooter.removeClass('distraction-free');
+		$('body').css({'overflow':'scroll'});
+	} else {
+		self.addClass('btn-info');
+		panel.addClass('distraction-free is-distration-free');
+		panelFooter.addClass('distraction-free');
+		$('body').css({'overflow':'hidden'});
+	}
+};
+
+let iframeLoaded = function(callback) {
+	var iFrameID = document.getElementById('previewiframe');
+	if(iFrameID) {
+		var padding = 50;
+		if (iFrameID.contentWindow.document.body.scrollHeight < (window.innerHeight - padding)){
+			iFrameID.height = iFrameID.contentWindow.document.body.scrollHeight + "px";
+		} else {
+			iFrameID.height = (window.innerHeight - padding) + "px";
+		}
+
+	    var iframeDoc = iFrameID.contentDocument || iFrameID.contentWindow.document;
+
+	    // Check if loading is complete
+	    if (  iframeDoc.readyState  == 'complete' ) {
+	        //iframe.contentWindow.alert("Hello");
+	        iFrameID.contentWindow.onload = function(){
+	            alert("I am loaded");
+	        };
+	        // The loading is complete, call the function we want executed once the iframe is loaded
+	        previewIframeContents($('#editor').html(), $('input[name="postTitle"]').val())
+	        return;
+	    }
+
+	    // If we are here, it is not loaded. Set things up so we check   the status again in 100 milliseconds
+	    window.setTimeout('checkIframeLoaded();', 100);
+	}
+	alert('');
+};
+
+
+
+let previewIframeContents = function(content, title) {
+	var iFrameID = document.getElementById('');
+	var previewFrameContents = $('#previewiframe').contents();
+	$(previewFrameContents).find('.post-content').html(content);
+	$(previewFrameContents).find('.post-title').html(title);
+}
+
+let enableDistractionFreePreview = function(self) {
+	var panel = $('.editor-panel');
+	var panelFooter = panel.find('.panel-footer');
+	var panelEditor = panel.find('.wysihtml5-editor');
+
+	if (panel.hasClass('is-distration-free')) {
+		self.removeClass('btn-info');
+		panel.removeClass('distraction-free is-distration-free');
+		panelFooter.removeClass('distraction-free');
+		$('body').css({'overflow':'scroll'});
+	} else {
+		self.addClass('btn-info');
+		panel.addClass('distraction-free is-distration-free');
+		panelFooter.addClass('distraction-free');
+		$('body').css({'overflow':'hidden'});
+	}
+};
+
 let passwordGenerator = function(len) {
     var possible = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789![]{}()%&*$#^<>~@|';
     var text = '';

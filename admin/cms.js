@@ -4,13 +4,20 @@ const path = require('path');
 const Utils = require('./utils.js');
 const Promise = require('bluebird');
 const _ = require('lodash');
-
+const APP = require('./assets/js/core/app.js');
+const async = require('async');
 (() => {
 
 	CMS = {
-		init: (settings) => {
+		init: (settings, router) => {
 			CMS.cmsDetails = require(__dirname + '/config.json');
 			CMS.adminDir = __dirname;
+
+			if (!settings.configLocation) {
+				CMS.configLocation = `${CMS.adminDir}/config.json`;
+			} else {
+				CMS.configLocation = settings.configLocation;
+			}
 
 			if (typeof CMS.cmsDetails.dbHost === 'undefined') {
 				return;
@@ -38,9 +45,35 @@ const _ = require('lodash');
 
 			};
 
+			CMS.statusTypes = {
+				published: 'Published',
+				draft: 'Draft',
+				trash: 'Trash',
+				private: 'Private'
+			}
+
+			CMS.postTypes = {
+				attachment: {
+					slug: 'Posts',
+					url: 'posts',
+					icon: 'icon-stack',
+					priviledge: 'read',
+					contentType: 'post',
+					navItemName: 'posts'
+				}
+			}
+
+			CMS.navigation = require('./navigation.js');
+			CMS.addedRoutes = [];
+
 			// Define the database details.
 			CMS.dbData = db(mongojs, CMS.dbConn).dataInit();
 			CMS.dbAccounts = db(mongojs, CMS.dbConn).accountInit();
+			CMS.dbUpdate = Promise.promisify( db(mongojs, CMS.dbConn).update );
+			CMS.dbSave = Promise.promisify( db(mongojs, CMS.dbConn).save );
+			CMS.dbInsert = Promise.promisify( db(mongojs, CMS.dbConn).insert );
+			CMS.dbFind = Promise.promisify( db(mongojs, CMS.dbConn).find );
+			CMS.dbFindOne = Promise.promisify( db(mongojs, CMS.dbConn).findOne );
 
 			CMS.adminLocation = CMS.cmsDetails.adminLocation;
 			CMS.themeDir = settings.themeDir;
@@ -49,6 +82,8 @@ const _ = require('lodash');
 			CMS.hooks = CMS.defineHooks();
 			CMS.passToRender = {};
 			CMS.themes = [];
+			CMS.metaBoxes = [];
+			CMS.dashboardWidgets = [];
 
 			// Requires
 			CMS._content = require('./requires/_content.js')(CMS);
@@ -62,6 +97,8 @@ const _ = require('lodash');
 			CMS._themes = require('./requires/_themes.js')(CMS);
 			CMS._plugins = require('./requires/_plugins.js')(CMS);
 			CMS._roles = require('./requires/_roles.js')(CMS);
+			CMS._messaging = require('./requires/_messaging.js')(CMS, APP);
+			CMS._initialFunctions = require('./requires/_init-functions.js')(CMS, APP);
 
 			// Promises
 			CMS.Promise = Promise;
@@ -72,6 +109,8 @@ const _ = require('lodash');
 			CMS.getPosts = Promise.promisify( CMS._content.getPosts );
 			CMS.updatePost = Promise.promisify( CMS._content.updatePost );
 			CMS.deletePost = Promise.promisify( CMS._content.deletePost );
+			CMS.doHook = Promise.promisify( CMS.doHook );
+			CMS.addMetaBox = CMS._content.addMetaBox;
 
 			// -- Thumbnails --
 			CMS.generateThumbnail = Promise.promisify( CMS._thumbnails.generateThumbnail );
@@ -85,6 +124,7 @@ const _ = require('lodash');
 			// -- Utilities --
 			CMS.getConfig = Promise.promisify( CMS._utilities.getConfig );
 			CMS.writeConfig = Promise.promisify( CMS._utilities.writeConfig );
+			CMS.request = Promise.promisify( CMS._utilities.request );
 			CMS.sendResponse = CMS._utilities.sendResponse;
 			CMS.passThroughUrl = CMS._utilities.passThroughUrl;
 			CMS.isLoggedIn = CMS._utilities.isLoggedIn;
@@ -93,6 +133,9 @@ const _ = require('lodash');
 			CMS.error = CMS._utilities.error;
 			CMS.errorHandler = CMS._utilities.errorHandler;
 			CMS.getTemplates = CMS._utilities.getTemplates;
+			CMS.addAdminNavigation = CMS._utilities.addAdminNavigation;
+			CMS.setQueryVars = CMS._utilities.setQueryVars;
+			CMS.createRoute = CMS._utilities.createRoute;
 
 			// -- Attachments --
 			CMS.getAttachment = Promise.promisify( CMS._attachments.getAttachment );
@@ -106,12 +149,14 @@ const _ = require('lodash');
 			// -- Users --
 			CMS.getUsers = Promise.promisify( CMS._users.getUsers );
 			CMS.createUser = Promise.promisify( CMS._users.createUser );
+			CMS.updateUser = Promise.promisify( CMS._users.updateUser );
 
 			// -- Rendering --
 			CMS.renderTemplate = CMS._render.renderTemplate;
 			CMS.renderPluginTemplate = CMS._render.renderPluginTemplate;
 			CMS.renderInstallTemplate = CMS._render.renderInstallTemplate;
 			CMS.renderAdminTemplate = CMS._render.renderAdminTemplate;
+			CMS.renderMetaBox = CMS._render.metaBox;
 
 			// -- Themes --
 			CMS._themes.initThemes();
@@ -119,11 +164,54 @@ const _ = require('lodash');
 
 			// -- Plugins --
 			CMS._plugins.initPlugins();
+			CMS.addPluginRoute = Promise.promisify( CMS._plugins.addPluginRoute );
+			const adminPlugins = CMS.activePlugins.admin;
 
 			// -- Roles --
 			CMS.rolesAndCaps = Promise.promisifyAll( CMS._roles );
 
+			// Initialize the included functions and content
+			CMS._initialFunctions.init();
+
 			CMS.rolesAndCaps.initRoles();
+			CMS.enableUserRegistration = () => {
+				CMS.createRoute({
+					type: 'get',
+					url: 'register',
+					auth: false,
+					function: () => {
+						CMS.renderAdminTemplate('registration', { message: ''});
+					}
+				});
+			};
+
+			// run active admin panel plugins
+			for (var i = adminPlugins.length - 1; i >= 0; i--) {
+
+				let requirePath = path.join(adminPlugins[i].pluginPath, adminPlugins[i].pluginInfo.require);
+				let thisPlugin = require(requirePath);
+				thisPlugin(CMS).init();
+
+			}
+
+			// Create initial postTypes
+			const posts = {
+				slug: 'Posts',
+				url: 'posts',
+				icon: 'icon-stack',
+				priviledge: 'read',
+				contentType: 'post'
+			}
+			const pages = {
+				slug: 'Pages',
+				url: 'pages',
+				icon: 'icon-stack',
+				priviledge: 'read',
+				contentType: 'page'
+			}
+			CMS._content.addPostType(posts, 2, 'posts');
+			CMS._content.addPostType(pages, 3, 'pages');
+			CMS._messaging.init()
 
 		},
 
@@ -133,40 +221,52 @@ const _ = require('lodash');
 
 		defineHooks: () => {
 			let hooks = {
-				dashboard: {}
+				dashboard: {},
+				edit: {}
 			};
 
 			return hooks;
 		},
 
-		applyHook: (name, func, location) => {
-			if (typeof func === 'function') {
-				let hooks = CMS.hooks;
-				hooks[location][name] = func
+		addHook: (name, location, position, func) => {
+			let hooks = CMS.hooks;
+
+			if (typeof hooks[location] === 'undefined') {
+				hooks[location] = {};
 			}
+			hooks[location][name] = func
 		},
 
-		doHook: (location) => {
-			let doTheseHooks = CMS.hooks[location];
+		doHook: (location, done) => {
+			const doTheseHooks = CMS.hooks[location];
+			let returns = {};
+			let promises = [];
 
 			for(var h in doTheseHooks){
-				if (doTheseHooks.hasOwnProperty(h) && typeof doTheseHooks[h] === 'function'){
-					doTheseHooks[h]();
+				if (doTheseHooks.hasOwnProperty(h)){
+					promises.push({slug: APP.textToSlug(h), func: doTheseHooks[h]});
 				}
 			}
-		},
 
-		addAdminNavigation: (navObject, position, navItemName) => {
-			let currentNav = CMS.navigation;
-			navObject.navItemName = navItemName;
+			async.forEachOf(promises, (value, key, callback) => {
 
-			// remove any plugin
-			for (var i = currentNav.length - 1; i >= 0; i--) {
-				if (currentNav[i].navItemName === navItemName) {
-					currentNav.splice(i, 1);
+				if (typeof value.func === 'string') {
+					returns[value.slug] = value.func;
+					callback();
 				}
-			}
-			currentNav.splice(position, 0, navObject);
+
+				if (typeof value.func === 'function') {
+					value.func((results) => {
+						returns[value.slug] = results;
+						callback();
+					});
+				}
+			}, (err) => {
+				if (err) {
+					done(err);
+				}
+				done(null, returns);
+			});
 		},
 
 		rebuildThumbnails: (images, attachmentId, done) => {

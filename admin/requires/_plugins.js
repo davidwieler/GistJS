@@ -13,7 +13,6 @@ module.exports = (CMS) => {
 			user: []
 		};
 		CMS.pluginDetails = [];
-		CMS.activePluginRoutes = [];
 
 		if (plugins.length !== 0) {
 			CMS.plugins = {};
@@ -30,8 +29,11 @@ module.exports = (CMS) => {
 				let details = {
 					pluginName: pluginInfo.name,
 					pluginPath: pluginPath,
-					pluginFile: path.join(pluginPath, pluginInfo.init),
 					pluginInfo: pluginInfo
+				}
+
+				if (pluginInfo.init) {
+					details.pluginFile = path.join(pluginPath, pluginInfo.init);
 				}
 
 				CMS.pluginDetails.push(details);
@@ -43,12 +45,6 @@ module.exports = (CMS) => {
 					}
 
 					pluginInfo.path = path.join(pluginFolder);
-
-					if (Object.prototype.toString.call(pluginRoutes) === '[object Array]') {
-						for (let i = pluginRoutes.length - 1; i >= 0; i--) {
-							CMS.activePluginRoutes.push(pluginInfo)
-						}
-					}
 
 					switch (pluginInfo.type) {
 						case 'admin' :
@@ -71,6 +67,11 @@ module.exports = (CMS) => {
 
 	plugins.disablePlugin = (plugin) => {
 
+	};
+
+	plugins.addPluginRoute = (route) => {
+		const startRoute = `/${CMS.adminLocation}/${route}`;
+		//console.log(startRoute);
 	};
 
 	return plugins;

@@ -8,31 +8,16 @@
 
 	<!-- Global stylesheets -->
 	<link href="https://fonts.googleapis.com/css?family=Roboto:400,300,100,500,700,900" rel="stylesheet" type="text/css">
-	<link href="/assets/css/icons/icomoon/styles.css" rel="stylesheet" type="text/css">
-	<link href="/assets/css/bootstrap.css" rel="stylesheet" type="text/css">
-	<link href="/assets/css/core.css" rel="stylesheet" type="text/css">
-	<link href="/assets/css/components.css" rel="stylesheet" type="text/css">
-	<link href="/assets/css/colors.css" rel="stylesheet" type="text/css">
+	<link href="/gistjs-assets/css/icons/icomoon/styles.css" rel="stylesheet" type="text/css">
+	<link href="/gistjs-assets/css/bootstrap.css" rel="stylesheet" type="text/css">
+	<link href="/gistjs-assets/css/core.css" rel="stylesheet" type="text/css">
+	<link href="/gistjs-assets/css/components.css" rel="stylesheet" type="text/css">
+	<link href="/gistjs-assets/css/colors.css" rel="stylesheet" type="text/css">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/css/bootstrap-select.min.css">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 	<!-- /global stylesheets -->
 
 	<!-- Core JS files -->
-	<script type="text/javascript" src="/assets/js/core/libraries/jquery.min.js"></script>
-	<script type="text/javascript" src="/assets/js/core/libraries/bootstrap.min.js"></script>
-	<script type="text/javascript" src="/assets/js/core/libraries/wysihtml.min.js"></script>
-	<script type="text/javascript" src="/assets/js/core/libraries/wysihtml-toolbar.min.js"></script>
-	<script type="text/javascript" src="/assets/js/core/libraries/wysihtml-parser-rules.js"></script>
-	<script type="text/javascript" src="/assets/js/plugins/loaders/blockui.min.js"></script>
-	<script type="text/javascript" src="/assets/js/plugins/ui/nicescroll.min.js"></script>
-	<script type="text/javascript" src="/assets/js/plugins/ui/drilldown.js"></script>
-	<script type="text/javascript" src="/assets/js/plugins/loaders/pace.min.js"></script>
-	<script type="text/javascript" src="/assets/js/plugins/tidyhtml.js"></script>
-	<script type="text/javascript" src="/assets/js/plugins/tomarkdown.js"></script>
-	<script type="text/javascript" src="/assets/js/core/app.js"></script>
-	<script type="text/javascript" src="/assets/js/core/handlers.js"></script>
-	<script type="text/javascript" src="/assets/js/core/helperFunctions.js"></script>
-	<script src="https://cdn.rawgit.com/showdownjs/showdown/1.6.3/dist/showdown.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/js/bootstrap-select.min.js"></script>
 	<script>
 		const postMeta = '<%- JSON.stringify(postData.postMeta); %>';
 		const adminLocation = '<%- adminLocation%>';
@@ -40,7 +25,24 @@
 		const postId = '<%- postData._id%>';
 		const autoSaveTimer = '<%- cms.cmsDetails.autoSaveTimer%>';
 		const coreVersion = '<%- cms.cmsDetails.coreVersion%>';
+		let subscriptionStatus = '';
 	</script>
+	<script type="text/javascript" src="/gistjs-assets/js/core/libraries/jquery.min.js"></script>
+	<script type="text/javascript" src="/gistjs-assets/js/core/libraries/bootstrap.min.js"></script>
+	<script type="text/javascript" src="/gistjs-assets/js/core/libraries/wysihtml.min.js"></script>
+	<script type="text/javascript" src="/gistjs-assets/js/core/libraries/wysihtml-toolbar.min.js"></script>
+	<script type="text/javascript" src="/gistjs-assets/js/core/libraries/wysihtml-parser-rules.js"></script>
+	<script type="text/javascript" src="/gistjs-assets/js/plugins/loaders/blockui.min.js"></script>
+	<script type="text/javascript" src="/gistjs-assets/js/plugins/ui/nicescroll.min.js"></script>
+	<script type="text/javascript" src="/gistjs-assets/js/plugins/ui/drilldown.js"></script>
+	<script type="text/javascript" src="/gistjs-assets/js/plugins/loaders/pace.min.js"></script>
+	<script type="text/javascript" src="/gistjs-assets/js/plugins/tidyhtml.js"></script>
+	<script type="text/javascript" src="/gistjs-assets/js/plugins/tomarkdown.js"></script>
+	<script type="text/javascript" src="/gistjs-assets/js/core/app.js"></script>
+	<script type="text/javascript" src="/gistjs-assets/js/core/handlers.js"></script>
+	<script type="text/javascript" src="/gistjs-assets/js/core/helperFunctions.js"></script>
+	<script src="https://cdn.rawgit.com/showdownjs/showdown/1.6.3/dist/showdown.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/js/bootstrap-select.min.js"></script>
 	<!-- /core JS files -->
 
 	<!-- Plugin CSS & JS files -->

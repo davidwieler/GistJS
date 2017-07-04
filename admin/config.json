@@ -1,16 +1,16 @@
 {
-	"name": "site test",
+	"name": "GistJS Dev Setup",
 	"url": "http://localhost:7637",
-	"title": "Test Site",
-	"tagline": "Nothing to see here",
+	"title": "Testing GistJS",
+	"tagline": "Open Source",
 	"adminEmail": "davidw@focuswebmedia.com",
 	"custom404": true,
 	"custom500": false,
-	"deleteAfter": 86400,
+	"deleteAfter": "86400",
 	"postRevisions": true,
 	"imageRevisions": false,
-	"jpgQuality": 100,
-	"pngQuality": 100,
+	"jpgQuality": "100",
+	"pngQuality": "100",
 	"coreVersion": 0.1,
 	"maintenance": false,
 	"prettyPagination": true,
@@ -21,29 +21,29 @@
 		{
 			"suffix": "-thumb1024",
 			"size": {
-				"height": 1024,
-				"width": 1024
+				"width": "1024",
+				"height": "1024"
 			}
 		},
 		{
 			"suffix": "-thumb500",
 			"size": {
-				"height": 500,
-				"width": 500
+				"width": "500",
+				"height": "500"
 			}
 		},
 		{
 			"suffix": "-thumb250",
 			"size": {
-				"height": 250,
-				"width": 250
+				"width": "250",
+				"height": "250"
 			}
 		},
 		{
 			"suffix": "-preview",
 			"size": {
-				"height": 200,
-				"width": 200
+				"width": "200",
+				"height": "200"
 			}
 		}
 	],
@@ -56,5 +56,9 @@
 	"dbPort": "27017",
 	"dbData": "data",
 	"dbAccounts": "accounts",
-	"dbSessions": "sessions"
+	"dbSessions": "sessions",
+	"sessionCookieSecret": "test",
+	"sessionCookieName": "testit",
+	"anyoneRegister": false,
+	"pushEnabled": true
 }

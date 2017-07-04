@@ -43,7 +43,10 @@ module.exports = (CMS) => {
 			editUsers: false,
 			deleteUsers: false,
 			listUsers: false,
-			editSettings: false
+			editMenus: false,
+			editSettings: false,
+			adjustControls: false,
+			enableAdminPush: false
 		};
 
 		roles.contributor = {
@@ -75,7 +78,10 @@ module.exports = (CMS) => {
 			editUsers: false,
 			deleteUsers: false,
 			listUsers: false,
-			editSettings: false
+			editMenus: false,
+			editSettings: false,
+			adjustControls: false,
+			enableAdminPush: true
 		};
 
 		roles.author = {
@@ -107,7 +113,10 @@ module.exports = (CMS) => {
 			editUsers: false,
 			deleteUsers: false,
 			listUsers: false,
-			editSettings: false
+			editMenus: false,
+			editSettings: false,
+			adjustControls: false,
+			enableAdminPush: true
 		};
 
 		roles.editor = {
@@ -139,7 +148,10 @@ module.exports = (CMS) => {
 			editUsers: false,
 			deleteUsers: false,
 			listUsers: false,
-			editSettings: false
+			editMenus: true,
+			editSettings: false,
+			adjustControls: false,
+			enableAdminPush: true
 		};
 
 		roles.administrator = {
@@ -171,7 +183,10 @@ module.exports = (CMS) => {
 			editUsers: true,
 			deleteUsers: true,
 			listUsers: true,
-			editSettings: true
+			editMenus: true,
+			editSettings: true,
+			adjustControls: true,
+			enableAdminPush: true
 		};
 
 		CMS.roles = roles;

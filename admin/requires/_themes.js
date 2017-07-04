@@ -19,6 +19,7 @@ module.exports = (CMS) => {
 	        let themeInfo = JSON.parse(fs.readFileSync(themeJson, 'utf-8'));
 	        themeInfo.id = i;
 	        themeInfo.localPath = path.join(themeFolder);
+			themeInfo.themeFolder = path.join('/themes/', themeFolder);
 	        themeInfo.path = themePath;
 	        CMS.themes.push(themeInfo);
 

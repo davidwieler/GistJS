@@ -2,22 +2,57 @@ $(document).ready(function() {
 
     // Auto save functions
     let timeoutId;
-    if (postId) {
-        $('body').on('input propertychange change', 'form input, #editor', function() {
+    $('body').on('input propertychange change paste', 'form input, #editor', function() {
 
-            if ($(this).data('autosave') !== false) {
-                clearTimeout(timeoutId);
-                timeoutId = setTimeout(function() {
-                    // Runs 1 second (1000 ms) after the last change
-                    $('textarea[name="postContent"], input[name="autoSave"]').remove();
-                    var content = $('#editor').html();
-                    $('.edit-form').append('<textarea style="display:none;" name="postContent">' + content + '</textarea><input type="hidden" value="true" name="autoSave">')
-                    autoSave($('.edit-form'));
-                }, autoSaveTimer);
-            }
+		var text = $('#editor').text();
+		var content = $('#editor').html();
+		var postTitle = $('input[name="postTitle"]').val();
+		//previewIframeContents(content, postTitle);
+		//return;
+		var wordCount = app.countWords(text);
+		var countParagraphs = app.countParagraphs(content);
+		var countCharacters = app.countCharacters(text);
+		var countSentences = app.countSentences(text);
+		var uniqueWords = app.uniqueWords(text);
+		var readTime = app.readTime(text, 250);
+		var readTimeSeconds = app.readTime(text, 250, true);
 
-        });
-    }
+		$('.word-count-stat').html(wordCount);
+		$('.paragraph-stat').html(countParagraphs);
+		$('.characters-stat').html(countCharacters);
+		$('.sentences-stat').html(countSentences);
+		$('.unique-words-stat').html(uniqueWords);
+
+		$('input[name="postStats[wordCount]"]').val(wordCount);
+		$('input[name="postStats[paragraphCount]"]').val(countParagraphs);
+		$('input[name="postStats[characterCount]"]').val(countCharacters);
+		$('input[name="postStats[sentenceCount]"]').val(countSentences);
+		$('input[name="postStats[uniqueWordCount]"]').val(uniqueWords);
+
+
+		if (typeof readTime === 'number') {
+			readTime = `${readTime} seconds`;
+		} else {
+			readTime = `${readTime[0]} min, ${readTime[1]} seconds`;
+		}
+
+		$('.read-time-stat').html(readTime);
+		$('input[name="postStats[readTime]"]').val(readTime);
+		$('input[name="postStats[readTimeSeconds]"]').val(readTimeSeconds);
+
+	    if (postId) {
+	        if ($(this).data('autosave') !== false) {
+	            clearTimeout(timeoutId);
+	            timeoutId = setTimeout(function() {
+	                // Runs 1 second (1000 ms) after the last change
+	                $('textarea[name="postContent"], input[name="autoSave"]').remove();
+					$('.edit-form').append(`<textarea style="display:none;" name="postContent">${content}</textarea><input type="hidden" value="true" name="autoSave">`);
+	                autoSave($('.edit-form'));
+	            }, autoSaveTimer);
+	        }
+		}
+
+    });
     // --------- end auto save functions
     $('body').on('input change', 'input[name="postTitle"]', function() {
         var value = $(this).val();
@@ -28,7 +63,7 @@ $(document).ready(function() {
             $('input[name="postUrl"').val('');
             return;
         }
-        $('input[name="postUrl"').val('/' + app.sanitizeTitle(value));
+        $('input[name="postUrl"').val(`/${app.sanitizeTitle(value)}`);
     });
 
     $('body').on('input change', 'input[name="postUrl"]', function() {
@@ -57,8 +92,17 @@ $(document).ready(function() {
     });
 
     $('body').on('click', '.submit-new-category', function(e) {
-       e.preventDefault();
-       categoryNew($('.category-list-input').val(), true)
+		e.preventDefault();
+		categoryNew($('.category-list-input').val(), false);
+    });
+
+	$('body').on('click', '.add-category', function(e) {
+		e.preventDefault();
+		var selectedCategory = $('.add-category option:selected').val();
+
+		if (selectedCategory !== '') {
+			categoryNew(selectedCategory, false);
+		}
     });
 
     $('body').on('click', '.category-list-options', function() {
@@ -122,7 +166,7 @@ $(document).ready(function() {
                 content = '';
             }
             $('input[name="postContent"], input[name="autoSave"]').remove();
-            $('.edit-form').append('<textarea style="display:none;" name="postContent">' + content + '</textarea>');
+            $('.edit-form').append(`<textarea style="display:none;" name="postContent">${content}</textarea>`);
             $('.edit-form').submit();
         }
     });
@@ -134,21 +178,7 @@ $(document).ready(function() {
     });
 
     $('body').on('click', '.action-distraction-free', function() {
-        var panel = $('.editor-panel');
-        var panelFooter = panel.find('.panel-footer');
-        var panelEditor = panel.find('.wysihtml5-editor');
-
-        if (panel.hasClass('is-distration-free')) {
-            $(this).removeClass('btn-info');
-            panel.removeClass('distraction-free is-distration-free');
-            panelFooter.removeClass('distraction-free');
-            $('body').css({'overflow':'scroll'});
-        } else {
-            $(this).addClass('btn-info');
-            panel.addClass('distraction-free is-distration-free');
-            panelFooter.addClass('distraction-free');
-            $('body').css({'overflow':'hidden'});
-        }
+		enableDistractionFree($(this));
     });
 
     $('body').on('click', '.action-preview', function() {
@@ -156,11 +186,44 @@ $(document).ready(function() {
         var panelFooter = panel.find('.panel-footer');
         var panelEditor = panel.find('.wysihtml5-editor');
 
+
         if (panel.hasClass('is-preview')) {
             $(this).removeClass('btn-info');
+			panel.removeClass('is-preview');
+			$('.main-panel').removeClass('col-md-6').addClass('col-md-9');
+			var sidePanel = $('.side-panel').addClass('col-md-3').detach();
+			$('.main-panel').after(sidePanel);
+			$('.sidebar-main-toggle').click();
+			$('.preview-panel').hide();
         } else {
             $(this).addClass('btn-info');
             panel.addClass('is-preview');
+			$('.main-panel').removeClass('col-md-9').addClass('col-md-6');
+			var sidePanel = $('.side-panel').removeClass('col-md-3').detach();
+			$('.main-panel').append(sidePanel);
+			$('.preview-panel').fadeIn();
+			$('.sidebar-main-toggle').click();
+
+			$('#previewiframe').attr({src: $('input[name="postUrl"]').val()});
+			var previewData = {
+				url: $('input[name="postUrl"]').val(),
+				template: $('select[name="template"] option:selected').val()
+			}
+			app.preview = {};
+			var items = $("form :input").map(function(index, elm) {
+				var item = {};
+				var type = elm.type;
+				var name = elm.name;
+				var value = $(elm).val();
+
+				if (type === 'hidden' || type === 'button' || type === 'submit' || name === '' || type === 'select-one') {
+					return;
+				}
+
+
+				return {name, type, value};
+
+			});
         }
     });
 
@@ -207,7 +270,6 @@ $(document).ready(function() {
         e.preventDefault();
 
         const checked = bulkCheckboxValues();
-        console.log(checked);
 
         switch (toDo) {
             case 'bulk-edit' :
@@ -346,7 +408,6 @@ $(document).ready(function() {
             var modal = $('#linksinsertmodal');
             modal.modal('toggle');
             var posts = JSON.parse(res);
-            console.log(posts);
             posts = posts.posts.posts;
 
             if (isEditorLinkClicked) {
@@ -756,7 +817,7 @@ $(function() {
     $('.navigation').find('li.active').parents('li').addClass('active');
 
     // Hide all nested lists
-    $('.navigation').find('li').not('.active, .category-title').has('ul').children('ul').addClass('hidden-ul');
+    //$('.navigation').find('li').not('.active, .category-title').has('ul').children('ul').addClass('hidden-ul');
 
     // Highlight children links
     $('.navigation').find('li').has('ul').children('a').addClass('has-ul');
@@ -841,7 +902,7 @@ $(function() {
 
     // Adjust page height on sidebar control button click
     $(document).on('click', '.sidebar-control', function (e) {
-        containerHeight();
+        //containerHeight();
     });
 
 

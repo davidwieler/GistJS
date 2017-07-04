@@ -25,6 +25,18 @@
 				className = 'alert-info';
 				text = '<strong>No changes were made.</strong>';
 			break;
+			case '6' :
+				className = 'alert-warning';
+				text = '<strong>Post not found</strong>';
+			break;
+			case '93' :
+				className = 'alert-info';
+				text = '<strong>User updated</strong>';
+			break;
+			case '94' :
+				className = 'alert-warning';
+				text = '<strong>Problem updating user, please try again.</strong>';
+			break;
 			case '95' :
 				className = 'alert-warning';
 				text = '<strong>Username, email and password are required to create a new user</strong>';
@@ -53,6 +65,7 @@
 
 		return '<div class="alert ' + className + '">' + text + '</div>';
 	};
+
     exports.timeAgo = function(dateString, format) {
         var rightNow = new Date();
 
@@ -111,6 +124,84 @@
             return exports.formatDate(dateString, format);
         }
     };
+
+	exports.countWords = function(string) {
+		if (string === '') {
+			return 0;
+		}
+		string = string.replace(/(^\s*)|(\s*$)/gi, '');
+	    string = string.replace(/\s\s+/g, ' ');
+	    string = string.replace(/,/g, ' ');
+	    string = string.replace(/;/g, ' ');
+	    string = string.replace(/\//g, ' ');
+	    string = string.replace(/\\/g, ' ');
+	    string = string.replace(/{/g, ' ');
+	    string = string.replace(/}/g, ' ');
+	    string = string.replace(/\n/g, ' ');
+	    string = string.replace(/[\{\}]/g, ' ');
+	    string = string.replace(/[\(\)]/g, ' ');
+	    string = string.replace(/[[\]]/g, ' ');
+	    string = string.replace(/[ ]{2,}/gi, ' ');
+	    var countWordsBySpaces = string.split(' ').length;
+	    return countWordsBySpaces;
+	};
+
+	exports.readTime = function(string, wpm, secondsOnly) {
+		var words = exports.countWords(string);
+	    var estimatedRaw = words / wpm;
+		var wordsPerSecond = wpm / 60;
+	    var minutes = Math.round(estimatedRaw);
+		var seconds = Math.floor(words / wordsPerSecond);
+
+		if (secondsOnly) {
+			return seconds;
+		}
+
+		if (seconds <= 59) {
+			return seconds;
+		} else {
+			minutes = Math.floor(seconds/60);
+            seconds = seconds%60;
+
+            return [minutes, seconds];
+		}
+	};
+
+	exports.countParagraphs = function(string) {
+		var returns = string.match(/<p\b[^>]*>/ig);
+
+		if (returns === null) {
+			return 0;
+		}
+		return returns.length;
+	};
+
+	exports.countCharacters = function(string) {
+		return string.replace(/\s/g, '').length;
+	};
+
+	exports.countSentences = function(string) {
+		var returns = string.match(/[^\r\n.!?]+(\r\n|\r|\n|[.!?])\s*/gi);
+		if (returns === null) {
+			return 0;
+		}
+		return returns.length;
+	};
+
+	exports.uniqueWords = function(string) {
+		if (string === '') {
+			return 0;
+		}
+		var cleanString = string.replace(/[\.,-\/#!?$%\^&\*;:{}=\-_`~()]/g, '').split(' ');
+		var newWords = [];
+
+	    for (var i = 0; i < cleanString.length; i++) {
+	    	newWords.push(cleanString[i].replace(/\s/g, ''));
+	    }
+		var uniqueCount = [...new Set(newWords)]
+
+		return uniqueCount.length;
+	};
 
     exports.formatDate = function(date, mask) {
 
@@ -341,18 +432,43 @@
 
 	};
 
-	exports.metaBox = function(data) {
+	exports.renderDashboardWidget = function(widgetName, widgetContent, noheader) {
+		var returns = `
+			<div class="col-md-6">
+				<div class="panel panel-white ">
+					<div class="panel-heading">
+						<h6 class="panel-title">${widgetName}<a class="heading-elements-toggle"><i class="icon-more"></i></a></h6>
+						<div class="heading-elements">
+							<ul class="icons-list">
+								<li><a data-action="collapse"></a></li>
+								<li><a data-action="move" class="ui-sortable-handle"></a></li>
+							</ul>
+						</div>
+					</div>
+					${widgetContent}
+				</div>
+			</div>
+			`;
+		return returns;
+	};
 
+	exports.metaBox = function(data, postData) {
+		var postMeta = postData.postMeta;
 		var heading = '';
 		var content = '';
+		var value = '';
 
 		if (data.heading) {
-			var heading = '<div class="panel-heading metabox">\
-								<h6 class="panel-title">' + data.heading + '</h6>\
-						   <div>';
+			var heading = `
+				<div class="panel-heading metabox">
+					<h6 class="panel-title">${data.heading}</h6>
+				</div>
+			`;
 		}
 
 		var dataContent = data.content;
+		console.log(dataContent);
+		console.log('^^^^ from app.js, exports.metaBox function');
 
 		for (var i = 0; i < dataContent.length; i++) {
 			var text = '';
@@ -365,31 +481,38 @@
 			if ( dataContent[i].inputs) {
 				var inputs = dataContent[i].inputs;
 				for (var i = 0; i < inputs.length; i++) {
+
 					if (inputs[i].name) {
-						var name = '<label>' + inputs[i].name + '</label>';
+						var name = `<label>${inputs[i].name}</label>`;
 					} else {
 						var name = '';
 					}
 
 					var type = inputs[i].type || 'text';
 					var placeholder = inputs[i].placeholder || '';
-					var name = app.removeSpecialChars(inputs[i].name.trim());
+					var attributes = inputs[i].attr || '';
+					var name = exports.sanitizeTitle(inputs[i].name.trim(), ' ');
 
 					if (typeof name === 'undefined') {
 						console.error('metaBox inputs must have a name');
 						return;
 					}
 
-					if (postMeta.length > 0) {
-						var value = JSON.parse(postMeta)[name];
-					} else {
-						var value = '';
+					if (typeof postMeta !== 'undefined') {
+						if (postMeta[exports.removeSpecialChars(name)]) {
+							var value = postMeta[exports.removeSpecialChars(name)];
+						} else {
+							var value = '';
+						}
 					}
 
-					var inputContent =	'<div class="form-group">\
-											' + name + '\
-											<input type="' + app.removeSpecialChars(type) + '" class="form-control" value="' + value +'" name="postMeta[' + name + ']" placeholder="' + app.removeSpecialChars(placeholder) + '">\
-										</div>';
+
+					var inputContent = `
+						<div class="form-group">
+							${name}
+							<input type="${exports.removeSpecialChars(type)}" class="form-control" value="${value}" name="postMeta[${exports.removeSpecialChars(name)}]" placeholder="${exports.removeSpecialChars(placeholder, ' ')}" ${attributes}>
+						</div>
+					`;
 
 					content += inputContent;
 				}
@@ -397,12 +520,14 @@
 
 		}
 
-		return '<div class="panel panel-white meta-box-panel">\
-					' + heading + '\
-	                <div class="panel-body meta-box-wrap">\
-						' + content + '\
-	                </div>\
-	           </div>';
+		return `
+			<div class="panel panel-white meta-box-panel">
+				${heading}
+				<div class="panel-body meta-box-wrap">
+					${content}
+				</div>
+			</div>
+		`;
 	};
 
 	exports.modal = function(post) {
@@ -490,13 +615,20 @@
 			}
     };
 
-	exports.sanitizeTitle = function(text) {
-	    var newString = text.trim().replace(/[\s+`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\]/gi, '-');
-	    return newString.toLowerCase();
+	exports.sanitizeTitle = function(text, replaceChar) {
+		replaceChar = replaceChar || '-';
+		if (text[text.length - 1] === '.'){
+			text = text.slice(0,-1);
+		}
+	    var newString = text.trim().replace(/[\s+`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\]/gi, replaceChar);
+		newString = newString.replace(/-+/g,'-').toLowerCase();
+
+	    return newString
 	};
 
-	exports.removeSpecialChars = function(text) {
-	    return text.replace(/[+`~!@#$%^&*()|+\=?;:'",.<>\{\}\[\]\\]/gi, '').trim().replace(/\s/g, '_');
+	exports.removeSpecialChars = function(text, replace) {
+		const replaceWith = replace || '_'
+	    return text.replace(/[+`~!@#$%^&*()|+\=?;:'",.<>\{\}\[\]\\]/gi, '').trim().replace(/\s/g, replaceWith);
 	};
 
 	exports.sanitizeHtml = function(html) {
@@ -516,6 +648,20 @@
 	        return entityMap[s];
 	    });
 	};
+
+	exports.textToSlug = function(text) {
+		const slug = exports.sanitizeTitle(text).replace(/-/g, '_');
+		return slug
+	};
+
+	exports.sanitizeUrl = function(url) {
+		const startsWithSlash = /^\//;
+		if (!startsWithSlash.test(url)) {
+			url = `/${url}`
+		}
+
+		return url.trim().replace(/[\s+`~!@#$%^&*()_|+=?;:'",.<>\{\}\[\]\\]/gi, '');
+	}
 
 	exports.unescapeHtml = function(string) {
 

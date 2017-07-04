@@ -3,6 +3,10 @@ const path = require('path');
 const Events = require('../events.js');
 const bcrypt   = require('bcrypt-nodejs');
 const _ = require('lodash');
+const express = require('express');
+const router = express.Router();
+const APP = require('../assets/js/core/app.js');
+const request = require('request');
 module.exports = (CMS) => {
 
 	let utilities = {};
@@ -47,11 +51,33 @@ module.exports = (CMS) => {
 		});
 	}
 
+	utilities.setQueryVars = (vars) => {
+		if (_.isEmpty(vars)) {
+			CMS.passToRender.queryVarString = '';
+			CMS.passToRender.queryVars = {};
+			return;
+		}
+
+		let query = [];
+
+		for (var v in vars) {
+			if (vars.hasOwnProperty(v)) {
+
+				query.push(`${encodeURIComponent(v)}=${encodeURIComponent(vars[v])}`);
+			}
+		}
+
+		const string = query.join("&");
+
+		CMS.passToRender.queryVarString = `${string}`;
+		CMS.passToRender.queryVars = vars;
+	};
+
 	utilities.getConfig = (type, done) => {
 		let config;
 		switch(type) {
 			case 'main' :
-				config = require(__dirname + '/config.json');
+				config = require(CMS.configLocation);
 			break;
 
 			case 'active-theme' :
@@ -63,18 +89,16 @@ module.exports = (CMS) => {
 	};
 
 	utilities.writeConfig = (toWrite, done) => {
-		let configFile = __dirname + '/config.json';
-		let config = require(configFile);
-		Object.assign(config, toWrite);
+		CMS.getConfig('main').then((configData) => {
+			Object.assign(configData, toWrite);
+			let string = JSON.stringify(configData, null, '\t');
+			fs.writeFile(CMS.configLocation, string, (err) => {
+				if (err) {
+					return done(err);
+				}
 
-		let string = JSON.stringify(config, null, '\t');
-
-		fs.writeFile(configFile, string, (err) => {
-			if (err) {
-				return done(err);
-			}
-
-			done(null, 'complete');
+				done(null, 'complete');
+			});
 		});
 	};
 
@@ -119,10 +143,22 @@ module.exports = (CMS) => {
 	};
 
 	utilities.passThroughUrl = (url, req, res) => {
-		let okay = [
+		const okay = [
 			'/' + CMS.adminLocation,
-			'/assets'
+			'/gistjs-assets'
 		];
+
+		if (!CMS.cmsDetails.anyoneRegister) {
+			okay.push('/register');
+		}
+
+		const deny = [];
+
+		for (let i = deny.length - 1; i >= 0; i--) {
+			if (url.indexOf(deny[i]) >= 0) {
+				return false;
+			}
+		}
 
 		for (let i = okay.length - 1; i >= 0; i--) {
 			if (url.indexOf(okay[i]) >= 0) {
@@ -133,6 +169,31 @@ module.exports = (CMS) => {
 		return false;
 	};
 
+	utilities.installRouting = (requestUrl) => {
+		if (fs.existsSync(`${CMS.adminDir}/.install`)) {
+			if (CMS.req.method === 'GET') {
+				if (requestUrl !== '/install') {
+					CMS.res.redirect('/install');
+					return;
+				}
+
+				if (requestUrl === '/install') {
+					CMS.renderInstallTemplate();
+					return;
+				}
+			}
+
+			if (requestUrl === `/${CMS.adminLocation}/api/install` && req.method === 'POST') {
+				return false;
+			}
+
+		} else {
+			return false;
+		}
+
+
+	}
+
 	utilities.sendResponse = (res, status, response, done) => {
 
 		if(typeof response === 'object'){
@@ -142,6 +203,8 @@ module.exports = (CMS) => {
 		res.status(status);
 		res.write(response);
 		res.end();
+
+		return;
 
 		if (typeof done === 'function') {
 			done();
@@ -165,10 +228,10 @@ module.exports = (CMS) => {
 				template: statusCode,
 				statusCode: 404
 			}
-			CMS.renderTemplate(res, templateData);
+			CMS.renderTemplate( templateData);
 			return;
 		} else {
-			CMS.sendResponse(res, statusCode, msg || 'error');
+			CMS.sendResponse(CMS.res, statusCode, msg || 'error');
 		}
 
 	};
@@ -176,20 +239,46 @@ module.exports = (CMS) => {
 	utilities.errorHandler = (error, res) => {
 		switch (error.type) {
 			case 'postnotfound':
-				CMS.renderAdminTemplate(res, 'error', {type: 'postnotfound'});
+				CMS.renderAdminTemplate('error', {type: 'postnotfound'});
 				return;
 			break;
 
 			case 'pagenotfound':
-				CMS.renderAdminTemplate(res, 'error', {type: 'pagenotfound'}, undefined, 404);
+				CMS.renderAdminTemplate('error', {type: 'pagenotfound'}, undefined, 404);
 				return;
 			break;
 
 			case 'invalidtemplatejson' :
-				CMS.renderAdminTemplate(res, 'error', {type: 'invalidtemplatejson'}, undefined, 404);
+				CMS.renderAdminTemplate('error', {type: 'invalidtemplatejson'}, undefined, 404);
 				return;
 			break;
 		};
+	};
+
+	utilities.themeFunctionFile = () => {
+		const functionsFile = path.join(CMS.activeTheme.path, 'functions.js')
+
+		if (fs.existsSync(functionsFile)) {
+			let functions = require(functionsFile);
+			functions(CMS, APP).init();
+		}
+	};
+
+	utilities.addPostStatus = (newStatus) => {
+		CMS.statusTypes = _.merge(CMS.statusTypes, newStatus);
+	};
+
+	utilities.addAdminNavigation = (navObject, position, navItemName) => {
+		let currentNav = CMS.navigation;
+		navObject.navItemName = navItemName;
+
+		// remove any plugin
+		for (var i = currentNav.length - 1; i >= 0; i--) {
+			if (currentNav[i].navItemName === navItemName) {
+				currentNav.splice(i, 1);
+			}
+		}
+		currentNav.splice(position, 0, navObject);
 	};
 
 	utilities.getTemplates = () => {
@@ -247,6 +336,17 @@ module.exports = (CMS) => {
 		return templateNames;
 	};
 
+	utilities.createRoute = (routerData) => {
+		routerData.url = APP.sanitizeUrl(routerData.url);
+		CMS.addedRoutes.push(routerData);
+	}
+	utilities.addPostTypeColumn = (postType, columnName, postAttribute, callback) => {
+		if (!CMS.postTypeColumns) {
+			CMS.postTypeColumns = [];
+		}
+		CMS.postTypeColumns.push({postAttribute, postType, columnName, callback});
+	}
+
 	utilities.templateJsonValidate = (json) => {
 		try {
 	        JSON.parse(json);
@@ -255,6 +355,23 @@ module.exports = (CMS) => {
 	        return false;
 	    }
 	};
+
+	utilities.request = (url, type, done) => {
+		// So we can leave out the type,
+		// and have it default to 'get'
+		if (typeof type === 'function') {
+			done = type;
+			type = 'get';
+		}
+
+		request[type](url, function (error, response, body) {
+		  	if (error) {
+				done(error);
+			}
+
+			done(null, {response, body})
+		});
+	}
 
 	utilities.serialize = (obj, prefix) => {
 		let str = [], p;
@@ -268,6 +385,13 @@ module.exports = (CMS) => {
 		}
 		return str.join("&");
 	};
+
+	utilities.sanitizedCmsInfo = () => {
+		const toSanitize = ['dbHost', 'dbUsername', 'dbPassword', 'dbPort', 'dbName', 'dbData', 'dbAccounts', 'dbSessions', 'dbSessions', 'sessionCookieSecret'];
+		let sanitized = _.omit(CMS.cmsDetails, toSanitize);
+
+		return sanitized;
+	}
 
 	return utilities;
 }

@@ -1,5 +1,13 @@
 <% include includes/header %>
 <% include includes/pageheader %>
+<script>
+	<% if (data.users[0].pushSubscription && data.users[0].pushSubscription.endpoint) { %>
+		subscriptionStatus = true;
+	<% } else { %>
+		subscriptionStatus = false;
+	<% } %>
+</script>
+
 	<!-- Page container -->
 	<div class="page-container">
 
@@ -57,75 +65,158 @@
 						<div class="col-md-12">
 							<form class="form-horizontal" action="/<%- adminLocation;%>/update-user" method="POST">
 								<input type="hidden" name="formType" value="update">
-
+								<input type="hidden" name="userId" value="<%- data.users[0]._id%>">
 								<legend class="text-bold">User Details</legend>
 								<div class="form-group">
 									<label class="control-label col-lg-2">Username</label>
 									<div class="col-lg-10">
-										<input type="text" class="form-control" name="name" value="<%- data.users[0].username%>">
+										<input type="text" class="form-control" name="username" value="<%- data.users[0].username%>">
 										<span class="help-block">This users Username</span>
 									</div>
 								</div>
 								<div class="form-group">
 									<label class="control-label col-lg-2">Email address</label>
 									<div class="col-lg-10">
-										<input type="text" class="form-control" name="title" value="<%- data.users[0].email%>">
+										<input type="text" class="form-control" name="email" value="<%- data.users[0].email%>">
 										<span class="help-block">Email address of the user</span>
 									</div>
 								</div>
 								<div class="form-group">
 									<label class="control-label col-lg-2">Name</label>
 									<div class="col-lg-10">
-										<input type="text" class="form-control" name="tagline" value="<%- data.users[0].name%>">
+										<input type="text" class="form-control" name="realname" value="<%- data.users[0].realname%>">
 										<span class="help-block">The real name of the user</span>
 									</div>
 								</div>
 								<div class="form-group">
 									<label class="control-label col-lg-2">Display name</label>
 									<div class="col-lg-10">
-										<input type="text" class="form-control" name="url" value="<%- data.users[0].displayname%>">
+										<input type="text" class="form-control" name="displayname" value="<%- data.users[0].displayname%>">
 										<span class="help-block">How the site will display the user's name</span>
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="control-label col-lg-2">Preferred editor</label>
+									<div class="col-lg-3">
+										<select class="form-control" name="editortype">
+
+											<%
+												var editortype = ['visual', 'HTML', 'markdown'];
+												for (var i = 0; i < editortype.length; i++) {
+
+													var selected = '';
+
+													if (data.users[0].editortype === editortype[i]) {
+														var selected = 'selected';
+													}
+
+													%>
+													<option value="<%- editortype[i];%>" <%- selected;%>><%- app.capitalizeFirstLetter(editortype[i]);%></option>
+													<%
+												}
+											%>
+										</select>
 									</div>
 								</div>
 								<div class="form-group">
 									<label class="control-label col-lg-2">Display this name</label>
 									<div class="col-lg-3">
-										<select class="form-control" name="email-service">
-											<option value="username">Username</option>
-											<option value="realname">Real name</option>
-											<option value="displayname">Display name</option>
+										<select class="form-control" name="displaytype">
+
+											<%
+												var displayTypes = ['username', 'realname', 'displayname'];
+												var displayTypesText = ['Username', 'Real name', 'Display name'];
+												for (var i = 0; i < displayTypes.length; i++) {
+
+													var selected = '';
+
+													if (data.users[0].displaytype === displayTypes[i]) {
+														var selected = 'selected';
+													}
+
+													%>
+													<option value="<%- displayTypes[i];%>" <%- selected;%>><%- displayTypesText[i];%></option>
+													<%
+												}
+											%>
 										</select>
 									</div>
 								</div>
-								<div class="form-group">
-									<label class="control-label col-lg-2">Role</label>
-									<div class="col-lg-3">
-										<select class="form-control" name="email-service">
-											<% for (var i = 0; i < data.roles.length; i++) { %>
-												<% if (data.users[0].accounttype === data.roles[i]) {%>
-													<option value="<%- data.roles[i];%>" selected><%- app.capitalizeFirstLetter(data.roles[i]);%></option>
-												<% } else {%>
-													<option><%- app.capitalizeFirstLetter(data.roles[i]);%></option>
+								<% if (currentUser.caps.addUsers) { %>
+									<div class="form-group">
+										<label class="control-label col-lg-2">Role</label>
+										<div class="col-lg-3">
+											<select class="form-control" name="accounttype">
+												<% for (var i = 0; i < data.roles.length; i++) { %>
+													<% if (data.users[0].accounttype === data.roles[i]) {%>
+														<option value="<%- data.roles[i];%>" selected><%- app.capitalizeFirstLetter(data.roles[i]);%></option>
+													<% } else {%>
+														<option><%- app.capitalizeFirstLetter(data.roles[i]);%></option>
+													<% } %>
 												<% } %>
-											<% } %>
-										</select>
-									</div>
-								</div>
-								<div class="form-group has-feedback">
-									<label class="control-label col-lg-2">Password</label>
-									<div class="col-lg-3">
-										<input type="password" class="form-control" name="password">
-										<div class="form-control-feedback show-password">
-											<i class="icon-eye"></i>
+											</select>
 										</div>
-										<span class="help-block">Change the users password</span>
 									</div>
-									<div class="col-md-2">
-										<button class="btn btn-info generateRandomPassword">Generate</button>
+								<% } %>
+
+								<% if (currentUser.caps.editUsers || data.users[0]._id == data.userId) { %>
+									<div class="form-group has-feedback">
+										<label class="control-label col-lg-2">Password</label>
+										<div class="col-lg-3">
+											<input type="password" class="form-control" name="password">
+											<div class="form-control-feedback show-password">
+												<i class="icon-eye"></i>
+											</div>
+											<span class="help-block">Change the users password</span>
+										</div>
+										<div class="col-md-2">
+											<button class="btn btn-info generateRandomPassword">Generate</button>
+										</div>
 									</div>
-								</div>
+								<% } %>
+								<% if (currentUser.caps.enableAdminPush && cmsInfo.pushEnabled === true) { %>
+									<div class="form-group has-feedback">
+										<label class="control-label col-lg-2">Push notifications<br /> (Admin only) </label>
+										<div class="col-lg-10">
+											<button class="btn btn-primary" id="adminPushNotifications" name="adminPushNotifications">
+												Enable Push Messaging
+											</button>
+											<span class="help-block">Enable/Disable push notification for this user. As an admin, you can force this user to not get notifications.</span>
+										</div>
+									</div>
+								<% } %>
+								<% if (data.users[0]._id == data.userId && cmsInfo.pushEnabled === true) { %>
+
+									<%
+										if (data.users[0].pushSubscription && data.users[0].pushSubscription.endpoint) {
+											var subscribeText = 'Unsubscribe from push notifications';
+											var subscribeButtonClass = 'btn-danger unsubscribe-action';
+										} else {
+											var subscribeText = 'Subscribe to push notifications';
+											var subscribeButtonClass = 'btn-primary';
+										}
+									%>
+									<div class="form-group has-feedback">
+										<label class="control-label col-lg-2">Push notifications</label>
+										<div class="col-lg-10">
+											<button class="btn <%- subscribeButtonClass;%>" id="userPushNotifications" name="userPushNotifications" data-userid="<%-data.userId;%>">
+												<%- subscribeText;%>
+											</button>
+											<span class="help-block">Subscribe to push notifications from this site</span>
+										</div>
+									</div>
+								<% } %>
 
 								<button class="btn btn-success">Update</button>
+
+								<% if (currentUser.caps.editUsers || data.users[0]._id === data.userId) { %>
+									<hr />
+									<h4>Remove this user</h4>
+									<em>WARNING: Removing this user will not delete any content they added. Content will be assigned to the administrator.</em>
+									<br />
+									<button class="btn btn-warning delete-user">Delete User</button>
+								<% } %>
+
     						</form>
     					</div>
 					</div>

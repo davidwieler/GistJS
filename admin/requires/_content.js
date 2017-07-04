@@ -3,6 +3,7 @@ const path = require('path');
 const Events = require('../events.js');
 const mongojs = require('mongojs');
 const ObjectId = mongojs.ObjectId;
+const APP = require('../assets/js/core/app.js');
 const _ = require('lodash');
 module.exports = (CMS) => {
 
@@ -16,6 +17,13 @@ module.exports = (CMS) => {
 		data.timestamp = +new Date();
 		data.contentType = type;
 
+		if (data.postUrl) {
+			const postUrl = data.postUrl;
+			if (postUrl.charAt(0) !== '/') {
+				data.postUrl = `/${postUrl}`;
+			}
+		}
+
 		if (data.category) {
 			CMS.createCategory(data.category[0]);
 			data.category = data.category[0];
@@ -27,6 +35,12 @@ module.exports = (CMS) => {
 			}
 
 			if (typeof done === 'function') {
+
+				CMS._messaging.sendPush({
+					message: data.postTitle,
+					clickTarget: data.postUrl,
+					title: 'New Post Published'
+				});
 				done(null, result._id);
 			}
 		});
@@ -90,6 +104,7 @@ module.exports = (CMS) => {
 					res.postId = data.postId;
 					res.updatedUser = data.updatedUser;
 					res.updatedUserId = data.updatedUserId;
+					res.updatedTimestamp = +new Date();
 					delete res._id;
 
 					CMS.createRevision(res);
@@ -166,17 +181,20 @@ module.exports = (CMS) => {
 	};
 
 	content.getPosts = (findPosts, done) => {
-
 		const db = CMS.dbData;
 		const collection = CMS.dbConn.data.collection;
 		let returnedPosts = [];
 		let count = 0;
 		let returnedLimits = {};
 		let limit = findPosts.limit || 20;
-		let search = {contentType: 'post'};
+		let search = {contentType: 'post', status: 'published'};
 
-		if (typeof findPosts.search !== 'undefined') {
+		if (!_.isEmpty(findPosts.search)) {
 			search = findPosts.search;
+
+			if (search === '*') {
+				search = {}
+			}
 		}
 
 		if (findPosts.multiId) {
@@ -189,6 +207,8 @@ module.exports = (CMS) => {
 
 			search._id = {$in: multi};
 		}
+
+		console.log(search);
 
 		returnedLimits.limit = limit;
 		returnedLimits.offset = Number(findPosts.offset) || 0;
@@ -226,6 +246,70 @@ module.exports = (CMS) => {
 		});
 
 	}
+
+	content.addMetaBox = (metaData, location, priority, position, contentType) => {
+		const metaBoxData = {content: metaData, location, priority, position, contentType}
+		CMS.metaBoxes.push(metaBoxData);
+	};
+
+	content.addPostType = (postTypeData, position, name) => {
+		CMS.addAdminNavigation(postTypeData, position, name);
+
+		let newPostTypeDetails = {};
+		newPostTypeDetails[postTypeData.contentType] = postTypeData;
+		_.extend(CMS.postTypes, newPostTypeDetails);
+
+		CMS.createRoute({
+			type: 'get',
+			url: `${CMS.adminLocation}/${postTypeData.url}`,
+			auth: true,
+			function: () => {
+
+				let findPosts = {
+					limit: 20
+				}
+
+				let limit = CMS.req.query.limit;
+				let offset = CMS.req.query.offset;
+				let msg = CMS.req.query.msg;
+				let status = CMS.req.query.status;
+
+				if (typeof limit !== 'undefined') {
+					findPosts.limit = limit
+				}
+
+				if (typeof offset !== 'undefined') {
+					findPosts.offset = offset
+				}
+
+				findPosts.search = {};
+
+				if (typeof status !== 'undefined') {
+					findPosts.search.status = status
+				}
+
+				if (status === 'mine') {
+					delete findPosts.search.status
+					findPosts.search.userId = `${CMS.currentUser._id}`
+				}
+				findPosts.search.contentType = postTypeData.contentType;
+
+				CMS.getPosts(findPosts, (err, result) => {
+					CMS.renderAdminTemplate('post-type-list', {posts: result, limit: findPosts.limit, msg: msg, postTypeData: postTypeData});
+				});
+
+			}
+		});
+	};
+
+	content.addDashboardWidget = (widgetObject) => {
+		const position = widgetObject.position || 1;
+		CMS.addHook(widgetObject.name, 'dashboard', position, widgetObject.function);
+	};
+
+	content.addWidget = () => {
+
+	};
 
 	return content;
 

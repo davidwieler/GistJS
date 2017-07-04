@@ -18,8 +18,8 @@ module.exports = (CMS) => {
 			thumbnailDetails[thumb.suffix] = thumbnailFileName;
 			if (thumb.suffix === '-preview') {
 				return sharp( data.path )
-					.jpeg({quality: CMS.cmsDetails.jpgQuality})
-					.png({quality: CMS.cmsDetails.pngQuality})
+					.jpeg({quality: Number(CMS.cmsDetails.jpgQuality)})
+					.png({quality: Number(CMS.cmsDetails.pngQuality)})
 					.resize( Number(thumb.size.width), Number(thumb.size.height), {
 						kernel: sharp.kernel.cubic,
 						interpolator: sharp.interpolator.nohalo
@@ -27,14 +27,14 @@ module.exports = (CMS) => {
 					.toFile( path.join(CMS.uploadDir,thumbnailFileName ) );
 			} else {
 				return sharp( data.path )
-					.jpeg({quality: CMS.cmsDetails.jpgQuality})
-					.png({quality: CMS.cmsDetails.pngQuality})
+					.jpeg({quality: Number(CMS.cmsDetails.jpgQuality)})
+					.png({quality: Number(CMS.cmsDetails.pngQuality)})
 					.resize( Number(thumb.size.width), Number(thumb.size.width), {
 						kernel: sharp.kernel.cubic,
 						interpolator: sharp.interpolator.nohalo
 					})
 					.max()
-					.toFile( path.join(CMS.uploadDir,thumbnailFileName ) );
+					.toFile( path.join(CMS.uploadDir, thumbnailFileName ) );
 			}
 		}).then(function(){
 			done(null, thumbnailDetails)

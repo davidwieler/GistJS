@@ -2,27 +2,35 @@ module.exports = [
 	{
 		slug: 'Dashboard',
 		url: '',
-		icon: 'icon-home4'
-	},
-	{
-		menuName: 'Content'
-	},
-	{
-		slug: 'Posts',
-		url: 'posts',
-		icon: 'icon-stack',
+		icon: 'icon-home4',
 		priviledge: 'read',
 	},
 	{
-		slug: 'Pages',
-		url: 'pages',
-		icon: 'icon-stack'
+		menuName: 'Content'
 	},
 	{
 		slug: 'Media',
 		url: 'media',
 		icon: 'icon-image2',
 		priviledge: 'editFiles',
+	},
+	{
+		slug: 'Categories',
+		url: 'menus',
+		icon: 'icon-list2',
+		priviledge: 'editMenus',
+	},
+	{
+		slug: 'Tags',
+		url: 'menus',
+		icon: 'icon-list2',
+		priviledge: 'editMenus',
+	},
+	{
+		slug: 'Menus',
+		url: 'menus',
+		icon: 'icon-list2',
+		priviledge: 'editMenus',
 	},
 	{
 		menuName: 'Settings'
@@ -55,7 +63,7 @@ module.exports = [
 	},
 	{
 		slug: 'Users',
-		icon: 'icon-footprint',
+		icon: 'icon-people',
 		priviledge: 'editUsers',
 		subMenu: [
 			{
@@ -74,9 +82,28 @@ module.exports = [
 	},
 	{
 		slug: 'Settings',
-		icon: 'icon-spell-check',
+		icon: 'icon-cog2',
 		priviledge: 'editSettings',
-		url: 'settings',
-		navItemName: 'settings'
+		navItemName: 'settings',
+		subMenu: [
+			{
+				slug: 'All Settings',
+				url: 'settings',
+				icon: 'icon-cog',
+				priviledge: 'listUsers',
+			},
+			{
+				slug: 'Controls',
+				url: 'settings/controls',
+				icon: 'icon-envelope',
+				priviledge: 'adjustControls',
+			},
+			{
+				slug: 'Mail',
+				url: 'settings/mail',
+				icon: 'icon-envelope',
+				priviledge: 'addUsers',
+			}
+		]
 	}
 ]

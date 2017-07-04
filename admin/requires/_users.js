@@ -41,12 +41,9 @@ module.exports = (CMS) => {
 		returnedLimits.offset = Number(findUsers.offset) || 0;
 		let calc = (limit - 1);
 		//db[CMS.dbConn.collection].find(search).limit(Number(limit)).sort({timestamp: -1}, (err, users) => {
-		db[collection].find(search, (err, users) => {
 
-			if (err) {
-				done(err);
-			}
-
+		CMS.dbFind(db, collection, search)
+		.then((users) => {
 			for (var i = 0; i < users.length; i++) {
 				if (returnedLimits.offset >= 1) {
 					calc = (limit - 1 + returnedLimits.offset);
@@ -65,6 +62,9 @@ module.exports = (CMS) => {
 
 			}
 			done(null, {userCount: users.length, users: returnedUsers, limits: returnedLimits});
+		})
+		.catch((e) => {
+			done(e);
 		});
 	};
 
@@ -72,8 +72,8 @@ module.exports = (CMS) => {
 		const db = CMS.dbData;
 		const collection = CMS.dbConn.accounts.collection;
 
-		db[collection].findOne({'username':userData.username}, function(err, user){
-
+		CMS.dbFindOne(db, collection, {'username':userData.username})
+		.then((user) => {
 			if (user) {
 				done('user exists');
 			}
@@ -86,36 +86,34 @@ module.exports = (CMS) => {
 				displaytype: userData.displaytype,
 				accounttype: userData.role
 			};
-			db[collection].save(newUser, function(err) {
-				if (err){
+
+			CMS.dbSave(db, collection, newUser, (err, result) => {
+				if (err) {
 					done('Error creating new user');
 				}
 
-				done(null, newUser);
+				done(err, result);
 			});
+		})
+		.catch((e) => {
+			done(err);
 		});
 	};
 
-	users.updateUser = (userData, done) => {
+	users.updateUser = (id, userData, done) => {
 		const db = CMS.dbData;
 		const collection = CMS.dbConn.accounts.collection;
 
 		let data = userData;
-		delete data._id;
-
-		db[collection].update(
-			{'_id':ObjectId(userData._id)},
-			{ $set: data},
-			(err, response) => {
-
-				if (err) {
-					done(err);
-				}
-
-				done(null, response);
-
+		CMS.dbUpdate(db, collection, {'_id':ObjectId(id)}, data, (err, result) => {
+			if (err) {
+				done(err);
 			}
-		)
+
+			done(err, result);
+		});
+
+
 	};
 
 	return users;

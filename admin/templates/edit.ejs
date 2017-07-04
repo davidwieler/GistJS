@@ -1,15 +1,10 @@
 <% include includes/header %>
 <% include includes/pageheader %>
-<% //var fileUploadModal = app.modal(postData); %>
-<%- //fileUploadModal%>
+<% //var fileUploadModal = app.modal(postData);
+%>
+<%- //fileUploadModal
+%>
 <%
-
-	var statusOptions = [
-		['published', 'Publish'],
-		['draft', 'Draft'],
-		['trash', 'Trash']
-	];
-
 	if (postData === 'not found') {
 		alert = '99';
 	}
@@ -19,8 +14,12 @@
 		var submitButton = 'Update';
 		var submitButtonProp = '';
 		var formClass = 'update';
-		var status = postData.status;
-		var template = postData.template;
+		var status = postData.status || 'draft';
+		var template = postData.template || 'default';
+		if (typeof postData.postStats === 'undefined') {
+			postData.postStats = {};
+		}
+		var contentType = postData.contentType;
 
 	} else {
 		var formPostTo = '/spry-admin/edit';
@@ -29,9 +28,13 @@
 		var formClass = 'create';
 		var status = '';
 		var template = '';
+		var postData = {
+			postStats: {}
+		};
+		var contentType = queryVars.type;
 	}
+	//
 %>
-
 	<div class="modal fade links-modal" id="linksinsertmodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
 		<div class="modal-dialog" role="document">
 			<div class="modal-content">
@@ -227,7 +230,7 @@
 				<form class="row edit-form <%- formClass%>" action="<%- formPostTo%>" method="post">
 					<input type="hidden" name="user" value="<%- user.username%>">
 					<input type="hidden" name="userId" value="<%- user._id%>">
-					<div class="col-md-9">
+					<div class="col-md-9 main-panel">
 						<!-- Edit post -->
 						<% var editor = app.editor(postData); %>
 						<%- editor%>
@@ -238,6 +241,12 @@
 						    });
 						</script>
 						<!-- /edit post -->
+
+						<% for (var i = 0; i < metaBoxes.length; i++) {%>
+							<% if (metaBoxes[i].location === 'main') { %>
+							<%- metaBoxes[i].rendered; %>
+							<% } %>
+						<% } %>
 
 						<!-- /Post revisions -->
 						<% if (cms.cmsDetails.postRevisions && postRevisions.length >= 1) { %>
@@ -253,10 +262,12 @@
 											var user = postRevisions[i].updatedUser || postRevisions[i].user;
 											var postId = postRevisions[i]._id;
 											var status = postRevisions[i].status;
+											var timestamp = postRevisions[i].updatedTimestamp;
+
 											%>
 												<li class="post-revision">
-													<%- user%>, <%- app.timeAgo(postRevisions[i].updatedTimestamp, 'ddd, mmm ddS yyyy h:MMtt'); %>
-													<a href="/<%-adminLocation%>/post-revision/<%-postId%>">(<%- app.formatDate(postRevisions[i].timestamp, 'ddd, mmm ddS yyyy h:MMtt'); %>)</a>
+													<%- user%>, <%- app.timeAgo(timestamp, 'ddd, mmm ddS yyyy h:MMtt'); %>
+													<a href="/<%-adminLocation%>/post-revision/<%-postId%>">(<%- app.formatDate(timestamp, 'ddd, mmm ddS yyyy h:MMtt'); %>)</a>
 												</li>
 											<%
 										}
@@ -267,7 +278,23 @@
 						<% } %>
 						<!-- /post revisions -->
 					</div>
-					<div class="col-md-3">
+					<div class="col-md-6 preview-panel">
+						<div class="panel panel-flat">
+							<div class="panel-heading">
+								<h6 class="panel-title">Preview<a class="heading-elements-toggle"><i class="icon-more"></i></a></h6>
+								<div class="heading-elements pull-right text-right">
+									<button class="btn btn-info"><i class="fa fa-mobile" aria-hidden="true"></i></button>
+									<button class="btn btn-info"><i class="fa fa-tablet" aria-hidden="true"></i></button>
+									<button class="btn btn-info"><i class="fa fa-desktop" aria-hidden="true"></i></button>
+									<button class="btn btn-info">Open in another tab</button>
+								</div>
+							</div>
+							<div class="preview-body">
+								<iframe src=""  width="100%" height="100%" frameBorder="0" onload="iframeLoaded()" id="previewiframe"></iframe>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-3 side-panel">
 						<div class="panel panel-white publish-panel">
 							<div class="panel-body publish-wrap">
 								<div class="row">
@@ -276,16 +303,18 @@
 											<label>Status</label>
 											<select class="selectpicker form-control show-menu-arrow" name="status">
 											<%
-												for (var i = 0; i < statusOptions.length; i++) {
-													var thisStatus = statusOptions[i][0];
-													var currentPostStatus = status;
+												for (var i in statusTypes) {
+													if (statusTypes.hasOwnProperty(i)) {
+														const type = i;
+														const named = statusTypes[i];
+														const href = `/${adminLocation}/posts?status=${type}`;
+														let selected = '';
 
-													if (thisStatus === currentPostStatus) {
-														var selected = 'class="bg-teal-400" selected';
-													} else {
-														var selected = '';
+														if (type === status) {
+															selected = 'class="bg-teal-400" selected';
+														}
+														%><option value="<%- type%>" <%- selected%>><%- named%></option><%
 													}
-													%><option value="<%- thisStatus%>" <%- selected%>><%- statusOptions[i][1]%></option><%
 												}
 											%>
 											</select>
@@ -324,6 +353,7 @@
 							</div>
 							<div class="panel-footer text-center text-danger">
 	                            <div class="error_msg"></div>
+								<input type="hidden" name="contentType" value="<%- contentType;%>" />
 	                            <button type="submit" class="btn bg-teal-400 btn-labeled btn-labeled-right submit-editor pull-right" <%- submitButtonProp%> ><b><i class="icon-circle-right2"></i></b> <%- submitButton%></button>
 							</div>
 						</div>
@@ -344,7 +374,7 @@
 											<%
 												if (typeof categoryList !== 'undefined') {
 													%>
-											<select class="selectpicker form-control show-menu-arrow" title="Add a category">
+											<select class="selectpicker form-control show-menu-arrow add-category" title="Add a category">
 												<option data-hidden="true"></option>
 													<%
 														var slugs = categoryList.slug;
@@ -410,6 +440,54 @@
 													}
 												%>
 											</ul>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<% for (var i = 0; i < metaBoxes.length; i++) {%>
+							<% if (metaBoxes[i].location === 'sidebar') { %>
+							<%- metaBoxes[i].rendered; %>
+							<% } %>
+						<% } %>
+						<div class="panel panel-white category-panel">
+							<div class="panel-body publish-wrap">
+								<div class="row">
+									<div class="col-xs-12">
+										<div class="form-group">
+											<legend class="text-bold">Post Stats</legend>
+											<div class="col-xs-6">
+											  <h5>Read Time</h5>
+											  <p class="read-time-stat"><%- postData.postStats.readTime || '0 seconds' %></p>
+											  <input type="hidden" name="postStats[readTime]" value="">
+											  <input type="hidden" name="postStats[readTimeSeconds]" value="">
+											</div>
+											<div class="col-xs-6">
+											  <h5>Words</h5>
+											  <p class="word-count-stat"><%- postData.postStats.wordCount || '0' %></p>
+											  <input type="hidden" name="postStats[wordCount]" value="">
+											</div>
+											<div class="col-xs-6">
+											  <h5>Unique Words</h5>
+											  <p class="unique-words-stat"><%- postData.postStats.uniqueWordCount || '0' %></p>
+											  <input type="hidden" name="postStats[uniqueWordCount]" value="">
+											</div>
+											<div class="col-xs-6">
+											  <h5>Characters</h5>
+											  <p class="characters-stat"><%- postData.postStats.characterCount || '0' %></p>
+											  <input type="hidden" name="postStats[characterCount]" value="">
+											</div>
+											<div class="col-xs-6">
+											  <h5>Sentences</h5>
+											  <p class="sentences-stat"><%- postData.postStats.sentenceCount || '0' %></p>
+											  <input type="hidden" name="postStats[sentenceCount]" value="">
+											</div>
+											<div class="col-xs-6">
+											  <h5>Paragraphs</h5>
+											  <p class="paragraph-stat"><%- postData.postStats.paragraphCount || '0' %></p>
+											  <input type="hidden" name="postStats[paragraphCount]" value="">
+											</div>
 										</div>
 									</div>
 								</div>

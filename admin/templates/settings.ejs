@@ -97,6 +97,46 @@
 								</div>
 
 								<legend class="text-bold">User Settings</legend>
+								<div class="col-md-12">
+									<div class="row">
+										<div class="col-md-6">
+											<div class="row">
+												<label class="display-block text-semibold">Push Notifications</label>
+											</div>
+											<div class="form-group">
+												<%
+													var pushEnabled = cmsInfo.pushEnabled
+
+													if (pushEnabled) {
+														var pushEnabledClass = 'btn-danger';
+														var pushText = 'Disable Push Messaging';
+													} else {
+														var pushEnabledClass = 'btn-primary';
+														var pushText = 'Enable Push Messaging';
+													}
+												%>
+												<button class="btn <%- pushEnabledClass;%>" name="pushNotifications" id="enablePushNotifications" data-status="<%- cmsInfo.pushEnabled;%>">
+													<%- pushText;%>
+									            </button>
+												<span class="help-block">Toggle push notifications being enabled. <br />Notifications are sent to users based on their role.<br /><a href="#"></a></span>
+											</div>
+										</div>
+										<div class="col-md-6">
+											<div class="row">
+												<label class="display-block text-semibold">Push Notification Status</label>
+											</div>
+											<div class="form-group">
+												<ul>
+													<li><strong>https:</strong>  <span class="push-notifs-https"></span></li>
+													<li><strong>Service Worker:</strong> <span class="push-notifs-sw"></span></li>
+													<li><strong>Permission:</strong>  <span class="push-notifs-permission"></span></li>
+													<li><strong>Push API Supported Browser:</strong>  <span class="push-notifs-push-api"></span></li>
+													<li><strong>Service Worker Supported Browser:</strong>  <span class="push-notifs-sw-support"></span></li>
+												</ul>
+											</div>
+										</div>
+									</div>
+								</div>
 								<div class="col-md-6">
 									<div class="row">
 										<label class="display-block text-semibold">Registration</label>
@@ -104,7 +144,18 @@
 									<div class="form-group">
 										<div class="checkbox">
 											<label>
-												<div class="checker"><span class="checked"><input type="checkbox" class="styled" checked="checked"></span></div>
+												<div class="checker">
+													<%
+														if (cmsInfo.anyoneRegister) {
+															var anyoneRegister = 'checked';
+														} else {
+															var anyoneRegister = '';
+														}
+													%>
+													<span class="<%- anyoneRegister%>">
+														<input type="checkbox" class="styled" name="anyoneRegister" value="true" <%- anyoneRegister; %>>
+													</span>
+												</div>
 												Anyone can register
 											</label>
 											<span class="help-block">Will place a registation link on the CMS login page. <br />New registrations have to be authorized by an Administrator</span>
@@ -118,7 +169,18 @@
 									<div class="form-group">
 										<div class="checkbox">
 											<label>
-												<div class="checker"><span class="checked"><input type="checkbox" class="styled" checked="checked"></span></div>
+												<div class="checker">
+													<%
+														if (cmsInfo.maintenance) {
+															var maintenance = 'checked';
+														} else {
+															var maintenance = '';
+														}
+													%>
+													<span class="<%- maintenance%>">
+														<input type="checkbox" class="styled" name="maintenance" value="true" <%- maintenance; %>>
+													</span>
+												</div>
 												Toggle maintenance-mode
 											</label>
 											<span class="help-block">Will display a themes maintenance page, or the general one if the theme doesn't have one</span>
@@ -132,7 +194,18 @@
 									<div class="form-group">
 										<div class="checkbox">
 											<label>
-												<div class="checker"><span class="checked"><input type="checkbox" class="styled" checked="checked"></span></div>
+												<div class="checker">
+													<%
+														if (cmsInfo.postRevisions) {
+															var postRevisions = 'checked';
+														} else {
+															var postRevisions = '';
+														}
+													%>
+													<span class="<%- postRevisions;%>">
+														<input type="checkbox" class="styled" name="postRevisions" value="true" <%- postRevisions; %>>
+													</span>
+												</div>
 												Post Revisions
 											</label>
 											<span class="help-block">Posts will be revised, enabling you to roll back changes and see the difference between updates</span>
@@ -140,7 +213,18 @@
 
 										<div class="checkbox">
 											<label>
-												<div class="checker"><span class="checked"><input type="checkbox" class="styled" checked="checked"></span></div>
+												<div class="checker">
+													<%
+														if (cmsInfo.imageRevisions) {
+															var imageRevisions = 'checked';
+														} else {
+															var imageRevisions = '';
+														}
+													%>
+													<span class="<%- imageRevisions;%>">
+														<input type="checkbox" class="styled" name="imageRevisions" value="true" <%- imageRevisions;%>>
+													</span>
+												</div>
 												Image Revisions
 											</label>
 											<span class="help-block">Images with the same name will be grouped together, enabling you to roll back which version is published to view</span>
@@ -204,7 +288,7 @@
 													let disabled = '';
 													let text = '';
 													if (name === '-preview') {
-														disabled = 'disabled';
+														disabled = 'readonly';
 														text = '-preview is required, and not adjustable';
 													} else {
 														text = 'Thumbnail name. Will be appended to the filename';
@@ -214,16 +298,16 @@
 													<div class="col-lg-12">
 														<div class="row">
 															<div class="col-md-5">
-																<input type="text" class="form-control" name="thumbnails[][names]" value="<%- name%>" <%- disabled%> >
+																<input type="text" class="form-control" name="thumbnails[][<%- i;%>][suffix]" value="<%- name%>" <%- disabled%> >
 																<span class="help-block"><%- text%></span>
 															</div>
 															<div class="col-md-3">
-																<input type="text" class="form-control" name="thumbnails[][<%- name%>]" value="<%- size.width%>" <%- disabled%>>
+																<input type="number" class="form-control" name="thumbnails[][<%- i;%>][size][width]" value="<%- size.width%>" <%- disabled%>>
 																<span class="help-block">Maximum width</span>
 															</div>
 
 															<div class="col-md-3">
-																<input type="text" class="form-control" name="thumbnails[][<%- name%>]" value="<%- size.height%>" <%- disabled%>>
+																<input type="number" class="form-control" name="thumbnails[][<%- i;%>][size][height]" value="<%- size.height%>" <%- disabled%>>
 																<span class="help-block">Maximum height</span>
 															</div>
 														</div>
@@ -267,7 +351,18 @@
 									<div class="form-group">
 										<div class="checkbox">
 											<label>
-												<div class="checker"><span class="checked"><input type="checkbox" class="styled" checked="checked"></span></div>
+												<div class="checker">
+													<%
+														if (cmsInfo.custom404) {
+															var custom404 = 'checked';
+														} else {
+															var custom404 = '';
+														}
+													%>
+													<span class="<%- custom404;%>">
+														<input type="checkbox" class="styled" name="custom404" value="true" <%- custom404; %>>
+													</span>
+												</div>
 												Custom error 404 page
 											</label>
 											<span class="help-block">Use a theme's error 404 template</span>
@@ -275,7 +370,18 @@
 
 										<div class="checkbox">
 											<label>
-												<div class="checker"><span><input type="checkbox" class="styled"></span></div>
+												<div class="checker">
+													<%
+														if (cmsInfo.custom500) {
+															var custom500 = 'checked';
+														} else {
+															var custom500 = '';
+														}
+													%>
+													<span class="<%- custom500;%>">
+														<input type="checkbox" class="styled" name="custom500" value="true" <%- custom500; %>>
+													</span>
+												</div>
 												Custom error 500 page
 											</label>
 											<span class="help-block">Use a theme's error 500 template</span>

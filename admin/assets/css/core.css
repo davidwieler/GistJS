@@ -184,9 +184,15 @@ a.bg-primary:focus, a.bg-primary:hover {
 }
 .page-header {
     margin: 0;
-    padding: 0;
+    padding: 0 20px;
     position: relative;
     border-bottom-width: 0;
+}
+.page-header .system-alerts{
+    margin-top: 20px;
+}
+.page-header .system-alerts .alert{
+    margin-bottom: 0;
 }
 @media (min-width:769px) {
     .page-header .heading-elements.collapse {
@@ -4582,6 +4588,23 @@ a.list-group-item-danger.active, a.list-group-item-danger.active:focus, a.list-g
     top: 0;
     border-radius: 0;
     overflow: scroll;
+}
+.panel.distraction-free-preview{
+    width: 50%;
+}
+.panel.is-in-preview{
+    position: fixed;
+    width: 50%;
+    height: 100%;
+    right: 0;
+    background: white;
+    z-index: 998;
+    top: 0;
+    border-radius: 0;
+    overflow: scroll;
+}
+.preview-panel{
+	display: none;
 }
 .panel[class*=bg-]>.panel-heading {
     border-color: rgba(255, 255, 255, .2);

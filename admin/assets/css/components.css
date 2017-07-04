@@ -252,9 +252,10 @@
     background-color: rgba(0, 0, 0, .15);
     -webkit-box-shadow: 0 1px 0 rgba(255, 255, 255, .05);
     box-shadow: 0 1px 0 rgba(255, 255, 255, .05);
+    display: none;
 }
 .navigation>li ul li a {
-    padding: 10px 20px 10px 51px;
+    padding: 10px 20px 10px 35px;
     min-height: 40px;
 }
 .navigation>li ul .navigation-header {

@@ -1,13 +1,15 @@
 const fs = require('fs');
 const path = require('path');
 const Events = require('./events.js');
+const request = require('request');
+const _ = require('lodash');
 module.exports = (CMS, router, passport, settings) => {
 
 	router.get('/' + CMS.adminLocation + '/install', (req, res) => {
 		if (fs.existsSync(__dirname + '/admin/.install')) {
-			CMS.renderAdminTemplate(res, 'install', { message: req.flash('installMessage')});
+			CMS.renderAdminTemplate('install', { message: req.flash('installMessage')});
 		} else {
-			CMS.renderAdminTemplate(res, 'login', {message: 'Install has already been complete. Please login to administer your site.'});
+			CMS.renderAdminTemplate('login', {message: 'Install has already been complete. Please login to administer your site.'});
 		}
 	});
 
@@ -16,7 +18,7 @@ module.exports = (CMS, router, passport, settings) => {
 			res.redirect('/' + CMS.adminLocation + '/install');
 		} else {
 			res.clearCookie(global.cms.cookieName);
-			CMS.renderAdminTemplate(res, 'login', { message: ''});
+			CMS.renderAdminTemplate('login', { message: ''});
 		}
 
 	});
@@ -28,7 +30,7 @@ module.exports = (CMS, router, passport, settings) => {
 			}
 
 			if (!user) {
-				CMS.renderAdminTemplate(res, 'login', {message: info});
+				CMS.renderAdminTemplate('login', {message: info});
 				return;
 			}
 
@@ -51,44 +53,20 @@ module.exports = (CMS, router, passport, settings) => {
 	});
 
 	router.get('/' + CMS.adminLocation + '/forgot-password', (req, res) => {
-		CMS.renderAdminTemplate(res, 'forgot-password', { message: ''});
+		CMS.renderAdminTemplate('forgot-password', { message: ''});
 
 	});
 
 	router.post('/' + CMS.adminLocation + '/forgot-password', (req, res) => {
 
 		if (req.body.user === '') {
-			CMS.renderAdminTemplate(res, 'forgot-password', {message: 'Please enter your username or email'});
+			CMS.renderAdminTemplate('forgot-password', {message: 'Please enter your username or email'});
 			return;
 		}
 	});
 
 	router.get(['/' + CMS.adminLocation + '/dashboard', '/' + CMS.adminLocation + '/'], CMS.isLoggedIn, (req, res) => {
-		CMS.doHook('dashboard');
-		CMS.renderAdminTemplate(res, 'dashboard');
-	});
-
-	router.get('/' + CMS.adminLocation + '/posts', CMS.isLoggedIn, (req, res) => {
-
-		let findPosts = {
-			limit: 20
-		}
-
-		let limit = req.query.limit;
-		let offset = req.query.offset;
-		let msg = req.query.msg;
-
-		if (typeof limit !== 'undefined') {
-			findPosts.limit = limit
-		}
-
-		if (typeof offset !== 'undefined') {
-			findPosts.offset = offset
-		}
-		CMS.getPosts(findPosts, (err, result) => {
-			CMS.renderAdminTemplate(res, 'posts', {posts: result, limit: findPosts.limit, msg: msg});
-		});
-
+		CMS.renderAdminTemplate('dashboard');
 	});
 
 	router.get('/' + CMS.adminLocation + '/media', CMS.isLoggedIn, (req, res) => {
@@ -116,24 +94,20 @@ module.exports = (CMS, router, passport, settings) => {
 		}
 
 		CMS.getAttachments(findAttachments, (err, result) => {
-			CMS.renderAdminTemplate(res, 'media', {attachments: result, limit: findAttachments.limit, msg: msg});
+			CMS.renderAdminTemplate('media', {attachments: result, limit: findAttachments.limit, msg: msg});
 		});
 	});
 
 	router.get('/' + CMS.adminLocation + '/edit', CMS.isLoggedIn, (req, res) => {
-		CMS.renderAdminTemplate(res, 'edit');
+		CMS.renderAdminTemplate('edit');
 	});
 
 	router.get('/' + CMS.adminLocation + '/updates', CMS.isLoggedIn, (req, res) => {
-		CMS.renderAdminTemplate(res, 'updates');
-	});
-
-	router.get('/' + CMS.adminLocation + '/pages', CMS.isLoggedIn, (req, res) => {
-		CMS.renderAdminTemplate(res, 'pages');
+		CMS.renderAdminTemplate('updates');
 	});
 
 	router.post('/' + CMS.adminLocation + '/edit', CMS.isLoggedIn, (req, res) => {
-		CMS.createContent(req.body, 'post', (err, result) => {
+		CMS.createContent(req.body, req.body.contentType, (err, result) => {
 			res.redirect('/' + CMS.adminLocation + '/edit/' + result + '?msg=1');
 		});
 	});
@@ -141,14 +115,14 @@ module.exports = (CMS, router, passport, settings) => {
 	router.get('/' + CMS.adminLocation + '/edit/:id', CMS.isLoggedIn, (req, res) => {
 		let msg = req.query.msg;
 		if (typeof msg !== 'undefined') {
-			CMS.renderAdminTemplate(res, 'edit', req.params, msg);
+			CMS.renderAdminTemplate('edit', req.params, msg);
 		} else {
-			CMS.renderAdminTemplate(res, 'edit', req.params);
+			CMS.renderAdminTemplate('edit', req.params);
 		}
 	});
 
 	router.get('/' + CMS.adminLocation + '/post-revision/:id', CMS.isLoggedIn, (req, res) => {
-		CMS.renderAdminTemplate(res, 'post-revision', req.params);
+		CMS.renderAdminTemplate('post-revision', req.params);
 	});
 
 	router.post('/' + CMS.adminLocation + '/edit/:id', CMS.isLoggedIn, (req, res) => {
@@ -186,21 +160,69 @@ module.exports = (CMS, router, passport, settings) => {
 
 	// Settings routes
 	router.get('/' + CMS.adminLocation + '/settings', CMS.isLoggedIn, (req, res) => {
-		CMS.renderAdminTemplate(res, 'settings', req.params);
+		CMS.renderAdminTemplate('settings', req.params);
 	});
 
 	router.post('/' + CMS.adminLocation + '/settings', CMS.isLoggedIn, (req, res) => {
-		res.redirect('/' + CMS.adminLocation + '/settings?msg=1');
+
+		let settings = {};
+
+		if (!req.body.maintenance) {
+			settings.maintenance = false;
+		} else {
+			settings.maintenance = true;
+		}
+
+		if (!req.body.postRevisions) {
+			settings.postRevisions = false;
+		} else {
+			settings.postRevisions = true;
+		}
+
+		if (!req.body.imageRevisions) {
+			settings.imageRevisions = false;
+		} else {
+			settings.imageRevisions = true;
+		}
+
+		if (!req.body.prettyPagination) {
+			settings.prettyPagination = false;
+		} else {
+			settings.prettyPagination = true;
+		}
+
+		if (!req.body.custom404) {
+			settings.custom404 = false;
+		} else {
+			settings.custom404 = true;
+		}
+
+		if (!req.body.custom500) {
+			settings.custom500 = false;
+		} else {
+			settings.custom500 = true;
+		}
+
+		if (!req.body.anyoneRegister) {
+			settings.anyoneRegister = false;
+		} else {
+			settings.anyoneRegister = true;
+		}
+
+		const settingsJson = _.merge(req.body, settings);
+		CMS.writeConfig(settingsJson).then((result) => {
+			res.redirect('/' + CMS.adminLocation + '/settings?msg=1');
+		})
 	});
 
 	router.get('/' + CMS.adminLocation + '/analytics', CMS.isLoggedIn, (req, res) => {
-		CMS.renderAdminTemplate(res, 'analytics', req.params);
+		CMS.renderAdminTemplate('analytics', req.params);
 	});
 
 	// Theme routes
 	router.get('/' + CMS.adminLocation + '/themes', CMS.isLoggedIn, (req, res) => {
 		let msg = req.query.msg;
-		CMS.renderAdminTemplate(res, 'themes', req.params, msg);
+		CMS.renderAdminTemplate('themes', req.params, msg);
 	});
 
 	router.post('/' + CMS.adminLocation + '/themes', CMS.isLoggedIn, (req, res) => {
@@ -212,7 +234,7 @@ module.exports = (CMS, router, passport, settings) => {
 	// Plugin routes
 	router.get('/' + CMS.adminLocation + '/plugins', CMS.isLoggedIn, (req, res) => {
 		let msg = req.query.msg;
-		CMS.renderAdminTemplate(res, 'plugins', req.params, msg);
+		CMS.renderAdminTemplate('plugins', req.params, msg);
 	});
 
 	router.post('/' + CMS.adminLocation + '/plugins', CMS.isLoggedIn, (req, res) => {
@@ -221,9 +243,8 @@ module.exports = (CMS, router, passport, settings) => {
 		});
 	});
 
-	router.get('/' + CMS.adminLocation + '/plugin/:action/:plugin', CMS.isLoggedIn, (req, res) => {
-		console.log(req.params.action);
-		console.log(req.params.plugin);
+	router.get('/' + CMS.adminLocation + '/plugin/:plugin/:page', CMS.isLoggedIn, (req, res) => {
+		CMS.renderPluginTemplate(res, req.params.plugin, req.params.page);
 	});
 
 	// User routes
@@ -231,7 +252,7 @@ module.exports = (CMS, router, passport, settings) => {
 		let msg = req.query.msg;
 
 		CMS.getUsers({}, (err, results) => {
-			CMS.renderAdminTemplate(res, 'users', results, msg);
+			CMS.renderAdminTemplate('users', results, msg);
 		});
 	});
 
@@ -244,7 +265,8 @@ module.exports = (CMS, router, passport, settings) => {
 
 		CMS.getUsers({search}, (err, results) => {
 			results.roles = CMS.rolesAndCaps.getRoleTypes();
-			CMS.renderAdminTemplate(res, 'user-edit', results, msg);
+			results.userId = req.params.id;
+			CMS.renderAdminTemplate('user-edit', results, msg);
 		});
 	});
 
@@ -253,7 +275,7 @@ module.exports = (CMS, router, passport, settings) => {
 		const results = {
 			roles: CMS.rolesAndCaps.getRoleTypes()
 		};
-		CMS.renderAdminTemplate(res, 'user-new', results, msg);
+		CMS.renderAdminTemplate('user-new', results, msg);
 	});
 
 	router.post('/' + CMS.adminLocation + '/update-user', CMS.isLoggedIn, (req, res) => {
@@ -286,6 +308,25 @@ module.exports = (CMS, router, passport, settings) => {
 			break;
 			case 'update':
 
+				const userId = data.formData.userId;
+				delete data.formData.userId;
+				delete data.formData.formType;
+
+				data.formData.accounttype = data.formData.accounttype.toLowerCase();
+
+				if (data.formData.password) {
+					data.formData.pass = CMS._utilities.hash(data.formData.password);
+				}
+
+				delete data.formData.password;
+
+				CMS.updateUser(userId, data.formData)
+				.then((user) => {
+					res.redirect('/' + CMS.adminLocation + '/user/edit/' + userId + '?msg=98');
+				})
+				.catch((e) => {
+					res.redirect('/' + CMS.adminLocation + '/user/edit/' + userId + '?msg=94');
+				});
 			break;
 
 		}
@@ -383,6 +424,14 @@ module.exports = (CMS, router, passport, settings) => {
 	});
 
 	//API routes
+
+	router.post('/' + CMS.adminLocation + '/api/preview', CMS.isLoggedIn, (req, res) => {
+		const previewUrl = req.body.url;
+		const template = req.body.template;
+		const getUrl = `${CMS.cmsDetails.url}${previewUrl}`;
+
+		CMS.sendResponse(res, 200, CMS._render._fileData(template));
+	});
 
 	router.post('/' + CMS.adminLocation + '/api/posts', (req, res) => {
 
@@ -563,9 +612,25 @@ module.exports = (CMS, router, passport, settings) => {
 
 	});
 
+	CMS.addedRoutes.forEach(function(route) {
+
+		let middleware = [];
+
+		if (route.auth) {
+			middleware.push(CMS.isLoggedIn)
+		}
+
+		router[route.type](route.url, middleware, (req, res) => {
+			if (typeof route.function === 'function') {
+				if (route.type === 'post') {}
+				route.function(req.body);
+			}
+		})
+	});
+
 	router.get('/' + CMS.adminLocation + '/*', CMS.isLoggedIn, (req, res) => {
-		let msg = req.query.msg;
-		CMS.errorHandler({type: 'pagenotfound'}, res);
+	  let msg = req.query.msg;
+	  CMS.errorHandler({type: 'pagenotfound'}, res);
 	});
 
 	return router;
