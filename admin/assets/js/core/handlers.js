@@ -1,13 +1,22 @@
 $(document).ready(function() {
 
+    $('.alert').on('closed.bs.alert', function () {
+    	adminPost('/')
+    })
+    // category page
+    $('body').on('input change', '#category-tag input[name="category[][name]"]', function() {
+        var value = $(this).val();
+		$('input[name="category[][slug]"').val(`${app.sanitizeTitle(value)}`);
+    });
+
     // Auto save functions
     let timeoutId;
-    $('body').on('input propertychange change paste', 'form input, #editor', function() {
+    $('body').on('input propertychange change paste', '#edit-form form input, #editor', function() {
 
 		var text = $('#editor').text();
 		var content = $('#editor').html();
 		var postTitle = $('input[name="postTitle"]').val();
-		//previewIframeContents(content, postTitle);
+		previewIframeContents(content, postTitle);
 		//return;
 		var wordCount = app.countWords(text);
 		var countParagraphs = app.countParagraphs(content);

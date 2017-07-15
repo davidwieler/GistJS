@@ -102,6 +102,29 @@ module.exports = (CMS, router, passport, settings) => {
 		CMS.renderAdminTemplate('edit');
 	});
 
+	router.get('/' + CMS.adminLocation + '/categories', CMS.isLoggedIn, (req, res) => {
+		CMS.renderAdminTemplate('category-tag', 'categories');
+	});
+
+	router.get('/' + CMS.adminLocation + '/tags', CMS.isLoggedIn, (req, res) => {
+		CMS.renderAdminTemplate('category-tag', 'tags');
+	});
+
+	router.post('/' + CMS.adminLocation + '/categories', CMS.isLoggedIn, (req, res) => {
+
+		CMS.createCategory(req.body.category[0]).then((result) => {
+			res.redirect('/' + CMS.adminLocation + '/categories');
+		})
+	});
+
+	router.get('/' + CMS.adminLocation + '/tags', CMS.isLoggedIn, (req, res) => {
+		CMS.renderAdminTemplate('category-tag');
+	});
+
+	router.get('/' + CMS.adminLocation + '/menus', CMS.isLoggedIn, (req, res) => {
+		CMS.renderAdminTemplate('menus');
+	});
+
 	router.get('/' + CMS.adminLocation + '/updates', CMS.isLoggedIn, (req, res) => {
 		CMS.renderAdminTemplate('updates');
 	});
@@ -259,14 +282,24 @@ module.exports = (CMS, router, passport, settings) => {
 	router.get('/' + CMS.adminLocation + '/user/edit/:id', CMS.isLoggedIn, (req, res) => {
 		let msg = req.query.msg;
 
-		const search = {
-			_id: req.params.id
+		const searchThisUser = {
+			search: {
+				_id: req.params.id
+			}
 		}
 
-		CMS.getUsers({search}, (err, results) => {
+		const searchGetEditors = {
+			search: {
+				accounttype: 'editor'
+			}
+		}
+
+		CMS.Promise.join(CMS.getUsers(searchThisUser), CMS.getUsers(searchGetEditors), (results, editors) => {
 			results.roles = CMS.rolesAndCaps.getRoleTypes();
 			results.userId = req.params.id;
+			results.editors = editors
 			CMS.renderAdminTemplate('user-edit', results, msg);
+
 		});
 	});
 
@@ -428,7 +461,7 @@ module.exports = (CMS, router, passport, settings) => {
 	router.post('/' + CMS.adminLocation + '/api/preview', CMS.isLoggedIn, (req, res) => {
 		const previewUrl = req.body.url;
 		const template = req.body.template;
-		const getUrl = `${CMS.cmsDetails.url}${previewUrl}`;
+		const getUrl = `${CMS.config.url}${previewUrl}`;
 
 		CMS.sendResponse(res, 200, CMS._render._fileData(template));
 	});

@@ -1,0 +1,133 @@
+<% include includes/header %>
+<% include includes/pageheader %>
+<%
+	const pageType = data;
+
+	switch (pageType) {
+		case 'categories':
+			var type = pageType
+			var single = 'category'
+		break;
+		case 'tags':
+			var type = pageType
+			var single = 'tag'
+		break;
+		default:
+		break;
+
+	}
+%>
+	<!-- Page container -->
+	<div class="page-container">
+
+		<!-- Page content -->
+		<div class="page-content">
+
+			<!-- Main sidebar -->
+			<div class="sidebar sidebar-main sidebar-default">
+				<div class="sidebar-content">
+
+					<!-- Main navigation -->
+					<div class="sidebar-category sidebar-category-visible">
+						<div class="category-title h6">
+							<span>Navigation</span>
+						</div>
+
+						<div class="category-content no-padding">
+							<% include includes/navigation %>
+						</div>
+					</div>
+					<!-- /main navigation -->
+
+				</div>
+			</div>
+			<!-- /main sidebar -->
+
+			<!-- Main content -->
+			<div class="content-wrapper">
+				<% if (data && typeof data.msg !== 'undefined') { %>
+					<%- app.alert(data.msg);%>
+				<% } %>
+					<!-- Single line -->
+					<div class="row">
+						<div class="col-md-6 col-lg-4">
+							<h3>New <%- app.capitalizeFirstLetter(type);%></h3>
+							<form action="/<%- adminLocation;%>/<%- type;%>" method="POST" id="category-tag">
+								<div class="row">
+									<div class="form-group">
+										<div class="col-lg-10">
+
+											<label class="control-label"><%- app.capitalizeFirstLetter(single);%> Name</label>
+											<input type="text" class="form-control" name="<%- single;%>[][name]" value="">
+											<span class="help-block">The name of your <%- single;%>.</span>
+										</div>
+									</div>
+								</div>
+								<div class="row">
+									<div class="form-group">
+										<div class="col-lg-10">
+
+											<label class="control-label"><%- app.capitalizeFirstLetter(single);%> Slug</label>
+											<input type="text" class="form-control" name="<%- single;%>[][slug]" value="">
+											<span class="help-block">The slug is the URL-friendly version of the name.</span>
+										</div>
+									</div>
+								</div>
+								<div class="col-md-12">
+									<div class="row">
+										<button class="btn btn-info" type="submit">Create</button>
+									</div>
+								</div>
+							</form>
+						</div>
+						<div class="col-md-6 col-lg-8">
+							<h3>Current <%- app.capitalizeFirstLetter(type);%></h3>
+							<div class="panel panel-white">
+								<div class="panel-heading">
+									<h6 class="panel-title"><%- app.capitalizeFirstLetter(type);%></h6>
+								</div>
+
+								<div class="table-responsive">
+									<table class="table table-inbox">
+										<thead>
+											<tr>
+												<th>Name</th>
+												<th>Slug</th>
+												<th>Posts</th>
+											</tr>
+										</thead>
+										<tbody data-link="row" class="rowlink">
+											<%
+												if (categories !== 0) {
+													for (var i = 0; i < categories.slug.length; i++) {
+														console.log(categories.slug[i]);
+														%>
+															<tr>
+															<td><%- categories.name[i];%></td>
+															<td><%- categories.slug[i];%></td>
+															<td>0</td>
+															</tr>
+														<%
+													}
+												}
+											%>
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!-- /single line -->
+
+			</div>
+
+			</div>
+			<!-- /main content -->
+
+		</div>
+		<!-- /page content -->
+
+	</div>
+	<!-- /page container -->
+
+<% include includes/footer %>

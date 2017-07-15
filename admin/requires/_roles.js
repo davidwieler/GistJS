@@ -46,7 +46,13 @@ module.exports = (CMS) => {
 			editMenus: false,
 			editSettings: false,
 			adjustControls: false,
-			enableAdminPush: false
+			enableAdminPush: false,
+			adjustMessaging: false,
+			adminPushNotifications: false,
+			editorPushNotifications: false,
+			authorPushNotifications: false,
+			contributorPushNotifications: false,
+			subscriberPushNotifications: true
 		};
 
 		roles.contributor = {
@@ -81,7 +87,12 @@ module.exports = (CMS) => {
 			editMenus: false,
 			editSettings: false,
 			adjustControls: false,
-			enableAdminPush: true
+			enableAdminPush: true,
+			adminPushNotifications: false,
+			editorPushNotifications: false,
+			authorPushNotifications: false,
+			contributorPushNotifications: true,
+			subscriberPushNotifications: true
 		};
 
 		roles.author = {
@@ -116,7 +127,13 @@ module.exports = (CMS) => {
 			editMenus: false,
 			editSettings: false,
 			adjustControls: false,
-			enableAdminPush: true
+			enableAdminPush: true,
+			adjustMessaging: false,
+			adminPushNotifications: false,
+			editorPushNotifications: false,
+			authorPushNotifications: true,
+			contributorPushNotifications: true,
+			subscriberPushNotifications: true
 		};
 
 		roles.editor = {
@@ -151,7 +168,13 @@ module.exports = (CMS) => {
 			editMenus: true,
 			editSettings: false,
 			adjustControls: false,
-			enableAdminPush: true
+			enableAdminPush: true,
+			adjustMessaging: false,
+			adminPushNotifications: false,
+			editorPushNotifications: true,
+			authorPushNotifications: true,
+			contributorPushNotifications: true,
+			subscriberPushNotifications: true
 		};
 
 		roles.administrator = {
@@ -186,7 +209,13 @@ module.exports = (CMS) => {
 			editMenus: true,
 			editSettings: true,
 			adjustControls: true,
-			enableAdminPush: true
+			enableAdminPush: true,
+			adjustMessaging: true,
+			adminPushNotifications: true,
+			editorPushNotifications: true,
+			authorPushNotifications: true,
+			contributorPushNotifications: true,
+			subscriberPushNotifications: true
 		};
 
 		CMS.roles = roles;

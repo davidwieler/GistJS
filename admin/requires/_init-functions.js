@@ -4,6 +4,28 @@ module.exports = (CMS, APP) => {
 	let initFunctions = {};
 
 	initFunctions.init = () => {
+
+		CMS._utilities.addAdminScript({
+			name: 'jquery',
+			src: 'core/libraries/jquery.min.js',
+			type: 'core'
+		})
+		CMS._utilities.addAdminScript({name: 'bootstrap', src: 'core/libraries/bootstrap.min.js', type: 'core'})
+		CMS._utilities.addAdminScript({name: 'wysihtml', src: 'core/libraries/wysihtml.min.js', type: 'core', page: 'edit'})
+		CMS._utilities.addAdminScript({name: 'wysihtml-toolbar', src: 'core/libraries/wysihtml-toolbar.min.js', type: 'core', page: 'edit'})
+		CMS._utilities.addAdminScript({name: 'wysihtml-parser-rules', src: 'core/libraries/wysihtml-parser-rules.js', type: 'core', page: 'edit'})
+		CMS._utilities.addAdminScript({name: 'blockui', src: 'plugins/loaders/blockui.min.js', type: 'core'})
+		CMS._utilities.addAdminScript({name: 'nicescroll', src: 'plugins/ui/nicescroll.min.js', type: 'core'})
+		CMS._utilities.addAdminScript({name: 'drilldown', src: 'plugins/ui/drilldown.js', type: 'core'})
+		CMS._utilities.addAdminScript({name: 'pace', src: 'plugins/loaders/pace.min.js', type: 'core'})
+		CMS._utilities.addAdminScript({name: 'tidyhtml', src: 'plugins/tidyhtml.js', type: 'core', page: 'edit'})
+		CMS._utilities.addAdminScript({name: 'tomarkdown', src: 'plugins/tomarkdown.js', type: 'core', page: 'edit'})
+		CMS._utilities.addAdminScript({name: 'app', src: 'core/app.js', type: 'core'})
+		CMS._utilities.addAdminScript({name: 'handlers', src: 'core/handlers.js', type: 'core'})
+		CMS._utilities.addAdminScript({name: 'helperFunctions', src: 'core/helperFunctions.js', type: 'core'})
+		CMS._utilities.addAdminScript({name: 'showdown', src: 'https://cdn.rawgit.com/showdownjs/showdown/1.6.3/dist/showdown.min.js', page: 'edit'})
+		CMS._utilities.addAdminScript({name: 'bootstrap-select', src: 'https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/js/bootstrap-select.min.js'})
+
 		const metaData = {
 			heading: 'Test Header',
 			content: [

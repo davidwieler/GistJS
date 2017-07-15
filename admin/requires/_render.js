@@ -4,6 +4,7 @@ const Events = require('../events.js');
 const APP = require('../assets/js/core/app.js');
 const ejs = require('ejs');
 const async = require('async');
+const _ = require('lodash');
 module.exports = (CMS, adminDir) => {
 
 	let render = {};
@@ -13,27 +14,23 @@ module.exports = (CMS, adminDir) => {
         	filename: path.join(CMS.adminDir, 'templates', type + '.ejs')
         };
 		let data = fs.readFileSync(options.filename, 'utf-8');
-        let user = CMS.res.req.user;
 		let rendered;
-        if (user) {
-        	delete user.pass
-        }
 		//console.log(CMS.hooks);
 		//CMS.doHook('edit')
 
         let render = {
         	cms: CMS,
         	cmsInfo: CMS._utilities.sanitizedCmsInfo(),
-			currentUser: CMS.currentUser,
+			currentUser: CMS._users.getCurrentUserInfo(),
         	themeInfo: CMS.activeTheme,
         	themes: CMS.themes,
         	templates: CMS.getTemplates(),
         	adminLocation: CMS.adminLocation,
         	data: urlData,
         	app: APP,
+			page: type,
         	msg: msg || '',
         	postData: {},
-        	user: user,
         	postRevisions: 0,
         	plugins: CMS.pluginDetails,
 			activePlugins: CMS.activePlugins,
@@ -44,7 +41,7 @@ module.exports = (CMS, adminDir) => {
 			queryVars: CMS.passToRender.queryVars,
 			queryVarString: CMS.passToRender.queryVarString,
 			postTypeColumns: CMS.postTypeColumns || [],
-			system: {msg:'test'}
+			systemMessages: CMS.systemMessages
         };
 
         if (typeof msg !== 'undefined') {
@@ -54,16 +51,47 @@ module.exports = (CMS, adminDir) => {
 		if (typeof status === 'undefined') {
 			status = 200
 		}
-
+		/*
 		CMS._messaging.sendPush({
 			message: 'Click this and go to settings',
 			clickTarget: 'http://localhost:7637/spry-admin/settings',
 			title: 'Test Message'
 		});
+		*/
+
+		if (CMS.adminScripts.removeScript) {
+			let newScripts = [];
+			const scripts = CMS.adminScripts.removeScript;
+			for (var i = 0; i < scripts.length; i++) {
+				_.remove(CMS.adminScripts, function(currentObject) {
+					console.log(currentObject[scripts[i].removeBy]);
+					console.log(scripts[i].attribute);
+				    return currentObject[scripts[i].removeBy] === scripts[i].attribute;
+				});
+			}
+		}
 
 		CMS.doHook(type).then((results) => {
 			render.hookResults = results;
 			switch (type) {
+				case 'category-tag' :
+
+					if (render.data === 'tags') {
+						CMS.getTags().then((cats) => {
+							render.categories = cats;
+							rendered = ejs.render(data, render, options);
+							CMS.sendResponse(CMS.res, status, rendered);
+						});
+					} else {
+						CMS.getCategories().then((cats) => {
+							render.categories = cats;
+							rendered = ejs.render(data, render, options);
+				            CMS.sendResponse(CMS.res, status, rendered);
+						});
+					}
+
+
+				break;
 	    		case 'edit' :
 			        if (typeof urlData !== 'undefined') {
 				    	const id = urlData.id.toString();
@@ -79,6 +107,7 @@ module.exports = (CMS, adminDir) => {
 
 						})
 		    			.catch((e) => {
+							console.log(e);
 		    				CMS.errorHandler({type: 'postnotfound', message: 'Post id: ' + id + ' not found', function: 'getPostById'});
 		    			});
 			        } else {
@@ -193,7 +222,7 @@ module.exports = (CMS, adminDir) => {
 					footerFile: `${CMS.adminDir}/templates/includes/footer.ejs`,
 					cms: CMS,
 					msg: msg,
-		        	cmsInfo: CMS.cmsDetails,
+		        	cmsInfo: CMS._utilities.sanitizedCmsInfo(),
 					currentUser: CMS.currentUser,
 		        	themeInfo: CMS.activeTheme,
 		        	themes: CMS.themes,
@@ -237,13 +266,13 @@ module.exports = (CMS, adminDir) => {
         	plugins: CMS.activePlugins.user,
 			theme: CMS.activeTheme,
         	site: {
-        		url: CMS.cmsDetails.url,
-        		name: CMS.cmsDetails.name,
-        		title: CMS.cmsDetails.title,
-        		tagline: CMS.cmsDetails.tagline,
-        		currentUser: CMS.cmsDetails.currentUser,
-        		adminLocation: CMS.cmsDetails.adminLocation,
-        		cmsLocation: CMS.cmsDetails.cmsLocation,
+        		url: CMS.config.url,
+        		name: CMS.config.name,
+        		title: CMS.config.title,
+        		tagline: CMS.config.tagline,
+        		currentUser: CMS.config.currentUser,
+        		adminLocation: CMS.config.adminLocation,
+        		cmsLocation: CMS.config.cmsLocation,
         	},
 			app: APP,
 			passedToRender: CMS.passToRender
@@ -321,8 +350,6 @@ module.exports = (CMS, adminDir) => {
 					search: CMS.loopQuery(value.find)
 				}
 
-				console.log(value.find);
-
 				// If the loop contains a query object, use that by default
 				if (value.query) {
 					loopQuery.search = value.query;
@@ -333,23 +360,19 @@ module.exports = (CMS, adminDir) => {
 				CMS.Promise.all(loopArrayPromises)
 				.then((result) => {
 					const postResult = result[0];
+					const postArray = postResult.posts;
 
-					if (value.getMedia && postResult.posts.length > 0) {
+					if (value.getMedia && postArray.length > 0) {
 						let postIds = [];
-						for (var i = 0; i < postResult.postCount; i++) {
-
-							const postDetails = postResult.posts[i];
-							const postId = postDetails._id.toString();
-							postIds.push(postId);
+						for (var i = 0; i < postArray.postCount; i++) {
+							postIds.push(postArray[i]._id);
 						}
 
 						let mediaSearch = { postId: { $in: postIds } };
 
-						if (value.getMedia === 'featured') {
+						if (value.getMedia.featured) {
 							mediaSearch = { $and: [ { featured: true}, { postId: { $in: postIds } } ] }
-						}
-
-						if (typeof value.getMedia === 'object') {
+						} else if (typeof value.getMedia === 'object') {
 							mediaSearch = value.getMedia;
 						}
 
@@ -383,7 +406,8 @@ module.exports = (CMS, adminDir) => {
 
 				})
 				.catch((e) => {
-					CMS.errorHandler(e, res);
+					console.log(e);
+					CMS.errorHandler(e, CMS.res);
 				});
 	        };
 
@@ -469,7 +493,7 @@ module.exports = (CMS, adminDir) => {
 		const db = CMS.dbData;
 		const collection = CMS.dbConn.data.collection;
 		const baseUrl = requestUrl;
-		const paginateRegEx = new RegExp('/' + CMS.cmsDetails.paginateBy + '/([0-9]+)((\/\w+)+|\/?)$');
+		const paginateRegEx = new RegExp('/' + CMS.config.paginateBy + '/([0-9]+)((\/\w+)+|\/?)$');
 		let paginateNumber = 0;
 
 		if (paginateRegEx.test(requestUrl)) {
@@ -487,7 +511,7 @@ module.exports = (CMS, adminDir) => {
 						continue;
 					}
 
-					if (paginate[i] === CMS.cmsDetails.paginateBy) {
+					if (paginate[i] === CMS.config.paginateBy) {
 						continue;
 					}
 
@@ -504,17 +528,16 @@ module.exports = (CMS, adminDir) => {
 				requestUrl = '/' + path.join.apply(null, URLPath);
 			}
 		} else {
-			paginateNumber = CMS.req.query[CMS.cmsDetails.paginateBy] || 0;
+			paginateNumber = CMS.req.query[CMS.config.paginateBy] || 0;
 		}
 
 		const search = {postUrl: requestUrl, status: { $ne: 'trash' }};
-		console.log(search);
 
 		CMS.dbFindOne(db, collection, search)
 		.then((doc) => {
 			if (doc === null) {
 
-				if (CMS.cmsDetails.custom404 === true) {
+				if (CMS.config.custom404 === true) {
 					// Use cms based error 404 page
 					CMS.error(CMS.res, 404, 'Page not found');
 					return;
@@ -534,7 +557,7 @@ module.exports = (CMS, adminDir) => {
 		})
 		.catch((e) => {
 			if (err) {
-				if (CMS.cmsDetails.custom500 === true) {
+				if (CMS.config.custom500 === true) {
 					// Use cms based error 500 page
 					CMS.error(CMS.res, 500);
 					CMS.sendResponse(CMS.res, 500, 'Server Error');

@@ -16,6 +16,8 @@ module.exports = (CMS) => {
 
 		data.timestamp = +new Date();
 		data.contentType = type;
+		data.user = CMS._users.getCurrentUserInfo().name;
+		data.userId = CMS._users.getCurrentUserInfo()._id;
 
 		if (data.postUrl) {
 			const postUrl = data.postUrl;
@@ -75,13 +77,13 @@ module.exports = (CMS) => {
 			data.category = {};
 		}
 
-		data.updatedUser = data.user;
-		data.updatedUserId = data.userId;
+		data.updatedUser = CMS._users.getCurrentUserInfo().name;
+		data.updatedUserId = CMS._users.getCurrentUserInfo()._id;
 		//data.updatedTimestamp = +new Date();
 		delete data.user;
 		delete data.userId;
 
-		if (CMS.cmsDetails.postRevisions === true) {
+		if (CMS.config.postRevisions === true) {
 
 			CMS.getPostById(postId, (err, res) => {
 
@@ -89,8 +91,6 @@ module.exports = (CMS) => {
 				// remove some of the known constant data points.
 				const equalityCheck = res;
 				delete equalityCheck._id;
-				delete equalityCheck.user;
-				delete equalityCheck.userId;
 				delete equalityCheck.timestamp;
 				delete equalityCheck.updatedTimestamp;
 				delete equalityCheck.contentType;
@@ -308,6 +308,22 @@ module.exports = (CMS) => {
 	};
 
 	content.addWidget = () => {
+
+	};
+
+	content.gjAdminHead = () => {
+
+	};
+
+	content.gjAdminFooter = () => {
+
+	};
+
+	content.gjHead = () => {
+
+	};
+
+	content.gjFooter = () => {
 
 	};
 

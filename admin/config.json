@@ -60,5 +60,8 @@
 	"sessionCookieSecret": "test",
 	"sessionCookieName": "testit",
 	"anyoneRegister": false,
-	"pushEnabled": true
+	"pushEnabled": false,
+	"vapidPublicKey": "BJJk8C_7gwq91q2yapYEjEL8i5WNgVIAd8fzssTK6OEyZipkDfO4tbtsm3YlSHxKdYZRGLiGwIM3Ggt65yPylaw",
+	"vapidPrivateKey": "Xy1fe7qsd91p9jni5hfexmonV0mHgdwtFekiaN870PQ",
+	"pushNotifications": ""
 }

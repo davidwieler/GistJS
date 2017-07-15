@@ -21,33 +21,31 @@
 	<script>
 		const postMeta = '<%- JSON.stringify(postData.postMeta); %>';
 		const adminLocation = '<%- adminLocation%>';
-		const siteUrl = '<%- cms.cmsDetails.url%>';
+		const siteUrl = '<%- cmsInfo.url%>';
 		const postId = '<%- postData._id%>';
-		const autoSaveTimer = '<%- cms.cmsDetails.autoSaveTimer%>';
-		const coreVersion = '<%- cms.cmsDetails.coreVersion%>';
+		const autoSaveTimer = '<%- cmsInfo.autoSaveTimer%>';
+		const coreVersion = '<%- cmsInfo.coreVersion%>';
+		const pushEnabled = '<%- cmsInfo.pushEnabled %>';
+		const pushServicePublicKey = '<%- cms.config.vapidPublicKey%>';
 		let subscriptionStatus = '';
 	</script>
-	<script type="text/javascript" src="/gistjs-assets/js/core/libraries/jquery.min.js"></script>
-	<script type="text/javascript" src="/gistjs-assets/js/core/libraries/bootstrap.min.js"></script>
-	<script type="text/javascript" src="/gistjs-assets/js/core/libraries/wysihtml.min.js"></script>
-	<script type="text/javascript" src="/gistjs-assets/js/core/libraries/wysihtml-toolbar.min.js"></script>
-	<script type="text/javascript" src="/gistjs-assets/js/core/libraries/wysihtml-parser-rules.js"></script>
-	<script type="text/javascript" src="/gistjs-assets/js/plugins/loaders/blockui.min.js"></script>
-	<script type="text/javascript" src="/gistjs-assets/js/plugins/ui/nicescroll.min.js"></script>
-	<script type="text/javascript" src="/gistjs-assets/js/plugins/ui/drilldown.js"></script>
-	<script type="text/javascript" src="/gistjs-assets/js/plugins/loaders/pace.min.js"></script>
-	<script type="text/javascript" src="/gistjs-assets/js/plugins/tidyhtml.js"></script>
-	<script type="text/javascript" src="/gistjs-assets/js/plugins/tomarkdown.js"></script>
-	<script type="text/javascript" src="/gistjs-assets/js/core/app.js"></script>
-	<script type="text/javascript" src="/gistjs-assets/js/core/handlers.js"></script>
-	<script type="text/javascript" src="/gistjs-assets/js/core/helperFunctions.js"></script>
-	<script src="https://cdn.rawgit.com/showdownjs/showdown/1.6.3/dist/showdown.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/js/bootstrap-select.min.js"></script>
 	<!-- /core JS files -->
 
 	<!-- Plugin CSS & JS files -->
-
 <%
+	for (var i = 0; i < cms.adminScripts.length; i++) {
+
+		if (!cms.adminScripts[i].scriptPage) {
+			%><script type="text/javascript" src="<%- cms.adminScripts[i].scriptSrc;%>"></script><%
+		} else if (page === cms.adminScripts[i].scriptPage) {
+			%><script type="text/javascript" src="<%- cms.adminScripts[i].scriptSrc;%>"></script><%
+		}
+
+
+	}
+%>
+<%
+	/*
 	for (var i = plugins.length - 1; i >= 0; i--) {
 		var cssFile = plugins[i].pluginInfo.css;
 		var jsFile = plugins[i].pluginInfo.init;
@@ -62,6 +60,7 @@
 			%><script type="text/javascript" src="/plugins/<%- path %>/<%- jsFile %>"></script><%
 		}
 	}
+	*/
 %>
 	<!-- /plugin CSS & JS files -->
 </head>
@@ -253,7 +252,7 @@
 
 				<li class="dropdown dropdown-user">
 					<a class="dropdown-toggle" data-toggle="dropdown">
-						<span><%- currentUser.username%></span>
+						<span><%- currentUser.name%></span>
 						<i class="caret"></i>
 					</a>
 

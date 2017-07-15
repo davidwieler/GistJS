@@ -59,7 +59,7 @@ module.exports = (settings, app) => {
 
 	CMS.init(settings, router);
 
-	if (CMS.cmsDetails.anyoneRegister) {
+	if (CMS.config.anyoneRegister) {
 		CMS.enableUserRegistration();
 	}
 
@@ -73,16 +73,16 @@ module.exports = (settings, app) => {
 		//console.log();
 	//});
 
-	if (typeof CMS.cmsDetails.dbHost !== 'undefined') {
+	if (typeof CMS.config.dbHost !== 'undefined') {
 		// Initialize session store via MongoStore
 	    const dbSessionsConf = {
 	        db: {
 	            url: 'mongodb://' + CMS.dbConn.sessions.url,
 	            stringify: false
 	        },
-	        secret: CMS.cmsDetails.sessionCookieSecret,
+	        secret: CMS.config.sessionCookieSecret,
 	        sameSite: true,
-	        cookieName: CMS.cmsDetails.sessionCookieName,
+	        cookieName: CMS.config.sessionCookieName,
 	        cookieLength: new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)) // NEED TO ADD A WAY TO SET THE LOGIN COOKIE LENGTH
 	    };
 
@@ -130,12 +130,12 @@ module.exports = (settings, app) => {
 		if (CMS.passThroughUrl(requestUrl, req, res)) {
 
 			// Run the "delete trashed" function if a
-			// logged in user loaders any admin pages
-			if (requestUrl.indexOf(CMS.cmsDetails.adminLocation) >= 0) {
+			// logged in user loads any admin pages
+			if (requestUrl.indexOf(CMS.config.adminLocation) >= 0) {
 				CMS._utilities.deleteTrashed();
 			}
 
-			if (CMS.cmsDetails.localEditing === false) {
+			if (CMS.config.localEditing === false) {
 				CMS.error(res, 404, 'Page not found');
 				return;
 			}
@@ -147,8 +147,18 @@ module.exports = (settings, app) => {
 		// Check if maintenance mode is on
 		// Enable by setting: maintenance: true in the settings.
 		// The system may set this automatically some times, like during updates or heavy processes.
-		if (CMS.cmsDetails.maintenance === true) {
-	    	if (typeof CMS.activeTheme === 'undefined') {
+		if (CMS.config.maintenance === true) {
+			let hasMaintenanceTemplate = false;
+			const activeThemeTemplates = CMS.getTemplates();
+
+			for (var i = 0; i < activeThemeTemplates.length; i++) {
+				if (activeThemeTemplates[i].filename === 'maintenance.ejse') {
+					hasMaintenanceTemplate = true;
+					break;
+				}
+			}
+
+	    	if (typeof CMS.activeTheme === 'undefined' || !hasMaintenanceTemplate) {
 	    		CMS.renderAdminTemplate('maintenance');
 	    		return;
 	    	}
@@ -161,16 +171,8 @@ module.exports = (settings, app) => {
 			return;
 		}
 
-		console.log(`Requested URL: ${requestUrl}`);
-
-		if (requestUrl === '/service-worker.js') {
-			console.log('test');
-		} else {
-			// If not an admin panel request, look for valid url in db.
-			CMS._render._mainRender(requestUrl);
-		}
-
-
+		// If not an admin panel request, look for valid url in db.
+		CMS._render._mainRender(requestUrl);
 
 	});
 

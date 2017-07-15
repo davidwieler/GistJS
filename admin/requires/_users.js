@@ -10,6 +10,7 @@ module.exports = (CMS) => {
 	users.getUsers = (findUsers, done) => {
 		const db = CMS.dbData;
 		const collection = CMS.dbConn.accounts.collection;
+		console.log(findUsers);
 
 		let returnedUsers = [];
 		let count = 0;
@@ -115,6 +116,22 @@ module.exports = (CMS) => {
 
 
 	};
+
+	users.getCurrentUserInfo = () => {
+		const user = CMS.currentUser;
+
+		return {
+			name: CMS.currentUser[CMS.currentUser.displaytype],
+			id: CMS.currentUser._id,
+			assignedEditor: CMS.currentUser.assignedEditor,
+			email: CMS.currentUser.email,
+			pushSubscription: CMS.currentUser.pushSubscription,
+			editortype: CMS.currentUser.editortype,
+			pushEnabled: CMS.currentUser.adminPushNotifications,
+			assignedEditor: CMS.currentUser._id,
+			caps: CMS.currentUser.caps
+		}
+	}
 
 	return users;
 

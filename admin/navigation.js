@@ -15,22 +15,29 @@ module.exports = [
 		priviledge: 'editFiles',
 	},
 	{
-		slug: 'Categories',
-		url: 'menus',
-		icon: 'icon-list2',
-		priviledge: 'editMenus',
-	},
-	{
-		slug: 'Tags',
-		url: 'menus',
-		icon: 'icon-list2',
-		priviledge: 'editMenus',
-	},
-	{
-		slug: 'Menus',
-		url: 'menus',
-		icon: 'icon-list2',
-		priviledge: 'editMenus',
+		slug: 'Content Settings',
+		icon: 'icon-image2',
+		priviledge: 'editFiles',
+		subMenu: [
+			{
+				slug: 'Categories',
+				url: 'categories',
+				icon: 'icon-list2',
+				priviledge: 'editMenus',
+			},
+			{
+				slug: 'Tags',
+				url: 'tags',
+				icon: 'icon-list2',
+				priviledge: 'editMenus',
+			},
+			{
+				slug: 'Menus',
+				url: 'menus',
+				icon: 'icon-list2',
+				priviledge: 'editMenus',
+			}
+		]
 	},
 	{
 		menuName: 'Settings'
@@ -97,6 +104,12 @@ module.exports = [
 				url: 'settings/controls',
 				icon: 'icon-envelope',
 				priviledge: 'adjustControls',
+			},
+			{
+				slug: 'Messaging',
+				url: 'settings/controls',
+				icon: 'icon-envelope',
+				priviledge: 'adjustMessaging',
 			},
 			{
 				slug: 'Mail',

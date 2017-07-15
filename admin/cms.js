@@ -10,7 +10,6 @@ const async = require('async');
 
 	CMS = {
 		init: (settings, router) => {
-			CMS.cmsDetails = require(__dirname + '/config.json');
 			CMS.adminDir = __dirname;
 
 			if (!settings.configLocation) {
@@ -19,28 +18,30 @@ const async = require('async');
 				CMS.configLocation = settings.configLocation;
 			}
 
-			if (typeof CMS.cmsDetails.dbHost === 'undefined') {
+			CMS.config = require(CMS.configLocation);
+
+			if (typeof CMS.config.dbHost === 'undefined') {
 				return;
 			}
 
-			if (CMS.cmsDetails.dbUsername && CMS.cmsDetails.dbPassword) {
-				dbConnectionUrl = `${CMS.cmsDetails.dbUsername}:${CMS.cmsDetails.dbPassword}@${CMS.cmsDetails.dbHost}:${CMS.cmsDetails.dbPort}/${CMS.cmsDetails.dbName}`;
+			if (CMS.config.dbUsername && CMS.config.dbPassword) {
+				dbConnectionUrl = `${CMS.config.dbUsername}:${CMS.config.dbPassword}@${CMS.config.dbHost}:${CMS.config.dbPort}/${CMS.config.dbName}`;
 			} else {
-				dbConnectionUrl = `${CMS.cmsDetails.dbHost}:${CMS.cmsDetails.dbPort}/${CMS.cmsDetails.dbName}`;
+				dbConnectionUrl = `${CMS.config.dbHost}:${CMS.config.dbPort}/${CMS.config.dbName}`;
 			}
 
 			CMS.dbConn = {
 				data: {
 					url: dbConnectionUrl,
-					collection: CMS.cmsDetails.dbData
+					collection: CMS.config.dbData
 				},
 				accounts: {
 					url: dbConnectionUrl,
-					collection: CMS.cmsDetails.dbAccounts
+					collection: CMS.config.dbAccounts
 				},
 				sessions: {
 					url: dbConnectionUrl,
-					collection: CMS.cmsDetails.dbSessions
+					collection: CMS.config.dbSessions
 				},
 
 			};
@@ -65,6 +66,16 @@ const async = require('async');
 
 			CMS.navigation = require('./navigation.js');
 			CMS.addedRoutes = [];
+			CMS.deletedRoutes = [];
+			CMS.pushServicesStarted = false;
+			CMS.passToRender = {};
+			CMS.themes = [];
+			CMS.metaBoxes = [];
+			CMS.dashboardWidgets = [];
+			CMS.systemMessages = [];
+			CMS.pushSubscribers = [];
+			CMS.cronJobs = {};
+			CMS.adminScripts = [];
 
 			// Define the database details.
 			CMS.dbData = db(mongojs, CMS.dbConn).dataInit();
@@ -75,15 +86,12 @@ const async = require('async');
 			CMS.dbFind = Promise.promisify( db(mongojs, CMS.dbConn).find );
 			CMS.dbFindOne = Promise.promisify( db(mongojs, CMS.dbConn).findOne );
 
-			CMS.adminLocation = CMS.cmsDetails.adminLocation;
+			CMS.adminLocation = CMS.config.adminLocation;
 			CMS.themeDir = settings.themeDir;
 			CMS.pluginDir = settings.pluginDir;
 			CMS.uploadDir = settings.uploadDir;
 			CMS.hooks = CMS.defineHooks();
-			CMS.passToRender = {};
-			CMS.themes = [];
-			CMS.metaBoxes = [];
-			CMS.dashboardWidgets = [];
+
 
 			// Requires
 			CMS._content = require('./requires/_content.js')(CMS);
@@ -91,13 +99,15 @@ const async = require('async');
 			CMS._categories = require('./requires/_categories.js')(CMS);
 			CMS._revisions = require('./requires/_revisions.js')(CMS);
 			CMS._attachments = require('./requires/_attachments.js')(CMS);
-			CMS._utilities = require('./requires/_utilities.js')(CMS);
+			CMS._utilities = require('./requires/_utilities.js')(CMS, APP);
 			CMS._users = require('./requires/_users.js')(CMS);
 			CMS._render = require('./requires/_render.js')(CMS);
 			CMS._themes = require('./requires/_themes.js')(CMS);
 			CMS._plugins = require('./requires/_plugins.js')(CMS);
 			CMS._roles = require('./requires/_roles.js')(CMS);
 			CMS._messaging = require('./requires/_messaging.js')(CMS, APP);
+			CMS._security = require('./requires/_security.js')(CMS, APP);
+			CMS._crons = require('./requires/_crons.js')(CMS, APP);
 			CMS._initialFunctions = require('./requires/_init-functions.js')(CMS, APP);
 
 			// Promises
@@ -136,6 +146,7 @@ const async = require('async');
 			CMS.addAdminNavigation = CMS._utilities.addAdminNavigation;
 			CMS.setQueryVars = CMS._utilities.setQueryVars;
 			CMS.createRoute = CMS._utilities.createRoute;
+			CMS.deleteRoute = CMS._utilities.deleteRoute;
 
 			// -- Attachments --
 			CMS.getAttachment = Promise.promisify( CMS._attachments.getAttachment );
@@ -169,6 +180,12 @@ const async = require('async');
 
 			// -- Roles --
 			CMS.rolesAndCaps = Promise.promisifyAll( CMS._roles );
+
+			// -- Messaging --
+			CMS._messaging.init();
+
+			// -- Security --
+			CMS.security = CMS._security.init();
 
 			// Initialize the included functions and content
 			CMS._initialFunctions.init();
@@ -211,7 +228,17 @@ const async = require('async');
 			}
 			CMS._content.addPostType(posts, 2, 'posts');
 			CMS._content.addPostType(pages, 3, 'pages');
-			CMS._messaging.init()
+
+			const systemMessageCron = CMS._crons.createCron('sendSystemMessages', '*/55 * * * *', () => {
+				for (var i = 0; i < CMS.systemMessages.length; i++) {
+					CMS.systemMessages[i]
+					CMS._messaging.sendPush({
+						message: CMS.systemMessages[i].message,
+						clickTarget: 'http://localhost:7637/spry-admin/settings',
+						title: CMS.systemMessages[i].title
+					});
+				}
+			}, true, true);
 
 		},
 

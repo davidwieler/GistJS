@@ -2,13 +2,12 @@
 	<div class="page-header">
 		<div class="system-alerts">
 			<div class="row">
-				<div class="col-md-11">
-					<% if (system && typeof system.msg !== 'undefined') { %>
-						<%- app.alert(system.msg);%>
-					<% } %>
-				</div>
-				<div class="col-md-1">
-					<i class="icon-cog pull-right"></i>
+				<div class="col-md-12">
+					<% if ( currentUser.accounttype === 'administrator' && (systemMessages && systemMessages.length !== 0) ) {
+						for (var i = 0; i < systemMessages.length; i++) { %>
+							<%- app.alert(systemMessages[i], 'system');%>
+						<% }
+					} %>
 				</div>
 			</div>
 		</div>

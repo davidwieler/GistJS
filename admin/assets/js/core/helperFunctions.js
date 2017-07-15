@@ -1,4 +1,22 @@
-let enableDistractionFree = function(self) {
+const adminPost = function(postto, d, callback) {
+	var xhr = $.post(postto, d )
+			.done(function(data) {
+				if(data == 'login'){
+					window.location.href = `${adminLocation}/login`;
+					return
+				}
+
+				if(typeof callback == 'function') {
+				   callback(data);
+				}
+			});
+	xhr.fail(function(xhr, textStatus, error) {
+		callback(xhr.responseText)
+	   $('.xhr-failure').html('There was an error connecting to the server. Please try again.').show();
+	});
+};
+
+const enableDistractionFree = function(self) {
 	var panel = $('.editor-panel');
 	var panelFooter = panel.find('.panel-footer');
 	var panelEditor = panel.find('.wysihtml5-editor');
@@ -16,7 +34,7 @@ let enableDistractionFree = function(self) {
 	}
 };
 
-let iframeLoaded = function(callback) {
+const iframeLoaded = function(callback) {
 	var iFrameID = document.getElementById('previewiframe');
 	if(iFrameID) {
 		var padding = 50;
@@ -47,14 +65,14 @@ let iframeLoaded = function(callback) {
 
 
 
-let previewIframeContents = function(content, title) {
+const previewIframeContents = function(content, title) {
 	var iFrameID = document.getElementById('');
 	var previewFrameContents = $('#previewiframe').contents();
 	$(previewFrameContents).find('.post-content').html(content);
 	$(previewFrameContents).find('.post-title').html(title);
 }
 
-let enableDistractionFreePreview = function(self) {
+const enableDistractionFreePreview = function(self) {
 	var panel = $('.editor-panel');
 	var panelFooter = panel.find('.panel-footer');
 	var panelEditor = panel.find('.wysihtml5-editor');
@@ -72,7 +90,7 @@ let enableDistractionFreePreview = function(self) {
 	}
 };
 
-let passwordGenerator = function(len) {
+const passwordGenerator = function(len) {
     var possible = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789![]{}()%&*$#^<>~@|';
     var text = '';
     for(var i=0; i < len; i++) {
@@ -81,7 +99,7 @@ let passwordGenerator = function(len) {
     return text;
 };
 
-let bulkCheckboxValues = function() {
+const bulkCheckboxValues = function() {
     var checked = $('.checker').children('.checked');
     var checkedBoxes = [];
 
@@ -96,7 +114,7 @@ let bulkCheckboxValues = function() {
     return checkedBoxes;
 };
 
-let changeEditorMode = function(type) {
+const changeEditorMode = function(type) {
 
 	var fromType = $('.editor-mode.btn-info').data('mode');
 
@@ -169,7 +187,7 @@ let changeEditorMode = function(type) {
     }
 };
 
-let autoSave = function(form) {
+const autoSave = function(form) {
     form = form;
     $.ajax({
         url: postId,
@@ -185,7 +203,7 @@ let autoSave = function(form) {
     });
 }
 
-let categoryToUrl = function(categorySlug, categoryName, toDo, el) {
+const categoryToUrl = function(categorySlug, categoryName, toDo, el) {
     let currentUrl = $('input[name="postUrl"');
     let change = '';
     let button = $(el);
@@ -218,7 +236,7 @@ let categoryToUrl = function(categorySlug, categoryName, toDo, el) {
 
 };
 
-let categoryNew = function(category, addToUrl) {
+const categoryNew = function(category, addToUrl) {
     let categorySlug = app.sanitizeTitle(category);
     $('.category-list-input').val('');
     let item = '<li data-id="' + categorySlug + '" data-name="' + category + '">'+ category + ' <small class="category-list-options"><a>Options</a></small>\
@@ -236,7 +254,7 @@ let categoryNew = function(category, addToUrl) {
     }
 };
 
-let showAttachmentDetails = function(data) {
+const showAttachmentDetails = function(data) {
     let attachmentData = $(data).children('.panel').data();
     $('.file-name').html(attachmentData.name);
     $('.upload-date').html(attachmentData.date);
@@ -254,7 +272,7 @@ let showAttachmentDetails = function(data) {
 	}
 };
 
-let showSelectedImages = function() {
+const showSelectedImages = function() {
     let selected = $('.media-item-wrap.selected');
     if (selected.length >= 1) {
         $('.selected-thumbnails').show();
@@ -268,23 +286,23 @@ let showSelectedImages = function() {
     }
 };
 
-let checkUpdates = function() {
+const checkUpdates = function() {
 	$.post('/spry-admin/api/updates', {version: coreVersion}, function (response) {
 		$('.check-updates-toggle').find('.icon-sync').removeClass('spinner');
 		callback(response);
 	});
 };
 
-let insertSelectedImages = function() {
+const insertSelectedImages = function() {
 
 };
 
-let insertIntoEditor = function(string) {
+const insertIntoEditor = function(string) {
 	editor.focus();
     editor.composer.commands.exec('insertHTML', string);
 };
 
-let getPosts = function(callback, limit, postId, offset, search, multiId) {
+const getPosts = function(callback, limit, postId, offset, search, multiId) {
 
     let data = {};
     if (offset) {
@@ -304,7 +322,7 @@ let getPosts = function(callback, limit, postId, offset, search, multiId) {
     });
 }
 
-let getAttachments = function(callback, limit, postId, offset, search) {
+const getAttachments = function(callback, limit, postId, offset, search) {
     let data = {};
     if (offset) {
         data.limit = limit;
@@ -320,7 +338,7 @@ let getAttachments = function(callback, limit, postId, offset, search) {
     });
 }
 
-let appendAttachments = function(res, empty) {
+const appendAttachments = function(res, empty) {
 
     let insertInto = $('.thumbnail-display .file-details');
     const attachments = JSON.parse(res);
@@ -351,7 +369,7 @@ let appendAttachments = function(res, empty) {
     }
 };
 
-let getFileList = function(files){
+const getFileList = function(files){
 
     for (let i = 0; i < files.length; i++) {
         let file = files[i];
@@ -373,11 +391,11 @@ let getFileList = function(files){
 
 };
 
-let buildFileList = function(file) {
+const buildFileList = function(file) {
     $('.thumbnail-display .file-details').prepend(app.fileList(file));
 };
 
-let fileUploads = function(formData, fileName) {
+const fileUploads = function(formData, fileName) {
     $.ajax({
         url: '/' + adminLocation + '/upload',
         type: 'POST',
@@ -434,7 +452,7 @@ let fileUploads = function(formData, fileName) {
     });
 };
 
-let onDragEnter = function(event) {
+const onDragEnter = function(event) {
     event.preventDefault();
     $('.drag-overlay').removeClass('off');
 },

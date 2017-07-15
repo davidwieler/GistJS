@@ -191,7 +191,7 @@ a.bg-primary:focus, a.bg-primary:hover {
 .page-header .system-alerts{
     margin-top: 20px;
 }
-.page-header .system-alerts .alert{
+.page-header .system-alerts .alert:last-child{
     margin-bottom: 0;
 }
 @media (min-width:769px) {

@@ -7,16 +7,18 @@ module.exports = (CMS) => {
 	var categories = {};
 
 	categories.createCategory = (data, done) => {
-		CMS.getCategories((result) => {
-
+		CMS.getCategories((err, result) => {
 			const db = CMS.dbData;
 			const collection = CMS.dbConn.data.collection;
 			const query = {contentType: 'categoryList'};
 
 			let categoryList;
 
-			if (result === null) {
-				categoryList = data;
+			if (result === 0) {
+				categoryList = {
+					slug: [data.slug],
+					name: [data.name]
+				};
 			} else {
 				const slugs = result.slug;
 				const names = result.name;
@@ -62,6 +64,7 @@ module.exports = (CMS) => {
 			if (result.length === 0) {
 				done(null, 0);
 			} else {
+				console.log(result[0].categories);
 				done(null, result[0].categories);
 			}
 

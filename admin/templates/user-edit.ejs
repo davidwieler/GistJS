@@ -37,24 +37,9 @@
 
 			<!-- Main content -->
 			<div class="content-wrapper">
-				<%
-					if (typeof data.msg !== 'undefined') {
-						%>
-
-				<div class="row">
-						<div class="alert alert-info">
-						<%
-							switch(data.msg){
-								case '3' :
-									%> <strong>Post has been trashed. Trashed posts will auto delete in 24 hours.</strong> <%
-								break;
-							}
-						%>
-				</div>
-						<%
-					}
-				%>
-
+				<% if (data && typeof data.msg !== 'undefined') { %>
+					<%- app.alert(data.msg);%>
+				<% } %>
 				<!-- Single line -->
 				<div class="panel panel-white">
 					<div class="panel-heading">
@@ -157,6 +142,28 @@
 											</select>
 										</div>
 									</div>
+
+									<div class="form-group">
+										<label class="control-label col-lg-2">Assigned Editor</label>
+										<div class="col-lg-3">
+											<select class="form-control" name="assignedEditor">
+												<option value="" selected disabled>Select an Editor</option>
+												<%
+													const availableEditors = data.editors.users;
+													for (var ae = 0; ae < availableEditors.length; ae++) {
+												%>
+													<% if (data.users[0].assignedEditor == availableEditors[ae]._id) {%>
+														<option value="<%- availableEditors[ae]._id; %>" selected><%- availableEditors[ae].username%></option>
+													<% } else { %>
+														<option value="<%- availableEditors[ae]._id; %>"><%- availableEditors[ae].username;%></option>
+													<% } %>
+												<% } %>
+											</select>
+										</div>
+										<div class="col-lg-9 col-lg-offset-2">
+											<span class="help-block">Assign an editor to this user.</span>
+										</div>
+									</div>
 								<% } %>
 
 								<% if (currentUser.caps.editUsers || data.users[0]._id == data.userId) { %>
@@ -203,7 +210,59 @@
 												<%- subscribeText;%>
 											</button>
 											<span class="help-block">Subscribe to push notifications from this site</span>
+											<br />
+											<h6>Notification types</h6>
+											<span class="help-block">Choose which notifications you receive</span>
+											<div class="tabbable">
+												<ul class="nav nav-tabs nav-tabs-top">
+													<% if (currentUser.caps.adminPushNotifications) { %>
+													<li class="active"><a href="#top-tab1" data-toggle="tab" aria-expanded="true">Admin specific</a></li>
+													<% } %>
+													<% if (currentUser.caps.editorPushNotifications) { %>
+													<li class=""><a href="#top-tab1" data-toggle="tab" aria-expanded="true">Editor specific</a></li>
+													<% } %>
+													<% if (currentUser.caps.authorPushNotifications) { %>
+													<li class=""><a href="#top-tab1" data-toggle="tab" aria-expanded="true">Author specific</a></li>
+													<% } %>
+													<% if (currentUser.caps.contributorPushNotifications) { %>
+													<li class=""><a href="#top-tab1" data-toggle="tab" aria-expanded="true">Contributor specific</a></li>
+													<% } %>
+													<% if (currentUser.caps.subscriberPushNotifications) { %>
+													<li class=""><a href="#top-tab1" data-toggle="tab" aria-expanded="true">Subscriber specific</a></li>
+													<% } %>
+													<li class=""><a href="#top-tab2" data-toggle="tab" aria-expanded="false">Standard notifications</a></li>
+												</ul>
+
+												<div class="tab-content">
+													<% if (currentUser.caps.adminPushNotifications) { %>
+													<div class="tab-pane active" id="top-tab1">
+														<label class="checkbox-inline">
+															<div class="checker"><span class="checked"><input type="checkbox" class="styled" checked="checked"></span></div>
+															Checked styled
+														</label>
+														<label class="checkbox-inline">
+															<div class="checker"><span class="checked"><input type="checkbox" class="styled" checked="checked"></span></div>
+															Checked styled
+														</label>
+													</div>
+													<% } %>
+
+													<div class="tab-pane <% if (!currentUser.caps.enableAdminPush) { %> active <% } %>" id="top-tab2">
+														Food truck fixie locavore, accusamus mcsweeney's marfa nulla single-origin coffee squid laeggin.
+													</div>
+
+													<div class="tab-pane" id="top-tab3">
+														DIY synth PBR banksy irony. Leggings gentrify squid 8-bit cred pitchfork. Williamsburg whatever.
+													</div>
+
+													<div class="tab-pane" id="top-tab4">
+														Aliquip jean shorts ullamco ad vinyl cillum PBR. Homo nostrud organic, assumenda labore aesthet.
+													</div>
+												</div>
+											</div>
+
 										</div>
+
 									</div>
 								<% } %>
 

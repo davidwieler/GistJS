@@ -39,5 +39,11 @@ self.addEventListener('activate', function(e) {
   // To perform an action when the service worker is revived, include that logic in the
   // `onfetch` or `onmessage` event listeners.
 
-  console.log('Activate event:', e);
+  //console.log('Activate event:', e);
+});
+
+self.addEventListener('activate', function(e) {
+});
+
+self.addEventListener('install', function(e) {
 });

@@ -29,25 +29,9 @@
 
 			<!-- Main content -->
 			<div class="content-wrapper">
-				<%
-					if (typeof msg !== 'undefined') {
-				%>
-					<div class="row">
-							<div class="alert alert-info">
-							<%
-								switch(msg){
-									case '1' :
-										%> <strong>User updated</strong> <%
-									break;
-								}
-							%>
-					</div>
-				<%
-					}
-				%>
-
-				<!-- Users wrap -->
-				<div class="row">
+				<% if (typeof data.msg !== 'undefined') { %>
+					<%- app.alert(data.msg);%>
+				<% } %>
 					<!-- Single line -->
 					<div class="panel panel-white">
 						<div class="panel-heading">
@@ -199,8 +183,6 @@
 						</div>
 					</div>
 					<!-- /single line -->
-				</div>
-				<!-- /users wrap -->
 
 			</div>
 

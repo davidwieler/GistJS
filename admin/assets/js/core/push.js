@@ -1,13 +1,13 @@
 var pushSettings = {
 	basePostUrl: adminLocation,
-	applicationServerPublicKey: 'BAjuFtdVAl-GlZZsuR3ZB1ajRJfSPnTwJ22seL0Mg2UxbucE1b3fYzHOt_DSMC2lxFMWe_pZ-ugoVNb6s2o6Nd4',
+	applicationServerPublicKey: pushServicePublicKey || '',
 	serviceWorkerName: '/service-worker.js',
 	isSubscribed: subscriptionStatus || '', // Rendered in user-edit.ejs
+	isEnabled: pushEnabled || 'false', // Rendered in user-edit.ejs
 	swRegistration: null,
 	status: {
 		https: (location.protocol == 'https:'),
-		serviceWorker: serviceWorkerStatus(),
-		permission: null,
+		serviceWorker: null,
 		pushSupported: isPushApiSupported(),
 		serviceWorkerSupported: areServiceWorkersSupported(),
 	},
@@ -19,7 +19,6 @@ var pushSettings = {
 	statusArea: {
 		https: 'push-notifs-https',
 		serviceWorker: 'push-notifs-sw',
-		permission: 'push-notifs-permission',
 		pushSupported: 'push-notifs-push-api',
 		serviceWorkerSupported: 'push-notifs-sw-support'
 	}
@@ -33,17 +32,6 @@ function areServiceWorkersSupported() {
 	return 'serviceWorker' in navigator;
 }
 
-function serviceWorkerStatus() {
-	if (areServiceWorkersSupported()) {
-		if (navigator.serviceWorker.controller === null) {
-			return false;
-		} else {
-			return true;
-		}
-	}
-
-	return false;
-}
 
 function pushAsk() {
 	Notification.requestPermission().then(function (status) {
@@ -56,7 +44,6 @@ function pushAsk() {
 }
 
 function statusUpdate() {
-	console.log(pushSettings);
 	for (var i in pushSettings.status) {
 		var name = i;
 		var status = pushSettings.status[i];
@@ -64,6 +51,8 @@ function statusUpdate() {
 		var falseStatusClass = 'text-danger';
 		var trueStatusClass = 'text-success';
 		var warningStatusClass = 'text-warning';
+
+		$(`.${statusAreaClass}`).removeClass('text-danger text-success text-warning');
 
 		switch (name) {
 			case 'https' :
@@ -78,40 +67,42 @@ function statusUpdate() {
 				$(`.${statusAreaClass}`).text(text).addClass(addClass);
 			break;
 
-			case 'permission' :
-				if (status === 'denied') {
-					var text = 'Denied';
-					var addClass = falseStatusClass;
-				} else if (status === null) {
-					var text = 'Pending (never asked)';
-					var addClass = warningStatusClass;
-				} else if (status === 'granted') {
-					var text = 'Granted';
+			case 'pushSupported' :
+				if (status === true) {
+					var text = 'Yes';
 					var addClass = trueStatusClass;
+				} else {
+					var text = 'No';
+					var addClass = falseStatusClass;
 				}
 
 				$(`.${statusAreaClass}`).text(text).addClass(addClass);
 			break;
 
-			case 'pushSupported' :
-			if (status === true) {
-				var text = 'Yes';
-				var addClass = trueStatusClass;
-			} else {
-				var text = 'No';
-				var addClass = falseStatusClass;
-			}
-
-				$(`.${statusAreaClass}`).text(text).addClass(addClass);
-			break;
-
 			case 'serviceWorker' :
-				if (status === true) {
-					var text = 'Running';
-					var addClass = trueStatusClass;
-				} else {
-					var text = 'Not enabled';
-					var addClass = falseStatusClass;
+
+				switch (status) {
+					case 'installed':
+						var text = app.capitalizeFirstLetter(status);
+						var addClass = trueStatusClass;
+					break;
+					case 'activating':
+						var text = app.capitalizeFirstLetter(status);
+						var addClass = trueStatusClass;
+					break;
+					case 'activated':
+						var text = app.capitalizeFirstLetter(status);
+						var addClass = trueStatusClass;
+					break;
+					case 'redundant':
+						var text = 'Removed';
+						var addClass = '';
+					break;
+					default:
+						var text = 'Not started'
+						var addClass = '';
+					break;
+
 				}
 
 				$(`.${statusAreaClass}`).text(text).addClass(addClass);
@@ -139,13 +130,11 @@ $(document).ready(function () {
 
 	if (pushSettings.status.pushSupported && pushSettings.status.serviceWorkerSupported) {
 		navigator.permissions.query({name: 'notifications'}).then(function(permission) {
-			console.log(permission.state);
-
 			if (permission.state === 'prompt') {
 				makeButtonSubscribable();
 			}
 
-			if (permission.state === 'granted') {
+			if (permission.state === 'granted' && pushEnabled === 'true') {
 				pushAsk();
 			}
 
@@ -161,10 +150,8 @@ $(document).ready(function () {
 		if (!pushSettings.isSubscribed && !pushSettings.swRegistration) {
 			pushAsk();
 		} else if (pushSettings.isSubscribed && $(this).hasClass('unsubscribe-action')){
-            console.log("Unsubscribing...");
             unsubscribe(userId);
         } else{
-			console.log("subbing...");
             subscribe(userId);
         }
     });
@@ -176,16 +163,20 @@ $(document).ready(function () {
 		var el = $(this);
 		var pushEnabled = el.data('status');
 		if (pushEnabled === false) {
-			el.prop('disabled', true).text('<i class="icon-cog5 position-left spinner"></i> Enabling Push...');
+			el.prop('disabled', true).html('<i class="icon-cog5 position-left spinner"></i> Enabling Push...');
 		} else {
-			el.prop('disabled', true).text('<i class="icon-cog5 position-left spinner"></i> disabling Push...');
+			el.prop('disabled', true).html('<i class="icon-cog5 position-left spinner"></i> Disabling Push...');
 		}
 		$.post('/' + adminLocation + '/push-setup/toggle', {pushEnabled}, function (response) {
 			switch (response) {
 				case 'true' :
+					pushAsk()
 					el.removeClass('btn-primary').addClass('btn-danger').prop('disabled', false).text('Disable Push Messaging').data('status', 'true');
 				break;
 				case 'false' :
+					pushSettings.swRegistration.unregister();
+					pushSettings.status.serviceWorker = 'redundant';
+					statusUpdate();
 					el.removeClass('btn-danger').addClass('btn-primary').prop('disabled', false).text('Enable Push Messaging').data('status', 'false');
 				break;
 				default :
@@ -207,29 +198,40 @@ function initialiseServiceWorker() {
 };
 
 function handleSWRegistration(reg) {
-    if (reg.installing) {
-        console.log('Service worker installing');
-    } else if (reg.waiting) {
-        console.log('Service worker installed');
-    } else if (reg.active) {
-        console.log('Service worker active');
-    }
 	pushSettings.swRegistration = reg;
-    initialiseState(reg);
+	serviceWorkerStatus(pushSettings.swRegistration)
+    initialiseState(pushSettings.swRegistration);
+}
+
+
+function serviceWorkerStatus(reg) {
+	if (reg.active !== null) {
+		pushSettings.status.serviceWorker = reg.active.state;
+		statusUpdate();
+	}
+	reg.onupdatefound = function() {
+		var installingWorker = reg.installing;
+
+		installingWorker.onstatechange = function() {
+			pushSettings.status.serviceWorker = installingWorker.state;
+			statusUpdate();
+		};
+	};
+
+
+
 }
 
 // Once the service worker is registered set the initial state
 function initialiseState(reg) {
     // Are Notifications supported in the service worker?
     if (!(reg.showNotification)) {
-        console.log('Notifications aren\'t supported on service workers.');
         disableAndSetBtnMessage('Notifications unsupported');
         return;
     }
 
     // Check if push messaging is supported
     if (!('PushManager' in window)) {
-        console.log('Push messaging isn\'t supported.');
         disableAndSetBtnMessage('Push messaging unsupported');
         return;
     }
@@ -242,8 +244,6 @@ function initialiseState(reg) {
 
 				$('.push-notifs-enabled').text('Yes').addClass('text-success');
                 if (!subscription) {
-                    console.log('Not yet subscribed to Push');
-
                     pushSettings.isSubscribed = false;
                     makeButtonSubscribable();
                 } else {

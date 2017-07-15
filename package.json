@@ -25,6 +25,7 @@
     "helmet": "^3.4.0",
     "lodash": "^4.17.4",
     "mongojs": "^2.4.0",
+    "node-cron": "^1.2.0",
     "passport": "^0.3.2",
     "passport-facebook": "^2.1.1",
     "passport-github": "^1.1.0",

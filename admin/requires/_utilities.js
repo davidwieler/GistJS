@@ -3,11 +3,9 @@ const path = require('path');
 const Events = require('../events.js');
 const bcrypt   = require('bcrypt-nodejs');
 const _ = require('lodash');
-const express = require('express');
-const router = express.Router();
-const APP = require('../assets/js/core/app.js');
 const request = require('request');
-module.exports = (CMS) => {
+module.exports = (CMS, APP) => {
+
 
 	let utilities = {};
 
@@ -36,10 +34,10 @@ module.exports = (CMS) => {
 					timestamp = postTimestamp;
 				}
 
-				const deleteAfterCalc = (timestamp + CMS.cmsDetails.deleteAfter);
+				const deleteAfterCalc = (timestamp + CMS.config.deleteAfter);
 				const deleteInt = (+new Date() - deleteAfterCalc) / 1000;
 
-				if (deleteInt > CMS.cmsDetails.deleteAfter && postStatus === 'trashed') {
+				if (deleteInt > CMS.config.deleteAfter && postStatus === 'trashed') {
 					CMS.deletePost(postsLoop[i]._id);
 					CMS.deleteRevision(postsLoop[i]._id);
 				}
@@ -148,7 +146,7 @@ module.exports = (CMS) => {
 			'/gistjs-assets'
 		];
 
-		if (!CMS.cmsDetails.anyoneRegister) {
+		if (!CMS.config.anyoneRegister) {
 			okay.push('/register');
 		}
 
@@ -340,6 +338,12 @@ module.exports = (CMS) => {
 		routerData.url = APP.sanitizeUrl(routerData.url);
 		CMS.addedRoutes.push(routerData);
 	}
+
+	utilities.deleteRoute = (routerUrl) => {
+		routerUrl = APP.sanitizeUrl(routerUrl);
+		CMS.deletedRoutes.push(routerUrl);
+	}
+
 	utilities.addPostTypeColumn = (postType, columnName, postAttribute, callback) => {
 		if (!CMS.postTypeColumns) {
 			CMS.postTypeColumns = [];
@@ -371,7 +375,7 @@ module.exports = (CMS) => {
 
 			done(null, {response, body})
 		});
-	}
+	};
 
 	utilities.serialize = (obj, prefix) => {
 		let str = [], p;
@@ -386,12 +390,97 @@ module.exports = (CMS) => {
 		return str.join("&");
 	};
 
+	utilities.addAdminScript = (scriptObj) => {
+
+		// TODO: Add array positioning from scriptObj.position
+
+		// Usage:
+		/*
+		CMS._utilities.addAdminScript({name: 'bootstrap', src: 'core/libraries/bootstrap.min.js', type: 'core', page: 'edit', position: 4})
+		*/
+
+		if (!utilities.isUrlAbsolute(scriptObj.src)) {
+			let path = '';
+			if (scriptObj.type === 'theme') {
+				path = '/themes'
+			}
+
+			if (scriptObj.type === 'plugin') {
+				path = '/plugins'
+			}
+
+			if (scriptObj.type === 'core') {
+				path = '/gistjs-assets/js'
+			}
+
+			scriptObj.src = `${path}${APP.sanitizeUrl(scriptObj.src)}`
+		}
+
+		let script = {
+			scriptName: scriptObj.name,
+			scriptSrc: scriptObj.src,
+			scriptPage: scriptObj.page || false
+		}
+
+		CMS.adminScripts.push(script);
+
+	};
+
+	utilities.removeAdminScript = (scriptObj) => {
+		// Usage:
+		/*
+		by name:
+		CMS._utilities.removeAdminScript({name: 'bootstrap', page: 'edit',})
+
+		or
+
+		by src:
+		when using src, the value must be the entire src string,
+		CMS._utilities.removeAdminScript({src: 'core/libraries/bootstrap.min.js', page: 'edit',})
+		*/
+		let remove;
+		let value;
+		if (scriptObj.name) {
+			remove = 'scriptName'
+			value = scriptObj.name
+		} else if (scriptObj.src) {
+			remove = 'scriptSrc'
+			value = scriptObj.src
+		} else {
+			console.error('no script name or src provided');
+			return;
+		}
+
+		if (!CMS.adminScripts.removeScript) {
+			CMS.adminScripts.removeScript = [];
+		}
+
+		let removeScript = {
+			removeBy: remove,
+			attribute: value
+		};
+
+		if (scriptObj.page) {
+			removeScript.page = scriptObj.page
+		}
+
+		CMS.adminScripts.removeScript.push(removeScript)
+	};
+
+	utilities.addFrontScript = (name, src, deps, ver, footer) => {
+
+	};
+
+	utilities.isUrlAbsolute = (url) => {
+		return url.indexOf('://') > 0 || url.indexOf('//') === 0;
+	};
+
 	utilities.sanitizedCmsInfo = () => {
-		const toSanitize = ['dbHost', 'dbUsername', 'dbPassword', 'dbPort', 'dbName', 'dbData', 'dbAccounts', 'dbSessions', 'dbSessions', 'sessionCookieSecret'];
-		let sanitized = _.omit(CMS.cmsDetails, toSanitize);
+		const toSanitize = ['dbHost', 'dbUsername', 'dbPassword', 'dbPort', 'dbName', 'dbData', 'dbAccounts', 'dbSessions', 'dbSessions', 'sessionCookieSecret', 'vapidPrivateKey'];
+		let sanitized = _.omit(CMS.config, toSanitize);
 
 		return sanitized;
-	}
+	};
 
 	return utilities;
 }

@@ -8,7 +8,7 @@ module.exports = (CMS) => {
 
 	thumbnails.generateThumbnail = (data, done) => {
 		let sharp = require('sharp');
-		const thumbSettings = CMS.cmsDetails.thumbnails;
+		const thumbSettings = CMS.config.thumbnails;
 		let thumbnailDetails = {};
 
 		let uploadFolder = CMS.uploadDir;
@@ -18,8 +18,8 @@ module.exports = (CMS) => {
 			thumbnailDetails[thumb.suffix] = thumbnailFileName;
 			if (thumb.suffix === '-preview') {
 				return sharp( data.path )
-					.jpeg({quality: Number(CMS.cmsDetails.jpgQuality)})
-					.png({quality: Number(CMS.cmsDetails.pngQuality)})
+					.jpeg({quality: Number(CMS.config.jpgQuality)})
+					.png({quality: Number(CMS.config.pngQuality)})
 					.resize( Number(thumb.size.width), Number(thumb.size.height), {
 						kernel: sharp.kernel.cubic,
 						interpolator: sharp.interpolator.nohalo
@@ -27,8 +27,8 @@ module.exports = (CMS) => {
 					.toFile( path.join(CMS.uploadDir,thumbnailFileName ) );
 			} else {
 				return sharp( data.path )
-					.jpeg({quality: Number(CMS.cmsDetails.jpgQuality)})
-					.png({quality: Number(CMS.cmsDetails.pngQuality)})
+					.jpeg({quality: Number(CMS.config.jpgQuality)})
+					.png({quality: Number(CMS.config.pngQuality)})
 					.resize( Number(thumb.size.width), Number(thumb.size.width), {
 						kernel: sharp.kernel.cubic,
 						interpolator: sharp.interpolator.nohalo

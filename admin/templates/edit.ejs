@@ -228,8 +228,6 @@
 					<%- app.alert(alert);%>
 				<% } %>
 				<form class="row edit-form <%- formClass%>" action="<%- formPostTo%>" method="post">
-					<input type="hidden" name="user" value="<%- user.username%>">
-					<input type="hidden" name="userId" value="<%- user._id%>">
 					<div class="col-md-9 main-panel">
 						<!-- Edit post -->
 						<% var editor = app.editor(postData); %>
@@ -249,7 +247,7 @@
 						<% } %>
 
 						<!-- /Post revisions -->
-						<% if (cms.cmsDetails.postRevisions && postRevisions.length >= 1) { %>
+						<% if (cms.config.postRevisions && postRevisions.length >= 1) { %>
 							<div class="panel panel-white revision-panel">
 								<div class="panel-heading">
 									<h6 class="panel-title">Post Revisions</h6>

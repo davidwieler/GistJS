@@ -1,10 +1,46 @@
 (function(exports){
 
-	exports.alert = function(type) {
+	exports.alert = function(msg, type) {
 		let className;
 		let text;
 
-		switch(type){
+		if (type === 'system') {
+			let title = msg.title;
+			let content = msg.message;
+			let tag = msg.tag;
+			let msgType;
+
+			switch (msg.type) {
+				case '' :
+
+				break;
+				case 'warning' :
+				 	msgType = 'bg-warning'
+				break;
+				case 'danger' :
+				 	msgType = 'bg-danger'
+				break;
+				case 'info' :
+				 	msgType = 'bg-info'
+				break;
+				case 'success' :
+				 	msgType = 'bg-success'
+				break;
+				case 'custom' :
+				 	msgType = msg.class
+				break;
+				default:
+				 	msgType = 'bg-primary'
+				break;
+			}
+			return `<div class="alert ${msgType} alert-styled-left">
+						<button type="button" class="close" data-tag="${tag}" data-dismiss="alert"><span>×</span><span class="sr-only">Close</span></button>
+						<h6>${title}</h6>
+						${content}
+				    </div>`;
+		}
+
+		switch(msg){
 			case '1' :
 				className = 'alert-info';
 				text = '<strong>Post created</strong>';
@@ -660,7 +696,7 @@
 			url = `/${url}`
 		}
 
-		return url.trim().replace(/[\s+`~!@#$%^&*()_|+=?;:'",.<>\{\}\[\]\\]/gi, '');
+		return url.trim().replace(/[\s+`~!@#$%^&*()_|+=?;:'",<>\{\}\[\]\\]/gi, '');
 	}
 
 	exports.unescapeHtml = function(string) {
