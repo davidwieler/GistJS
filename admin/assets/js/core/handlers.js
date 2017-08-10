@@ -84,7 +84,16 @@ $(document).ready(function() {
         $('.submit-editor').prop('disabled', false);
     });
 
-    // category form
+    // category/tag form
+
+	$('.add-category').select2({
+		placeholder: 'Enter a category'
+	});
+	$('.add-tag').select2({
+		placeholder: 'Enter a tag',
+		tags: true
+	});
+
     $('body').on('keydown', '.category-list-input', function(e) {
         if(e.which === 13) {
            e.preventDefault();
@@ -112,6 +121,7 @@ $(document).ready(function() {
 		if (selectedCategory !== '') {
 			categoryNew(selectedCategory, false);
 		}
+		$('.add-category option:selected').prop('disabled', true);
     });
 
     $('body').on('click', '.category-list-options', function() {
@@ -389,8 +399,18 @@ $(document).ready(function() {
 
     $('body').on('click', '.generateRandomPassword', function(e) {
         e.preventDefault();
-        $('input[name="password"]').val(passwordGenerator(16));
+        $('input[name="password"]').val(passwordApiGenerator(16));
     });
+
+	$('body').on('click', '.generateApiKey', function(e) {
+		e.preventDefault();
+		$('input[name="apiKey"]').val(passwordApiGenerator(64));
+	});
+
+	$('body').on('click', '.revokeApiKey', function(e) {
+		e.preventDefault();
+		$('input[name="apiKey"]').val('');
+	});
 
 	$('body').on('click', '.show-password', function(e) {
 
@@ -417,7 +437,7 @@ $(document).ready(function() {
             var modal = $('#linksinsertmodal');
             modal.modal('toggle');
             var posts = JSON.parse(res);
-            posts = posts.posts.posts;
+            posts = posts.data.posts;
 
             if (isEditorLinkClicked) {
                 self.wrap('<span class="editing">')

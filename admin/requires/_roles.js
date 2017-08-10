@@ -52,7 +52,9 @@ module.exports = (CMS) => {
 			editorPushNotifications: false,
 			authorPushNotifications: false,
 			contributorPushNotifications: false,
-			subscriberPushNotifications: true
+			subscriberPushNotifications: true,
+			issueKeys: false,
+			editUserPermissions: false
 		};
 
 		roles.contributor = {
@@ -92,7 +94,9 @@ module.exports = (CMS) => {
 			editorPushNotifications: false,
 			authorPushNotifications: false,
 			contributorPushNotifications: true,
-			subscriberPushNotifications: true
+			subscriberPushNotifications: true,
+			issueKeys: false,
+			editUserPermissions: false
 		};
 
 		roles.author = {
@@ -133,7 +137,9 @@ module.exports = (CMS) => {
 			editorPushNotifications: false,
 			authorPushNotifications: true,
 			contributorPushNotifications: true,
-			subscriberPushNotifications: true
+			subscriberPushNotifications: true,
+			issueKeys: false,
+			editUserPermissions: false
 		};
 
 		roles.editor = {
@@ -174,7 +180,9 @@ module.exports = (CMS) => {
 			editorPushNotifications: true,
 			authorPushNotifications: true,
 			contributorPushNotifications: true,
-			subscriberPushNotifications: true
+			subscriberPushNotifications: true,
+			issueKeys: false,
+			editUserPermissions: false
 		};
 
 		roles.administrator = {
@@ -215,7 +223,9 @@ module.exports = (CMS) => {
 			editorPushNotifications: true,
 			authorPushNotifications: true,
 			contributorPushNotifications: true,
-			subscriberPushNotifications: true
+			subscriberPushNotifications: true,
+			issueKeys: true,
+			editUserPermissions: true
 		};
 
 		CMS.roles = roles;

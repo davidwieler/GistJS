@@ -1,18 +1,22 @@
-const adminPost = function(postto, d, callback) {
-	var xhr = $.post(postto, d )
-			.done(function(data) {
-				if(data == 'login'){
-					window.location.href = `${adminLocation}/login`;
-					return
-				}
+const adminPost = function(postTo, data, callback) {
+	postTo = `/${adminLocation}${postTo}`
 
+	data.loggedIn = true;
+
+
+	var xhr = $.post(postTo, data )
+			.done(function(data) {
 				if(typeof callback == 'function') {
 				   callback(data);
 				}
 			});
 	xhr.fail(function(xhr, textStatus, error) {
-		callback(xhr.responseText)
-	   $('.xhr-failure').html('There was an error connecting to the server. Please try again.').show();
+		if(xhr.statusText == 'Unauthorized'){
+			window.location.href = `/${adminLocation}/login`;
+			return
+		} else {
+			callback(xhr.responseText)
+		}
 	});
 };
 
@@ -90,8 +94,8 @@ const enableDistractionFreePreview = function(self) {
 	}
 };
 
-const passwordGenerator = function(len) {
-    var possible = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789![]{}()%&*$#^<>~@|';
+const passwordApiGenerator = function(len) {
+    var possible = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789![]}()%*#^<>~@';
     var text = '';
     for(var i=0; i < len; i++) {
       text += possible.charAt(Math.floor(Math.random() * possible.length));
@@ -304,7 +308,9 @@ const insertIntoEditor = function(string) {
 
 const getPosts = function(callback, limit, postId, offset, search, multiId) {
 
-    let data = {};
+	let data = {
+		type: 'posts'
+	};
     if (offset) {
         data.limit = limit;
         data.offset = offset;
@@ -317,13 +323,16 @@ const getPosts = function(callback, limit, postId, offset, search, multiId) {
     if (multiId) {
         data.multiId = true;
     }
-    $.post('/' + adminLocation + '/api/posts', data, function (response) {
-        callback(response);
-    });
+
+	adminPost('/api', data, function(response) {
+		callback(response);
+	});
 }
 
 const getAttachments = function(callback, limit, postId, offset, search) {
-    let data = {};
+    let data = {
+		type: 'attachments'
+	};
     if (offset) {
         data.limit = limit;
         data.offset = offset;
@@ -333,16 +342,21 @@ const getAttachments = function(callback, limit, postId, offset, search) {
     if (postId) {
         data.search = {postId: postId}
     }
-    $.post('/' + adminLocation + '/api/attachments', data, function (response) {
-        callback(response);
-    });
+
+	adminPost('/api', data, function(response) {
+		callback(response);
+	});
 }
 
 const appendAttachments = function(res, empty) {
 
     let insertInto = $('.thumbnail-display .file-details');
     const attachments = JSON.parse(res);
-    const a = attachments.attachments;
+	let a = []
+
+	if (attachments.message === 'success') {
+		a = attachments.data.attachments;
+	}
 
     if (empty === true) {
         insertInto.empty();

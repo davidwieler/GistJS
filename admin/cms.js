@@ -9,21 +9,68 @@ const async = require('async');
 (() => {
 
 	CMS = {
-		init: (settings, router) => {
+		init: (settings, router, passport) => {
 			CMS.adminDir = __dirname;
 
-			if (!settings.configLocation) {
-				CMS.configLocation = `${CMS.adminDir}/config.json`;
-			} else {
-				CMS.configLocation = settings.configLocation;
+			if (settings.multiSite) {
+				CMS.multiSite = true;
 			}
 
-			CMS.config = require(CMS.configLocation);
+			try{
+				if (!settings.configLocation) {
+					CMS.configLocation = `${CMS.adminDir}/config.json`;
+				} else {
+					CMS.configLocation = settings.configLocation;
+				}
+				CMS.config = require(CMS.configLocation);
+			}
+			catch(e){
+				console.log(e.message);
+				CMS.config = {};
+			}
+
+			CMS._utilities = require('./requires/_utilities.js')(CMS, APP);
+			CMS._security = require('./requires/_security.js')(CMS, APP);
+			CMS._render = require('./requires/_render.js')(CMS, APP);
+
+			CMS.navigation = require('./navigation.js');
+			CMS.passport = passport;
+			CMS.addedRoutes = [];
+			CMS.deletedRoutes = [];
+			CMS.pushServicesStarted = false;
+			CMS.passToRender = {};
+			CMS.themes = [];
+			CMS.metaBoxes = [];
+			CMS.dashboardWidgets = [];
+			CMS.systemMessages = [];
+			CMS.pushSubscribers = [];
+			CMS.cronJobs = {};
+			CMS.apiRequestRoutes = {};
+			CMS.adminScripts = {
+				header: [],
+				footer: []
+			};
+			CMS.adminTemplateVars = {
+				header: [],
+				footer: []
+			};
+			CMS.forceSSL = CMS._security.forceSSL(settings.forceSSL);
+			CMS.forceApiSSL = CMS._security.forceApiSSL(settings.forceApiSSL);
+			CMS.apiAuthType = 'apikey';
+			CMS.testDbConnection = CMS._utilities.testDbConnection;
+			CMS.setQueryVars = CMS._utilities.setQueryVars;
+			CMS.renderInstallTemplate = CMS._render.renderInstallTemplate;
+			CMS.sendResponse = CMS._utilities.sendResponse;
+			CMS.getConfig = Promise.promisify( CMS._utilities.getConfig );
+			CMS.writeConfig = Promise.promisify( CMS._utilities.writeConfig );
+			CMS.passThroughUrl = CMS._utilities.passThroughUrl;
+			CMS.error = CMS._utilities.error;
+			CMS.mainRender = Promise.promisify( CMS._render._mainRender );
+
 
 			if (typeof CMS.config.dbHost === 'undefined') {
 				return;
 			}
-
 			if (CMS.config.dbUsername && CMS.config.dbPassword) {
 				dbConnectionUrl = `${CMS.config.dbUsername}:${CMS.config.dbPassword}@${CMS.config.dbHost}:${CMS.config.dbPort}/${CMS.config.dbName}`;
 			} else {
@@ -64,27 +111,17 @@ const async = require('async');
 				}
 			}
 
-			CMS.navigation = require('./navigation.js');
-			CMS.addedRoutes = [];
-			CMS.deletedRoutes = [];
-			CMS.pushServicesStarted = false;
-			CMS.passToRender = {};
-			CMS.themes = [];
-			CMS.metaBoxes = [];
-			CMS.dashboardWidgets = [];
-			CMS.systemMessages = [];
-			CMS.pushSubscribers = [];
-			CMS.cronJobs = {};
-			CMS.adminScripts = [];
-
 			// Define the database details.
 			CMS.dbData = db(mongojs, CMS.dbConn).dataInit();
 			CMS.dbAccounts = db(mongojs, CMS.dbConn).accountInit();
 			CMS.dbUpdate = Promise.promisify( db(mongojs, CMS.dbConn).update );
+			CMS.dbUpsert = Promise.promisify( db(mongojs, CMS.dbConn).upsert );
 			CMS.dbSave = Promise.promisify( db(mongojs, CMS.dbConn).save );
 			CMS.dbInsert = Promise.promisify( db(mongojs, CMS.dbConn).insert );
 			CMS.dbFind = Promise.promisify( db(mongojs, CMS.dbConn).find );
 			CMS.dbFindOne = Promise.promisify( db(mongojs, CMS.dbConn).findOne );
+			CMS.dbDelete = Promise.promisify( db(mongojs, CMS.dbConn).delete );
+			CMS.dbSort = db().sortResults
 
 			CMS.adminLocation = CMS.config.adminLocation;
 			CMS.themeDir = settings.themeDir;
@@ -94,19 +131,19 @@ const async = require('async');
 
 
 			// Requires
-			CMS._content = require('./requires/_content.js')(CMS);
-			CMS._thumbnails = require('./requires/_thumbnails.js')(CMS);
-			CMS._categories = require('./requires/_categories.js')(CMS);
-			CMS._revisions = require('./requires/_revisions.js')(CMS);
-			CMS._attachments = require('./requires/_attachments.js')(CMS);
-			CMS._utilities = require('./requires/_utilities.js')(CMS, APP);
-			CMS._users = require('./requires/_users.js')(CMS);
-			CMS._render = require('./requires/_render.js')(CMS);
-			CMS._themes = require('./requires/_themes.js')(CMS);
-			CMS._plugins = require('./requires/_plugins.js')(CMS);
-			CMS._roles = require('./requires/_roles.js')(CMS);
+			CMS._content = require('./requires/_content.js')(CMS, APP);
+			CMS._thumbnails = require('./requires/_thumbnails.js')(CMS, APP);
+			CMS._categories = require('./requires/_categories.js')(CMS, APP);
+			CMS._tags = require('./requires/_tags.js')(CMS, APP);
+			CMS._revisions = require('./requires/_revisions.js')(CMS, APP);
+			CMS._attachments = require('./requires/_attachments.js')(CMS, APP);
+			CMS._users = require('./requires/_users.js')(CMS, APP);
+
+			CMS._themes = require('./requires/_themes.js')(CMS, APP);
+			CMS._plugins = require('./requires/_plugins.js')(CMS, APP);
+			CMS._roles = require('./requires/_roles.js')(CMS, APP);
 			CMS._messaging = require('./requires/_messaging.js')(CMS, APP);
-			CMS._security = require('./requires/_security.js')(CMS, APP);
+			CMS._logger = require('./requires/_logger.js')(CMS, APP);
 			CMS._crons = require('./requires/_crons.js')(CMS, APP);
 			CMS._initialFunctions = require('./requires/_init-functions.js')(CMS, APP);
 
@@ -116,6 +153,7 @@ const async = require('async');
 			// -- Content --
 			CMS.createContent = Promise.promisify( CMS._content.createContent );
 			CMS.getPostById = Promise.promisify( CMS._content.getPostById );
+			CMS.getPost = Promise.promisify( CMS._content.getPost );
 			CMS.getPosts = Promise.promisify( CMS._content.getPosts );
 			CMS.updatePost = Promise.promisify( CMS._content.updatePost );
 			CMS.deletePost = Promise.promisify( CMS._content.deletePost );
@@ -132,15 +170,13 @@ const async = require('async');
 			CMS.deleteRevision = Promise.promisify( CMS._revisions.deleteRevision );
 
 			// -- Utilities --
-			CMS.getConfig = Promise.promisify( CMS._utilities.getConfig );
-			CMS.writeConfig = Promise.promisify( CMS._utilities.writeConfig );
+
 			CMS.request = Promise.promisify( CMS._utilities.request );
-			CMS.sendResponse = CMS._utilities.sendResponse;
-			CMS.passThroughUrl = CMS._utilities.passThroughUrl;
+
+
 			CMS.isLoggedIn = CMS._utilities.isLoggedIn;
 			CMS.hash = CMS._utilities.hash;
 			CMS.testDbConnection = CMS._utilities.testDbConnection;
-			CMS.error = CMS._utilities.error;
 			CMS.errorHandler = CMS._utilities.errorHandler;
 			CMS.getTemplates = CMS._utilities.getTemplates;
 			CMS.addAdminNavigation = CMS._utilities.addAdminNavigation;
@@ -149,7 +185,7 @@ const async = require('async');
 			CMS.deleteRoute = CMS._utilities.deleteRoute;
 
 			// -- Attachments --
-			CMS.getAttachment = Promise.promisify( CMS._attachments.getAttachment );
+			CMS.getAttachmentById = Promise.promisify( CMS._attachments.getAttachmentById );
 			CMS.getAttachments = Promise.promisify( CMS._attachments.getAttachments );
 			CMS.deleteAttachment = Promise.promisify( CMS._attachments.deleteAttachment );
 
@@ -157,15 +193,20 @@ const async = require('async');
 			CMS.createCategory = Promise.promisify( CMS._categories.createCategory );
 			CMS.getCategories = Promise.promisify( CMS._categories.getCategories );
 
+			// -- Tags --
+			CMS.createTag = Promise.promisify( CMS._tags.createTag );
+			CMS.getTags = Promise.promisify( CMS._tags.getTags );
+
 			// -- Users --
 			CMS.getUsers = Promise.promisify( CMS._users.getUsers );
+			CMS.getUser = Promise.promisify( CMS._users.getUser );
 			CMS.createUser = Promise.promisify( CMS._users.createUser );
 			CMS.updateUser = Promise.promisify( CMS._users.updateUser );
 
 			// -- Rendering --
-			CMS.renderTemplate = CMS._render.renderTemplate;
+			CMS.renderTemplate = Promise.promisify( CMS._render.renderTemplate);
 			CMS.renderPluginTemplate = CMS._render.renderPluginTemplate;
-			CMS.renderInstallTemplate = CMS._render.renderInstallTemplate;
+
 			CMS.renderAdminTemplate = CMS._render.renderAdminTemplate;
 			CMS.renderMetaBox = CMS._render.metaBox;
 
@@ -187,6 +228,10 @@ const async = require('async');
 			// -- Security --
 			CMS.security = CMS._security.init();
 
+			// -- Logging --
+			// CMS.log = CMS._logger;
+			// CMS.log.init();
+
 			// Initialize the included functions and content
 			CMS._initialFunctions.init();
 
@@ -207,7 +252,7 @@ const async = require('async');
 
 				let requirePath = path.join(adminPlugins[i].pluginPath, adminPlugins[i].pluginInfo.require);
 				let thisPlugin = require(requirePath);
-				thisPlugin(CMS).init();
+				thisPlugin(CMS, APP).init();
 
 			}
 
@@ -229,16 +274,7 @@ const async = require('async');
 			CMS._content.addPostType(posts, 2, 'posts');
 			CMS._content.addPostType(pages, 3, 'pages');
 
-			const systemMessageCron = CMS._crons.createCron('sendSystemMessages', '*/55 * * * *', () => {
-				for (var i = 0; i < CMS.systemMessages.length; i++) {
-					CMS.systemMessages[i]
-					CMS._messaging.sendPush({
-						message: CMS.systemMessages[i].message,
-						clickTarget: 'http://localhost:7637/spry-admin/settings',
-						title: CMS.systemMessages[i].title
-					});
-				}
-			}, true, true);
+
 
 		},
 

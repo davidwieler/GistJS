@@ -4,6 +4,7 @@ const Events = require('../events.js');
 const bcrypt   = require('bcrypt-nodejs');
 const _ = require('lodash');
 const request = require('request');
+const mongojs = require('mongojs');
 module.exports = (CMS, APP) => {
 
 
@@ -12,15 +13,16 @@ module.exports = (CMS, APP) => {
 	utilities.deleteTrashed = () => {
 
 		const findPosts = {
-			status: 'trash',
+			search: {
+				status: 'trash'
+			},
 			limit: 100
 		}
 
-		CMS.Promise.join(CMS.getPosts(findPosts), (posts) => {
-			return {posts: posts};
-		})
+		CMS.getPosts(findPosts)
 		.then((posts) => {
-			const postsLoop = posts.posts.posts;
+			const postsLoop = posts.posts;
+			const deleteAfter = Number(CMS.config.deleteAfter);
 			let timestamp;
 
 			for (var i = postsLoop.length - 1; i >= 0; i--) {
@@ -34,13 +36,19 @@ module.exports = (CMS, APP) => {
 					timestamp = postTimestamp;
 				}
 
-				const deleteAfterCalc = (timestamp + CMS.config.deleteAfter);
-				const deleteInt = (+new Date() - deleteAfterCalc) / 1000;
-
-				if (deleteInt > CMS.config.deleteAfter && postStatus === 'trashed') {
+				if (deleteAfter === 0) {
 					CMS.deletePost(postsLoop[i]._id);
 					CMS.deleteRevision(postsLoop[i]._id);
+				} else {
+					const deleteAfterCalc = ( timestamp + (deleteAfter * 1000) );
+
+					if (+new Date() > deleteAfterCalc && postStatus === 'trash') {
+						CMS.deletePost(postsLoop[i]._id);
+						CMS.deleteRevision(postsLoop[i]._id);
+					}
 				}
+
+
 			}
 		})
 		.catch((e) => {
@@ -73,17 +81,70 @@ module.exports = (CMS, APP) => {
 
 	utilities.getConfig = (type, done) => {
 		let config;
-		switch(type) {
-			case 'main' :
-				config = require(CMS.configLocation);
-			break;
 
-			case 'active-theme' :
-				config = require(path.join(CMS.activeTheme.path, 'theme.json'));
-			break;
+		try{
+			switch(type) {
+				case 'main' :
+					config = require(CMS.configLocation);
+				break;
+
+				case 'activeSite' :
+					config = CMS._utilities.getSubdomainConfig();
+				break;
+
+				case 'active-theme' :
+					config = require(path.join(CMS.activeTheme.path, 'theme.json'));
+				break;
+			}
+		}
+		catch(e){
+			config = {};
 		}
 
 		done(null, config);
+	};
+
+	utilities.getSubdomainConfig = (subdomain) => {
+
+		let currentSubdomainRequest;
+
+
+		if (subdomain) {
+			currentSubdomainRequest = subdomain
+		}
+
+		if (CMS.req.subdomains.length > 0) {
+			currentSubdomainRequest = CMS.req.subdomains[0];
+		}
+
+		const subdomains = CMS.config.subdomains;
+		let subdomainAdminLocation;
+
+		for (var i = 0; i < subdomains.length; i++) {
+
+			let subLocation;
+
+			for (var sub in subdomains[i]) {
+				if (subdomains[i].hasOwnProperty(sub)) {
+
+					if (currentSubdomainRequest === sub) {
+						return subdomains[i][sub];
+					}
+
+				}
+			}
+		}
+
+		return {};
+	};
+
+	utilities.activateSubdomainConfig = (activate) => {
+		if (activate) {
+			CMS.subdomainInfo = CMS._utilities.getSubdomainConfig();
+		} else {
+			CMS.subdomainInfo = null;
+		}
+
 	};
 
 	utilities.writeConfig = (toWrite, done) => {
@@ -136,15 +197,91 @@ module.exports = (CMS, APP) => {
 
 		}
 		else{
-			res.redirect('/' + CMS.adminLocation + '/login')
+			res.redirect(`/${CMS.adminLocation}/login`)
 		}
 	};
 
+	utilities.authApi = (req, res, next) => {
+
+		if (req.body.loggedIn) {
+			if (!req.isAuthenticated()) {
+				next();
+				return;
+			} else {
+				CMS.sendResponse(res, 401, 'login');
+				return
+			}
+		} else {
+			if (CMS.apiAuthType === 'apikey') {
+				const apiKey = req.body.apiKey;
+
+
+				if (_.isEmpty(apiKey)) {
+					// Check if the API key being sent is missing, or an empty string
+					CMS.apiResponse(401, 'Invalid API Key');
+				} else {
+					CMS.getUser({apiKey: apiKey})
+					.then((user) => {
+						const key = user.apiKey;
+						if (key === apiKey) {
+							next();
+						} else {
+							CMS.apiResponse(401, 'Invalid API Key');
+						}
+					})
+					.catch((e) => {
+						CMS.apiResponse(401, 'Invalid API Key');
+					});
+				}
+			}
+		}
+
+
+
+	};
+
 	utilities.passThroughUrl = (url, req, res) => {
+
 		const okay = [
-			'/' + CMS.adminLocation,
 			'/gistjs-assets'
 		];
+
+		// Set the default adminLocation to be the base site,
+		// override it if a subdomain is active.
+		CMS.adminLocation = CMS.config.adminLocation
+
+		if (req.subdomains.length > 0) {
+			let currentSubdomainRequest = req.subdomains[0];
+
+			const subdomains = CMS.config.subdomains;
+			let subdomainAdminLocation;
+
+			for (var i = 0; i < subdomains.length; i++) {
+
+				let subLocation;
+
+				for (var sub in subdomains[i]) {
+					if (subdomains[i].hasOwnProperty(sub)) {
+
+						if (currentSubdomainRequest === sub) {
+							subdomainAdminLocation = sub
+							console.log(subdomains[i][sub]);
+							CMS.config.subdomainInfo = subdomains[i][sub]
+						}
+
+					}
+				}
+
+				okay.push(`/${subdomainAdminLocation}`)
+				CMS.adminLocation = subdomainAdminLocation
+				CMS._utilities.activateSubdomainConfig(true)
+			}
+
+		} else {
+			okay.push(`/${CMS.adminLocation}`)
+			CMS._utilities.activateSubdomainConfig(false)
+		}
+
 
 		if (!CMS.config.anyoneRegister) {
 			okay.push('/register');
@@ -167,22 +304,22 @@ module.exports = (CMS, APP) => {
 		return false;
 	};
 
-	utilities.installRouting = (requestUrl) => {
-		if (fs.existsSync(`${CMS.adminDir}/.install`)) {
+	utilities.installRouting = (requestUrl, settings) => {
+		if (settings.install) {
 			if (CMS.req.method === 'GET') {
 				if (requestUrl !== '/install') {
 					CMS.res.redirect('/install');
-					return;
+					return true;
 				}
 
 				if (requestUrl === '/install') {
 					CMS.renderInstallTemplate();
-					return;
+					return true;
 				}
 			}
 
-			if (requestUrl === `/${CMS.adminLocation}/api/install` && req.method === 'POST') {
-				return false;
+			if (requestUrl === `/install` && CMS.req.method === 'POST') {
+				return true;
 			}
 
 		} else {
@@ -198,17 +335,23 @@ module.exports = (CMS, APP) => {
 			response = JSON.stringify(response);
 		}
 
-		res.status(status);
-		res.write(response);
-		res.end();
-
-		return;
+		res.status(status).send(response).end();
 
 		if (typeof done === 'function') {
 			done();
 		}
-		return;
 
+	};
+
+	utilities.catchError = (e, showStack) => {
+		let message = '';
+
+		if (!showStack) {
+			message = `${e.name}: ${e.message}`;
+		} else {
+			message = `${e}`;
+		}
+		CMS.error(CMS.res, 500, message);
 	};
 
 	utilities.error = (res, statusCode, msg) => {
@@ -279,6 +422,20 @@ module.exports = (CMS, APP) => {
 		currentNav.splice(position, 0, navObject);
 	};
 
+	utilities.addAdminSubNavigation = (navObject, navItemName) => {
+		let currentNav = CMS.navigation;
+		navObject.navItemName = navItemName;
+
+		for (var i = 0; i < currentNav.length; i++) {
+			if (currentNav[i].navItemName === navItemName) {
+				currentNav[i].subMenu.push(navObject)
+			}
+		}
+
+
+
+	};
+
 	utilities.getTemplates = () => {
 		let themes = fs.readdirSync(CMS.themeDir);
 		let templateNames = [];
@@ -335,7 +492,11 @@ module.exports = (CMS, APP) => {
 	};
 
 	utilities.createRoute = (routerData) => {
-		routerData.url = APP.sanitizeUrl(routerData.url);
+
+		// TODO: check to see if route already exists in CMS.addedRoutes
+		// provide a duplicate route error.
+
+		routerData.url = APP.sanitizeUrl(routerData.url, true);
 		CMS.addedRoutes.push(routerData);
 	}
 
@@ -390,6 +551,14 @@ module.exports = (CMS, APP) => {
 		return str.join("&");
 	};
 
+	utilities.addAdminTemplateVariable = (varObj) => {
+
+	};
+
+	utilities.addTemplateVariable = (varObj) => {
+
+	};
+
 	utilities.addAdminScript = (scriptObj) => {
 
 		// TODO: Add array positioning from scriptObj.position
@@ -419,10 +588,18 @@ module.exports = (CMS, APP) => {
 		let script = {
 			scriptName: scriptObj.name,
 			scriptSrc: scriptObj.src,
-			scriptPage: scriptObj.page || false
+			scriptPage: scriptObj.page || false,
+			location: 'footer'
 		}
 
-		CMS.adminScripts.push(script);
+		if (typeof scriptObj.location !== 'undefined') {
+			script.location = scriptObj.location
+			CMS.adminScripts[scriptObj.location].push(script);
+		} else {
+			CMS.adminScripts.footer.push(script);
+		}
+
+
 
 	};
 

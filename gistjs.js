@@ -57,21 +57,16 @@ module.exports = (settings, app) => {
 		app.use(helmet(helmetSettings));
 	}
 
-	CMS.init(settings, router);
+	CMS.init(settings, router, passport);
 
 	if (CMS.config.anyoneRegister) {
 		CMS.enableUserRegistration();
 	}
 
-	CMS._utilities.themeFunctionFile();
+	//CMS._utilities.themeFunctionFile();
 
 	// Initialize PassportJS for login
 	require('./admin/passport')(passport, CMS);
-
-	//var events = Events();
-	//events.maintenanceMode(CMS, false, (err, result) => {
-		//console.log();
-	//});
 
 	if (typeof CMS.config.dbHost !== 'undefined') {
 		// Initialize session store via MongoStore
@@ -102,22 +97,38 @@ module.exports = (settings, app) => {
 		app.use(passport.session());
 
 		global.cms = dbSessionsConf;
+	} else {
+		settings.install = true
 	}
 
 	router.use( (req, res, next) => {
+
 		let requestUrl = req.url;
 
 		CMS.setQueryVars(req.query);
 		CMS.req = req;
 		CMS.res = res;
 
-		//filter(filterOptions, req, res, next)
-
-		if (!CMS._utilities.installRouting(requestUrl) && req.method === 'POST') {
-			next();
-			return;
+		if (CMS.forceSSL) {
+			const redirectDetails = CMS._security.redirectToSecure(requestUrl);
+			if (redirectDetails.redirect) {
+				res.redirect(redirectDetails.redirectTo);
+				return;
+			}
 		}
 
+		//filter(filterOptions, req, res, next)
+
+		// If redirect to install is neeed:
+
+		if (CMS._utilities.installRouting(requestUrl, settings)) {
+			if (req.method === 'POST') {
+				next();
+				return;
+			} else {
+				return;
+			}
+		}
 		// May remove this later --!!!!!!!!!!!!!!!!!
 		if (requestUrl === '/favicon.ico') {
 			CMS.sendResponse(res, 204);
@@ -129,17 +140,10 @@ module.exports = (settings, app) => {
 		// Check if the requested URL is coming from the admin panel
 		if (CMS.passThroughUrl(requestUrl, req, res)) {
 
-			// Run the "delete trashed" function if a
-			// logged in user loads any admin pages
-			if (requestUrl.indexOf(CMS.config.adminLocation) >= 0) {
-				CMS._utilities.deleteTrashed();
-			}
-
 			if (CMS.config.localEditing === false) {
 				CMS.error(res, 404, 'Page not found');
 				return;
 			}
-
 			next();
 			return;
 		}
@@ -172,8 +176,20 @@ module.exports = (settings, app) => {
 		}
 
 		// If not an admin panel request, look for valid url in db.
-		CMS._render._mainRender(requestUrl);
+		CMS.mainRender(requestUrl)
+		.then((render) => {
+			CMS.sendResponse(res, 200, render)
+		})
+		.catch((e) => {
+			CMS.sendResponse(res, 500, e.message)
+		})
 
+	});
+
+	process.on('unhandledRejection', function(reason, p) {
+		console.log(p, reason);
+	    //CMS._utilities.catchError(reason, true);
+	    // application specific logging, throwing an error, or other logic here
 	});
 
 	/*

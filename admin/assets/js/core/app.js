@@ -8,6 +8,8 @@
 			let title = msg.title;
 			let content = msg.message;
 			let tag = msg.tag;
+			let browserLog = msg.browserLog;
+			let logType;
 			let msgType;
 
 			switch (msg.type) {
@@ -16,23 +18,34 @@
 				break;
 				case 'warning' :
 				 	msgType = 'bg-warning'
+					logType = 'warn';
 				break;
 				case 'danger' :
 				 	msgType = 'bg-danger'
+					logType = 'error';
 				break;
 				case 'info' :
 				 	msgType = 'bg-info'
+					logType = 'info';
 				break;
 				case 'success' :
 				 	msgType = 'bg-success'
+					logType = 'log';
 				break;
 				case 'custom' :
 				 	msgType = msg.class
+					logType = 'log';
 				break;
 				default:
 				 	msgType = 'bg-primary'
+					logType = 'log';
 				break;
 			}
+
+			if (browserLog) {
+				//console[logType](`${msg.type}: ${title}, ${content}`);
+			}
+
 			return `<div class="alert ${msgType} alert-styled-left">
 						<button type="button" class="close" data-tag="${tag}" data-dismiss="alert"><span>×</span><span class="sr-only">Close</span></button>
 						<h6>${title}</h6>
@@ -503,8 +516,6 @@
 		}
 
 		var dataContent = data.content;
-		console.log(dataContent);
-		console.log('^^^^ from app.js, exports.metaBox function');
 
 		for (var i = 0; i < dataContent.length; i++) {
 			var text = '';
@@ -567,59 +578,119 @@
 	};
 
 	exports.modal = function(post) {
-        return '<div class="modal fade" id="fileuploadsmodal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel">\
-            <div class="modal-dialog modal-full drag-drop" role="document">\
-            	<div class="drag-overlay off">\
-            		<div class="icon-object border-white text-white"><i class="icon-upload"></i></div>\
-            		<h2 class="text-white">Drop your file here to start uploading</h2>\
-            	</div>\
-                <div class="modal-content">\
-                    <div class="modal-header bg-primary">\
-                        <button type="button" class="close" data-dismiss="modal">×</button>\
-                        <h6 class="modal-title">Images and Files</h6>\
-                    </div>\
-                    <div class="modal-body">\
-                    	<div class="col-md-12">\
-                    		<div class="thumbnail-display">\
-                    		</div>\
-                    		<div class="file-uploads-display">\
-                    			<input id="upload-input" type="file" name="uploads[]" multiple="multiple">\
-								<div class="row file-details">\
-								</div>\
-                    		</div>\
-                    	</div>\
-                    </div>\
-                    <div class="modal-footer">\
-                    	<div class="thumbnail-display">\
-	                    	<div class="col-xs-6 text-left">\
-		                    	<button type="button" class="btn btn-primary upload-file-handler">Upload</button>\
-								<div class="btn-group dropup">\
-									<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
-										Get attachments from: <span class="caret"></span>\
-									</button>\
-									<ul class="dropdown-menu">\
-										<li><a href="#">This post</a></li>\
-										<li><a href="#">All posts</a></li>\
-									</ul>\
-								</div>\
-							</div>\
-							<div class="col-xs-6">\
-		                        <button type="button" class="btn btn-link" data-dismiss="modal">Close</button>\
-		                        <button type="button" class="btn btn-info">Insert image</button>\
-	                        </div>\
-	                    </div>\
-                		<div class="file-uploads-display">\
-							<div class="col-xs-6 text-left">\
-								<button type="button" class="btn btn-primary upload-file-handler">Add files</button>\
-							</div>\
-							<div class="col-xs-6">\
-								<button type="button" class="btn btn-info cancel-upload">Done</button>\
-							</div>\
-                		</div>\
-                    </div>\
-                </div>\
-            </div>\
-        </div>';
+        return `
+		<div class="modal fade uploads-modal" id="fileuploadsmodal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel">
+	        <div class="modal-dialog modal-full drag-drop" role="document">
+	            <div class="modal-content">
+	                <div class="modal-header bg-primary">
+	                    <button type="button" class="close" data-dismiss="modal">×</button>
+	                    <h6 class="modal-title">Images and Files</h6>
+	                </div>
+	                <div class="modal-body">
+	                	<div class="image-edit"></div>
+			        	<div class="drag-overlay off">
+			        		<div class="icon-object border-white text-white"><i class="icon-upload"></i></div>
+			        		<h2 class="text-white">Drop your file here to start uploading</h2>
+			        	</div>
+	                	<div class="col-md-9 uploads-content image-display">
+	                		<div class="thumbnail-display">
+	                			<input id="upload-input" type="file" name="uploads[]" multiple="multiple" accept="image/*">
+								<div class="row file-details">
+								</div>
+	                		</div>
+	                	</div>
+	                	<div class="col-md-3 uploads-sidebar image-display">
+							<div class="col-md-12">
+								<h5>Attachment Details</h5>
+								<strong class="file-name"></strong>
+							</div>
+							<div class="col-xs-12 sidebar-image-preview">
+							</div>
+							<div class="col-xs-12">
+								<div class="text-light upload-date"></div>
+								<div class="text-light file-size"></div>
+								<button class="btn btn-primary btn-sm edit-image-toggle">Edit Image</button>
+								<a href="" class="media-heading text-danger-400 delete-attachment">Delete permanently</a>
+							</div>
+							<div class="clearfix"></div>
+
+							<div class="image-meta">
+								<div class="col-xs-3 text-right">
+									<label>Title</label>
+								</div>
+								<div class="col-xs-9">
+									<input type="text" class="form-control" name="title" placeholder="Enter Title" value="">
+								</div>
+								<div class="col-xs-3 text-right">
+									<label>Alt text</label>
+								</div>
+								<div class="col-xs-9">
+									<input type="text" class="form-control" name="title" placeholder="Enter Title" value="">
+								</div>
+								<div class="col-xs-3 text-right">
+									<label>Caption</label>
+								</div>
+								<div class="col-xs-9">
+									<textarea name="" class="form-control" placeholer="Message" rows="7"></textarea>
+								</div>
+							</div>
+							<div class="col-xs-9">
+								<div class="checkbox">
+									<label>
+										<div class="checker"><span class=""><input type="checkbox" name="blank" class="styled"></span></div>
+										Set as feature image
+									</label>
+								</div>
+							</div>
+							<div class="col-md-12">
+								<h5>Insert Settings</h5>
+								<div class="form-group insert-settings">
+									<label>Image Size</label>
+									<select class="form-control image-size" name="status">
+										<option value="">Select an image</option>
+									</select>
+								</div>
+								<div class="form-group link-settings">
+									<label>Link to</label>
+									<select class="form-control attachment-link" name="status">
+										<option value="none">None</option>
+										<option value="attachment" class="insert-attachment-url">Attachment URL</option>
+										<option value="<%- postData.postUrl;%>">Post URL</option>
+									</select>
+								</div>
+							</div>
+	                	</div>
+	                </div>
+	                <div class="modal-footer">
+	                	<div class="thumbnail-display">
+	                		<div class="col-xs-12 selected-thumbnails text-left">
+	                			<h6>Selected images <small><a class="clear-selected-images">clear</a></small></h6>
+	                			<div class="selected-thumbnail-images">
+
+	                			</div>
+	                		</div>
+	                    	<div class="col-xs-6 text-left">
+		                    	<button type="button" class="btn btn-primary upload-file-handler">Upload</button>
+								<div class="btn-group dropup">
+									<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+										Get attachments from: <span class="caret"></span>
+									</button>
+									<ul class="dropdown-menu">
+										<li class="get-attachments this-post"><a href="#">This post</a></li>
+										<li class="get-attachments all-posts"><a href="#">All posts</a></li>
+									</ul>
+								</div>
+							</div>
+							<div class="col-xs-6">
+		                        <button type="button" class="btn btn-link" data-dismiss="modal">Close</button>
+		                        <button type="button" class="btn btn-info insert-selected-images">Insert image</button>
+	                        </div>
+	                    </div>
+	                </div>
+	            </div>
+	        </div>
+	    </div>
+		`;
     }
 
     exports.fileList = function(file, showProgress){
@@ -690,13 +761,37 @@
 		return slug
 	};
 
-	exports.sanitizeUrl = function(url) {
-		const startsWithSlash = /^\//;
-		if (!startsWithSlash.test(url)) {
-			url = `/${url}`
+	exports.sanitizeUrl = function(url, route) {
+		let regex;
+		if (!route) {
+			regex = /[\s+`~!@#$%^&*()_|+=?;:'",<>\{\}\[\]\\]/gi
+		} else {
+			regex = /[\s+`~!@#$%^&*()_|+=?;'",<>\{\}\[\]\\]/gi
+		}
+		if (typeof url === 'object') {
+
+			let newUrlArray = [];
+
+			for (var i = 0; i < url.length; i++) {
+				const startsWithSlash = /^\//;
+				if (!startsWithSlash.test(url[i])) {
+					url[i] = `/${url[i]}`
+				}
+
+				newUrlArray.push(url[i].trim().replace(regex, ''));
+			}
+
+			return newUrlArray;
+
+		} else {
+			const startsWithSlash = /^\//;
+			if (!startsWithSlash.test(url)) {
+				url = `/${url}`
+			}
+
+			return url.trim().replace(regex, '');
 		}
 
-		return url.trim().replace(/[\s+`~!@#$%^&*()_|+=?;:'",<>\{\}\[\]\\]/gi, '');
 	}
 
 	exports.unescapeHtml = function(string) {
@@ -750,7 +845,7 @@
 	};
 
 	exports.capitalizeFirstLetter = function(string) {
-		if (typeof string === 'undefined') {
+		if (typeof string === 'undefined' || string === '' || string === null) {
 			return;
 		}
 

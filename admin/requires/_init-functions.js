@@ -1,19 +1,21 @@
+const fs = require('fs');
+const path = require('path');
+const Events = require('../events.js');
+const request = require('request');
+const _ = require('lodash');
+const adminRoutes = require('./admin-routes/init.js')
+
 module.exports = (CMS, APP) => {
 	//console.log('Plugin loading...');
 
 	let initFunctions = {};
 
-	initFunctions.init = () => {
-
-		CMS._utilities.addAdminScript({
-			name: 'jquery',
-			src: 'core/libraries/jquery.min.js',
-			type: 'core'
-		})
-		CMS._utilities.addAdminScript({name: 'bootstrap', src: 'core/libraries/bootstrap.min.js', type: 'core'})
-		CMS._utilities.addAdminScript({name: 'wysihtml', src: 'core/libraries/wysihtml.min.js', type: 'core', page: 'edit'})
-		CMS._utilities.addAdminScript({name: 'wysihtml-toolbar', src: 'core/libraries/wysihtml-toolbar.min.js', type: 'core', page: 'edit'})
-		CMS._utilities.addAdminScript({name: 'wysihtml-parser-rules', src: 'core/libraries/wysihtml-parser-rules.js', type: 'core', page: 'edit'})
+	initFunctions.adminScripts = () => {
+		// Footer scripts
+		CMS._utilities.addAdminScript({name: 'jquery', src: 'core/libraries/jquery.min.js', type: 'core', location: 'header'})
+		CMS._utilities.addAdminScript({name: 'wysihtml', src: 'core/libraries/wysihtml.min.js', type: 'core', page: 'edit', location: 'header'})
+		CMS._utilities.addAdminScript({name: 'wysihtml-toolbar', src: 'core/libraries/wysihtml-toolbar.min.js', type: 'core', page: 'edit', location: 'header'})
+		CMS._utilities.addAdminScript({name: 'wysihtml-parser-rules', src: 'core/libraries/wysihtml-parser-rules.js', type: 'core', page: 'edit', location: 'header'})
 		CMS._utilities.addAdminScript({name: 'blockui', src: 'plugins/loaders/blockui.min.js', type: 'core'})
 		CMS._utilities.addAdminScript({name: 'nicescroll', src: 'plugins/ui/nicescroll.min.js', type: 'core'})
 		CMS._utilities.addAdminScript({name: 'drilldown', src: 'plugins/ui/drilldown.js', type: 'core'})
@@ -21,29 +23,53 @@ module.exports = (CMS, APP) => {
 		CMS._utilities.addAdminScript({name: 'tidyhtml', src: 'plugins/tidyhtml.js', type: 'core', page: 'edit'})
 		CMS._utilities.addAdminScript({name: 'tomarkdown', src: 'plugins/tomarkdown.js', type: 'core', page: 'edit'})
 		CMS._utilities.addAdminScript({name: 'app', src: 'core/app.js', type: 'core'})
-		CMS._utilities.addAdminScript({name: 'handlers', src: 'core/handlers.js', type: 'core'})
-		CMS._utilities.addAdminScript({name: 'helperFunctions', src: 'core/helperFunctions.js', type: 'core'})
+		CMS._utilities.addAdminScript({name: 'handlers', src: 'core/handlers.js', type: 'core', location: 'header'})
+		CMS._utilities.addAdminScript({name: 'helperFunctions', src: 'core/helperFunctions.js', type: 'core', location: 'header'})
 		CMS._utilities.addAdminScript({name: 'showdown', src: 'https://cdn.rawgit.com/showdownjs/showdown/1.6.3/dist/showdown.min.js', page: 'edit'})
 		CMS._utilities.addAdminScript({name: 'bootstrap-select', src: 'https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/js/bootstrap-select.min.js'})
+		CMS._utilities.addAdminScript({name: 'select2', src: 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js', location: 'header'})
+		CMS._utilities.addAdminScript({name: 'bootstrap', src: 'core/libraries/bootstrap.min.js', type: 'core'})
+		CMS._utilities.addAdminScript({name: 'push-notifications', src: 'core/push.js', type: 'core'})
+	};
+
+	initFunctions.systemCrons = () => {
+		const deleteTrashedCron = CMS._crons.createCron('sendSystemMessages', '*/5 * * * *', () => {
+			CMS._utilities.deleteTrashed();
+		}, true, true);
+
+		const systemMessageCron = CMS._crons.createCron('sendSystemMessages', '*/55 * * * *', () => {
+			for (var i = 0; i < CMS.systemMessages.length; i++) {
+				CMS.systemMessages[i]
+				CMS._messaging.sendPush({
+					message: CMS.systemMessages[i].message,
+					clickTarget: 'http://localhost:7637/spry-admin/',
+					title: CMS.systemMessages[i].title
+				});
+			}
+		}, true, true);
+	};
+
+	initFunctions.init = () => {
+		adminRoutes(CMS, APP).init();
+		initFunctions.systemCrons();
+		initFunctions.adminScripts();
 
 		const metaData = {
 			heading: 'Test Header',
 			content: [
 				{
-					text: `what's this?`,
+					text: 'A secondary header for posts',
 					inputs: [
 						{
-							name: `Input test`
-						},
-						{
-							name: `Input test #2`
+							name: `Sub Heading`,
+							placeholder: 'Enter a secondary header'
 						}
 					]
 				}
 			]
 		}
 		const metaDataPage = {
-			heading: 'Test Header',
+			heading: 'Test Header for page',
 			content: [
 				{
 					text: `what's this Page?`,
@@ -282,6 +308,14 @@ module.exports = (CMS, APP) => {
 		CMS._content.addDashboardWidget(quickDraftWidget);
 		CMS._content.addDashboardWidget(chatWidget);
 
+		if (CMS.multiSite) {
+			CMS._utilities.addAdminSubNavigation({
+				slug: 'Network',
+	       		url: 'settings/network',
+	       		icon: 'fa fa-sitemap',
+	       		priviledge: 'addUsers' },
+			'settings')
+		}
 
 	}
 

@@ -1,20 +1,4 @@
 	<!-- Plugin JS files -->
-<%
-	for (var i = plugins.length - 1; i >= 0; i--) {
-		var jsFile = plugins[i].pluginInfo.init;
-		var path = plugins[i].pluginInfo.path;
-		var render = plugins[i].pluginInfo.render;
-		if (render === 'footer' || typeof render === 'undefined') {
-
-			%><script type="text/javascript" src="/plugins/<%- path %>/<%- jsFile %>"></script><%
-		}
-	}
-	if (typeof fileUploadModal !== 'undefined') {
-		%><script type="text/javascript" src="/assets/js/core/uploads.js"></script><%
-	}
-%>
-	<!-- /plugin JS files -->
-
-	<script type="text/javascript" src="/gistjs-assets/js/core/push.js"></script>
+	<%- gjFoot;%>
 </body>
 </html>

@@ -1,11 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 const Events = require('../events.js');
-const APP = require('../assets/js/core/app.js');
 const ejs = require('ejs');
 const async = require('async');
 const _ = require('lodash');
-module.exports = (CMS, adminDir) => {
+const Promise = require('bluebird');
+module.exports = (CMS, APP) => {
 
 	let render = {};
 
@@ -19,7 +19,7 @@ module.exports = (CMS, adminDir) => {
 		//CMS.doHook('edit')
 
         let render = {
-        	cms: CMS,
+			navigation: CMS.navigation,
         	cmsInfo: CMS._utilities.sanitizedCmsInfo(),
 			currentUser: CMS._users.getCurrentUserInfo(),
         	themeInfo: CMS.activeTheme,
@@ -41,8 +41,15 @@ module.exports = (CMS, adminDir) => {
 			queryVars: CMS.passToRender.queryVars,
 			queryVarString: CMS.passToRender.queryVarString,
 			postTypeColumns: CMS.postTypeColumns || [],
-			systemMessages: CMS.systemMessages
+			systemMessages: CMS.systemMessages,
+			gjHead: CMS._content.gjAdminHead(type),
+			gjFoot: CMS._content.gjAdminFooter(type)
         };
+
+		// Update the site details if a network subdomain is active
+		if (CMS.req.subdomains) {
+			render.cmsInfo = _.merge(render.cmsInfo, CMS.subdomainInfo)
+		}
 
         if (typeof msg !== 'undefined') {
         	render.alert = msg;
@@ -173,6 +180,18 @@ module.exports = (CMS, adminDir) => {
 		}
 
 		const metaBox = CMS.metaBoxes;
+
+		for (var i = 0; i < metaBox.length; i++) {
+
+			if (metaBox[i].contentType === queryVars.type || typeof metaBox[i].contentType === 'undefined') {
+				metaBox[i].rendered = APP.metaBox(metaBox[i].content, postData).replace(/[\n\t\r]/g,"")
+			}
+
+		}
+
+		//console.log(metaBox);
+
+		return metaBox;
 		for (var i = 0; i < metaBox.length; i++) {
 
 			if ( (metaBox[i] && metaBox[i].contentType) && metaBox[i].contentType === queryVars.type) {
@@ -195,7 +214,7 @@ module.exports = (CMS, adminDir) => {
         const render = {
         	msg: '',
         	data: {currentLocation: CMS.req.protocol + '://' + CMS.req.get('host')},
-        	cms: CMS
+        	adminLocation: CMS.adminLocation,
         };
 
         const data = fs.readFileSync(options.filename, 'utf-8');
@@ -254,186 +273,6 @@ module.exports = (CMS, adminDir) => {
 		}
     };
 
-	render.renderTemplate = (templateData) => {
-
-    	if (typeof CMS.activeTheme === 'undefined') {
-    		CMS.error(CMS.res, 500, 'You do not have an active theme. ');
-    		return;
-    	}
-
-        let render = {
-            data: templateData,
-        	plugins: CMS.activePlugins.user,
-			theme: CMS.activeTheme,
-        	site: {
-        		url: CMS.config.url,
-        		name: CMS.config.name,
-        		title: CMS.config.title,
-        		tagline: CMS.config.tagline,
-        		currentUser: CMS.config.currentUser,
-        		adminLocation: CMS.config.adminLocation,
-        		cmsLocation: CMS.config.cmsLocation,
-        	},
-			app: APP,
-			passedToRender: CMS.passToRender
-        }
-
-        if (typeof templateData === 'undefined') {
-        	CMS.error(CMS.res, 502, 'missing template data. Can not render.');
-            return;
-        }
-
-        let statusCode = 200;
-        if (typeof templateData.statusCode !== 'undefined') {
-			statusCode = templateData.statusCode;
-        }
-
-        let template = templateData.template;
-
-        if (template === 'default') {
-        	template = 'index';
-        }
-
-        if (typeof template === 'undefined') {
-        	console.error('Error: Could not find template for this post. Rendering index.ejs from your theme folder.');
-           	let template = 'index';
-        }
-
-		const templateFileData = CMS._render._templateFileData(template);
-
-		if (templateFileData.invalidJson) {
-			CMS.sendResponse(CMS.res, 500, `${CMS.activeTheme.themeFolder}/${template}.ejs contains invalid json, and can't render.`);
-			return;
-		}
-
-		if (!fs.existsSync(templateFileData.options.filename)) {
-			CMS.sendResponse(CMS.res, 500, 'Missing ' + template + '.ejs template file');
-		    return;
-		}
-
-		// If there is no loop data, just render the template.
-        if (templateFileData.noLoop) {
-        	let rendered = ejs.render(templateFileData.data, render, templateFileData.options);
-        	CMS.sendResponse(CMS.res, statusCode, rendered);
-            return;
-        }
-
-        let templateLoopData = JSON.parse(templateFileData.loop);
-		let configs = [];
-		let returns = {};
-		const db = CMS.dbData;
-	    const collection = CMS.dbConn.data.collection;
-
-		async.forEachOf(templateLoopData.loop, (value, key, callback) => {
-
-			let context = value.return;
-			let limit = value.postsPerPage || 0;
-			let pageNumber = Number(templateData.paginateNumber);
-			let onPageNumber = 1;
-			let returnedPosts = [];
-			let offset = 0;
-
-	    	let data = (search, readyCallback) => {
-
-	    		let calc = (limit);
-	    		let skipPosts = 0
-
-				if (pageNumber >= 2) {
-					offset = (pageNumber - 1) * limit;
-					calc = limit + offset;
-					onPageNumber = pageNumber;
-				}
-
-				let loopQuery = {
-					limit: limit,
-					offset: offset,
-					search: CMS.loopQuery(value.find)
-				}
-
-				// If the loop contains a query object, use that by default
-				if (value.query) {
-					loopQuery.search = value.query;
-				}
-
-				let loopArrayPromises = [CMS.getPosts(loopQuery)];
-
-				CMS.Promise.all(loopArrayPromises)
-				.then((result) => {
-					const postResult = result[0];
-					const postArray = postResult.posts;
-
-					if (value.getMedia && postArray.length > 0) {
-						let postIds = [];
-						for (var i = 0; i < postArray.postCount; i++) {
-							postIds.push(postArray[i]._id);
-						}
-
-						let mediaSearch = { postId: { $in: postIds } };
-
-						if (value.getMedia.featured) {
-							mediaSearch = { $and: [ { featured: true}, { postId: { $in: postIds } } ] }
-						} else if (typeof value.getMedia === 'object') {
-							mediaSearch = value.getMedia;
-						}
-
-						CMS.getAttachments(mediaSearch, (err, results) => {
-							let attachments = results.attachments;
-							let posts = postResult.posts;
-							for (var i = 0; i < results.attachmentCount; i++) {
-								let count = 0;
-								let attachmentPostId = attachments[i].postId.toString();
-								for (var pi = 0; pi < posts.length; pi++) {
-									let postId = posts[pi]._id.toString();
-
-									if (!posts[pi].attachments) {
-										posts[pi].attachments = [];
-									}
-
-									if (postId === attachmentPostId) {
-										posts[pi].attachments.push(attachments[i]);
-										count++;
-									}
-
-								}
-							}
-
-							postResult.posts = posts;
-							readyCallback(postResult)
-						});
-					} else {
-						readyCallback(postResult)
-					}
-
-				})
-				.catch((e) => {
-					console.log(e);
-					CMS.errorHandler(e, CMS.res);
-				});
-	        };
-
-	        data(value, (results) => {
-	        	returns[context] = results;
-	        	callback();
-	        });
-		}, (err) => {
-		    if (err){
-		    	console.error(err.message);
-		    }
-
-		    render.loops = returns;
-        	try{
-				let rendered = ejs.render(templateFileData.data, render, templateFileData.options);
-				CMS.sendResponse(CMS.res, statusCode, rendered);
-			}
-			catch(e){
-				console.log(e);
-			}
-
-
-
-		});
-	};
-
 	render._templateFileData = (template) => {
 		const themePath = CMS.activeTheme.path;
 
@@ -489,7 +328,7 @@ module.exports = (CMS, adminDir) => {
 		return returns;
 	};
 
-	render._mainRender = (requestUrl) => {
+	render._mainRender = (requestUrl, done) => {
 		const db = CMS.dbData;
 		const collection = CMS.dbConn.data.collection;
 		const baseUrl = requestUrl;
@@ -535,41 +374,209 @@ module.exports = (CMS, adminDir) => {
 
 		CMS.dbFindOne(db, collection, search)
 		.then((doc) => {
+
 			if (doc === null) {
-
-				if (CMS.config.custom404 === true) {
-					// Use cms based error 404 page
-					CMS.error(CMS.res, 404, 'Page not found');
-					return;
-				} else {
-					console.log('asdasd');
-					next();
-					return;
-				}
-
+				CMS.error(CMS.res, 404, 'Page not found');
+				return;
 			}
 
 			doc.paginateNumber = paginateNumber;
 			doc.requestUrl = requestUrl;
 			doc.baseUrl = baseUrl;
 
-			CMS.renderTemplate(doc);
+			CMS.renderTemplate(doc)
+			.then((rendered) => {
+				done(null, rendered)
+			})
+			.catch((e) => {
+				done(e)
+			})
+
+
 		})
-		.catch((e) => {
-			if (err) {
-				if (CMS.config.custom500 === true) {
-					// Use cms based error 500 page
-					CMS.error(CMS.res, 500);
-					CMS.sendResponse(CMS.res, 500, 'Server Error');
-					return;
-				} else {
-					next();
-					return;
-				}
-			}
-		});
 	};
 
+	render.renderTemplate = (templateData, done) => {
+
+		if (typeof CMS.activeTheme === 'undefined') {
+			CMS.error(CMS.res, 500, 'You do not have an active theme. ');
+			return;
+		}
+
+	    let render = {
+	        data: templateData,
+	    	plugins: CMS.activePlugins.user,
+			theme: CMS.activeTheme,
+	    	site: {
+	    		url: CMS.config.url,
+	    		name: CMS.config.name,
+	    		title: CMS.config.title,
+	    		tagline: CMS.config.tagline,
+	    		currentUser: CMS._users.getCurrentUserInfo(),
+	    		adminLocation: CMS.config.adminLocation,
+	    		cmsLocation: CMS.config.cmsLocation,
+	    	},
+			app: APP,
+			passedToRender: CMS.passToRender,
+			queryVars: CMS.passToRender.queryVars,
+			queryVarString: CMS.passToRender.queryVarString
+	    }
+
+	    if (typeof templateData === 'undefined') {
+			done(`missing template data. Can not render.`)
+	        return;
+	    }
+
+	    let statusCode = 200;
+	    if (typeof templateData.statusCode !== 'undefined') {
+			statusCode = templateData.statusCode;
+	    }
+
+	    let template = templateData.template;
+
+	    if (template === 'default') {
+	    	template = 'index';
+	    }
+
+	    if (typeof template === 'undefined') {
+	    	console.error('Error: Could not find template for this post. Rendering index.ejs from your theme folder.');
+	       	let template = 'index';
+	    }
+
+		const templateFileData = CMS._render._templateFileData(template);
+
+		if (templateFileData.invalidJson) {
+			done(`${CMS.activeTheme.themeFolder}/${template}.ejs contains invalid json, and can't render.`)
+			return;
+		}
+
+		if (!fs.existsSync(templateFileData.options.filename)) {
+			done(`Missing ${template}.ejs template file`)
+		    return;
+		}
+
+		// If there is no loop data, just render the template.
+	    if (templateFileData.noLoop) {
+	    	let rendered = ejs.render(templateFileData.data, render, templateFileData.options);
+	    	done(null, rendered)
+	    } else {
+			let templateLoopData = JSON.parse(templateFileData.loop);
+			let configs = [];
+			let returns = {};
+			const db = CMS.dbData;
+		    const collection = CMS.dbConn.data.collection;
+
+			async.forEachOf(templateLoopData.loop, (value, key, callback) => {
+
+				let context = value.return;
+				let limit = value.postsPerPage || 0;
+				let pageNumber = Number(templateData.paginateNumber);
+				let onPageNumber = 1;
+				let returnedPosts = [];
+				let offset = 0;
+
+		    	let data = (search, readyCallback) => {
+
+		    		let calc = (limit);
+		    		let skipPosts = 0
+
+					if (pageNumber >= 2) {
+						offset = (pageNumber - 1) * limit;
+						calc = limit + offset;
+						onPageNumber = pageNumber;
+					}
+
+					let loopQuery = {
+						limit: limit,
+						offset: offset,
+						search: CMS.loopQuery(value.find)
+					}
+
+					// If the loop contains a query object, use that by default
+					if (value.query) {
+						loopQuery.search = value.query;
+					}
+
+					let loopArrayPromises = [CMS.getPosts(loopQuery)];
+
+					CMS.Promise.all(loopArrayPromises)
+					.then((result) => {
+						const postResult = result[0];
+						const postArray = postResult.posts;
+
+						if (value.getMedia && postArray.length > 0) {
+							let postIds = [];
+							for (var i = 0; i < postArray.postCount; i++) {
+								postIds.push(postArray[i]._id);
+							}
+
+							let mediaSearch = { postId: { $in: postIds } };
+
+							if (value.getMedia.featured) {
+								mediaSearch = { $and: [ { featured: true}, { postId: { $in: postIds } } ] }
+							} else if (typeof value.getMedia === 'object') {
+								mediaSearch = value.getMedia;
+							}
+
+							CMS.getAttachments(mediaSearch, (err, results) => {
+								let attachments = results.attachments;
+								let posts = postResult.posts;
+								for (var i = 0; i < results.attachmentCount; i++) {
+									let count = 0;
+									let attachmentPostId = attachments[i].postId.toString();
+									for (var pi = 0; pi < posts.length; pi++) {
+										let postId = posts[pi]._id.toString();
+
+										if (!posts[pi].attachments) {
+											posts[pi].attachments = [];
+										}
+
+										if (postId === attachmentPostId) {
+											posts[pi].attachments.push(attachments[i]);
+											count++;
+										}
+
+									}
+								}
+
+								postResult.posts = posts;
+								readyCallback(postResult)
+							});
+						} else {
+							readyCallback(postResult)
+						}
+
+					})
+					.catch((e) => {
+						callback(e)
+					});
+		        };
+
+		        data(value, (results) => {
+		        	returns[context] = results;
+		        	callback();
+		        });
+			}, (err) => {
+			    if (err){
+			    	CMS._utilities.catchError(err);
+			    }
+
+			    render.loops = returns;
+	        	try{
+					let rendered = ejs.render(templateFileData.data, render, templateFileData.options);
+					done(null, rendered)
+				}
+				catch(e){
+					done(e)
+				}
+
+			});
+
+		}
+
+
+
+	};
 
 	return render;
 }

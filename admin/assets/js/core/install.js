@@ -126,13 +126,13 @@ $(document).ready(() => {
 	});
 
 	const testDb = (data, done) => {
-		$.post('/segment-cms/api/install', {type: 'testdb', url: data.url, collection: data.collection}, (res) => {
+		$.post('/install', {type: 'testdb', url: data.url, collection: data.collection}, (res) => {
 			done(res)
 		});
 	};
 
 	const install = (data, done) => {
-		$.post('/segment-cms/api/install', data, (res) => {
+		$.post('/install', data, (res) => {
 			done(res)
 		});
 	};

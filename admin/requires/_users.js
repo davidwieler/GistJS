@@ -3,14 +3,31 @@ const path = require('path');
 const Events = require('../events.js');
 const mongojs = require('mongojs');
 const ObjectId = mongojs.ObjectId;
+const _ = require('lodash');
 module.exports = (CMS) => {
 
 	var users = {};
 
+	users.getUser = (search, done) => {
+		const db = CMS.dbData;
+		const collection = CMS.dbConn.accounts.collection;
+
+		CMS.dbFindOne(db, collection, search)
+		.then((user) => {
+			if (user === null) {
+				done('not found');
+				return;
+			}
+			done(null, user)
+		})
+		.catch((e) => {
+			return done(e);
+		})
+	}
+
 	users.getUsers = (findUsers, done) => {
 		const db = CMS.dbData;
 		const collection = CMS.dbConn.accounts.collection;
-		console.log(findUsers);
 
 		let returnedUsers = [];
 		let count = 0;
@@ -42,10 +59,17 @@ module.exports = (CMS) => {
 		returnedLimits.offset = Number(findUsers.offset) || 0;
 		let calc = (limit - 1);
 		//db[CMS.dbConn.collection].find(search).limit(Number(limit)).sort({timestamp: -1}, (err, users) => {
-
 		CMS.dbFind(db, collection, search)
 		.then((users) => {
 			for (var i = 0; i < users.length; i++) {
+
+				// Apply user specific permissions
+				if (!users[i].permissions) {
+					users[i].permissions = CMS.roles[users[i].accounttype];
+				} else {
+					_.extend(users[i].permissions, CMS.roles[users[i].accounttype])
+				}
+
 				if (returnedLimits.offset >= 1) {
 					calc = (limit - 1 + returnedLimits.offset);
 					if (i < (returnedLimits.offset)) {
@@ -120,16 +144,22 @@ module.exports = (CMS) => {
 	users.getCurrentUserInfo = () => {
 		const user = CMS.currentUser;
 
+		if (!user) {
+			return '';
+		}
+
 		return {
-			name: CMS.currentUser[CMS.currentUser.displaytype],
-			id: CMS.currentUser._id,
-			assignedEditor: CMS.currentUser.assignedEditor,
-			email: CMS.currentUser.email,
-			pushSubscription: CMS.currentUser.pushSubscription,
-			editortype: CMS.currentUser.editortype,
-			pushEnabled: CMS.currentUser.adminPushNotifications,
-			assignedEditor: CMS.currentUser._id,
-			caps: CMS.currentUser.caps
+			name: user[user.displaytype] || user.username,
+			id: user._id,
+			accounttype: user.accounttype,
+			networkAdmin: user.networkAdmin || false,
+			assignedEditor: user.assignedEditor,
+			email: user.email,
+			pushSubscription: user.pushSubscription,
+			editortype: user.editortype,
+			pushEnabled: user.adminPushNotifications,
+			assignedEditor: user._id,
+			caps: user.caps
 		}
 	}
 

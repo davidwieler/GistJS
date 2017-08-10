@@ -17,7 +17,7 @@ module.exports = (CMS) => {
 		data.timestamp = +new Date();
 		data.contentType = type;
 		data.user = CMS._users.getCurrentUserInfo().name;
-		data.userId = CMS._users.getCurrentUserInfo()._id;
+		data.userId = CMS._users.getCurrentUserInfo().id;
 
 		if (data.postUrl) {
 			const postUrl = data.postUrl;
@@ -31,21 +31,13 @@ module.exports = (CMS) => {
 			data.category = data.category[0];
 		}
 
-		db[collection].insert(data, (err, result) => {
-			if (err) {
-				done(err);
-			}
-
-			if (typeof done === 'function') {
-
-				CMS._messaging.sendPush({
-					message: data.postTitle,
-					clickTarget: data.postUrl,
-					title: 'New Post Published'
-				});
-				done(null, result._id);
-			}
-		});
+		CMS.dbInsert(db, collection, data)
+		.then((result) => {
+			done(null, result._id);
+		})
+		.catch((e) => {
+			done(e);
+		})
 	}
 
 	content.deletePost = (postId, done) => {
@@ -53,14 +45,14 @@ module.exports = (CMS) => {
 		const db = CMS.dbData;
 		const collection = CMS.dbConn.data.collection;
 
-		db[collection].remove({'_id': ObjectId(postId)}, (err, result) => {
-			if (err) {
-				done(err);
-			}
+		const search = {'_id': ObjectId(postId)}
 
-			if (typeof done === 'function') {
-				done(null, result);
-			}
+		CMS.dbDelete(db, collection, search)
+		.then((result) => {
+			done(null, result);
+		})
+		.catch((e) => {
+			done(e);
 		});
 
 	}
@@ -111,55 +103,50 @@ module.exports = (CMS) => {
 
 					data.updatedTimestamp = +new Date();
 
-					db[collection].update(
-						{'_id':ObjectId(postId)},
-						{ $set: data},
-						(err, response) => {
+					const search = {'_id':ObjectId(postId)};
 
-							if (err) {
-								done(err);
-							}
-
-							done(null, response);
-
+					CMS.dbUpdate(db, collection, search, data, (err, result) => {
+						if (err) {
+							done(err);
 						}
-					)
+
+						done(err, result);
+					});
 				}
 			});
 
 		} else {
 			data.updatedTimestamp = +new Date();
-			db[collection].update(
-				{'_id':ObjectId(postId)},
-				{ $set: data},
-				(err, response) => {
-					if (err) {
-						done(err);
-					}
-					if (typeof done === 'function') {
-						done(null, response);
-					}
 
+			// TODO: May want to change this up to a then>catch type promise...
+
+			CMS.dbUpdate(db, collection, search, data, (err, result) => {
+				if (err) {
+					done(err);
 				}
-			)
-		}
 
+				done(err, result);
+			})
+		}
 	}
 
 	content.getPostById = (postId, done) => {
 		const db = CMS.dbData;
 		const collection = CMS.dbConn.data.collection;
+		const search = {'_id':ObjectId(postId)};
 
-		db[collection].findOne({'_id':ObjectId(postId)}, (err, post) => {
-			if (err) {
-				done(err);
-			}
+
+		CMS.dbFindOne(db, collection, search)
+		.then((post) => {
 			if (post === null) {
-				done({type: 'postnotfound', message: 'Post id: ' + postId + ' not found', function: 'getPostById'});
+				done({type: 'postnotfound', message: `Post id: ${postId} not found`, function: 'getPostById'});
 				return;
 			}
 
 			done(null, post);
+		})
+		.catch((e) => {
+			return done(e);
 		});
 
 	}
@@ -168,15 +155,17 @@ module.exports = (CMS) => {
 		const db = CMS.dbData;
 		const collection = CMS.dbConn.data.collection;
 
-		db[collection].findOne(search, (err, post) => {
-			if (err) {
-				done(err);
-			}
+		CMS.dbFindOne(db, collection, search)
+		.then((post) => {
 			if (post === null) {
-				done('Post id: ' + postId + ' not found');
+				done({type: 'postnotfound', message: 'Post not found using your search criteria', function: 'getPost'});
 				return;
 			}
+
 			done(null, post);
+		})
+		.catch((e) => {
+			return done(e);
 		});
 	};
 
@@ -208,13 +197,43 @@ module.exports = (CMS) => {
 			search._id = {$in: multi};
 		}
 
-		console.log(search);
-
 		returnedLimits.limit = limit;
 		returnedLimits.offset = Number(findPosts.offset) || 0;
 
 		let calc = (limit - 1);
-		//db[CMS.dbConn.collection].find(search).limit(Number(limit)).sort({timestamp: -1}, (err, posts) => {
+
+		CMS.dbFind(db, collection, search)
+		.then((posts) => {
+			for (var i = 0; i < posts.length; i++) {
+
+				if (returnedLimits.limit === 0) {
+					returnedPosts.push(posts[i]);
+					continue;
+				}
+
+				if (returnedLimits.offset >= 1) {
+					calc = (limit - 1 + returnedLimits.offset);
+					if (i < (returnedLimits.offset)) {
+						continue;
+					}
+				}
+
+				if (i <= calc) {
+					returnedPosts.push(posts[i]);
+				} else {
+					break;
+				}
+
+			}
+
+			done(null, {postCount: posts.length, posts: returnedPosts, limits: returnedLimits});
+		})
+		.catch((e) => {
+			done(e)
+		})
+
+		return;
+
 		db[collection].find(search).sort({timestamp: -1}, (err, posts) => {
 
 			if (err) {
@@ -242,6 +261,7 @@ module.exports = (CMS) => {
 				}
 
 			}
+
 			done(null, {postCount: posts.length, posts: returnedPosts, limits: returnedLimits});
 		});
 
@@ -263,16 +283,21 @@ module.exports = (CMS) => {
 			type: 'get',
 			url: `${CMS.adminLocation}/${postTypeData.url}`,
 			auth: true,
-			function: () => {
+			function: (req, res) => {
+
+				// Do search stuff here for post types????
+				// Who knows, good starting point tho.....
 
 				let findPosts = {
 					limit: 20
 				}
 
-				let limit = CMS.req.query.limit;
-				let offset = CMS.req.query.offset;
-				let msg = CMS.req.query.msg;
-				let status = CMS.req.query.status;
+				let limit = req.query.limit;
+				let offset = req.query.offset;
+				let msg = req.query.msg;
+				let status = req.query.status;
+				let sortBy = req.query.sortBy;
+				let sortOrder = req.query.sortOrder;
 
 				if (typeof limit !== 'undefined') {
 					findPosts.limit = limit
@@ -292,7 +317,21 @@ module.exports = (CMS) => {
 					delete findPosts.search.status
 					findPosts.search.userId = `${CMS.currentUser._id}`
 				}
+
 				findPosts.search.contentType = postTypeData.contentType;
+
+				findPosts.search.sort = {
+					by: 'timestamp',
+					order: 'desc'
+				}
+
+				if (typeof sortBy !== 'undefined') {
+					findPosts.search.sort.by = sortBy
+				}
+
+				if (typeof sortOrder !== 'undefined') {
+					findPosts.search.sort.order = sortOrder
+				}
 
 				CMS.getPosts(findPosts, (err, result) => {
 					CMS.renderAdminTemplate('post-type-list', {posts: result, limit: findPosts.limit, msg: msg, postTypeData: postTypeData});
@@ -311,12 +350,34 @@ module.exports = (CMS) => {
 
 	};
 
-	content.gjAdminHead = () => {
+	content.gjAdminHead = (page) => {
+		let adminHeader = '';
+		const headerScripts = CMS.adminScripts.header;
 
+		for (var i = 0; i < headerScripts.length; i++) {
+			if (!headerScripts[i].scriptPage) {
+				adminHeader += `<script type="text/javascript" src="${headerScripts[i].scriptSrc}"></script>\n`;
+			} else if (page === headerScripts[i].scriptPage) {
+				adminHeader += `<script type="text/javascript" src="${headerScripts[i].scriptSrc}"></script>\n`;
+			}
+		}
+
+		return adminHeader;
 	};
 
-	content.gjAdminFooter = () => {
+	content.gjAdminFooter = (page) => {
+		let adminFooter = '';
+		const footerScripts = CMS.adminScripts.footer;
 
+		for (var i = 0; i < footerScripts.length; i++) {
+			if (!footerScripts[i].scriptPage) {
+				adminFooter += `<script type="text/javascript" src="${footerScripts[i].scriptSrc}"></script>\n`;
+			} else if (page === footerScripts[i].scriptPage) {
+				adminFooter += `<script type="text/javascript" src="${footerScripts[i].scriptSrc}"></script>\n`;
+			}
+		}
+
+		return adminFooter;
 	};
 
 	content.gjHead = () => {

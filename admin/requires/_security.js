@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const hat = require('hat');
 module.exports = (CMS, APP) => {
 
 	let security = {};
@@ -44,8 +45,41 @@ module.exports = (CMS, APP) => {
 	}
 
 	security.setSecurityMessage = (title, message, type, tag) => {
-		CMS._messaging.generateSystemAlert({title, message, type, tag});
+		CMS._messaging.generateSystemAlert({title, message, type, tag, browserLog: true});
 	};
+
+	security.forceSSL = (setting) => {
+		if (typeof setting === 'undefined') {
+			return true;
+		} else {
+			return setting;
+		}
+	};
+
+	security.forceApiSSL = (setting) => {
+		if (typeof setting === 'undefined') {
+			return true;
+		} else {
+			return setting;
+		}
+	};
+
+	security.redirectToSecure = (url) => {
+		if (!/https/.test(CMS.req.protocol)) {
+			console.log(CMS.req.get('host'));
+			console.log('redirect');
+			return {
+				redirect: true,
+				redirectTo: `https://${CMS.req.get('host')}${url}`
+			}
+		}
+
+		return false;
+	}
+
+	security.createApiKey = () => {
+
+	}
 
 	return security;
 }

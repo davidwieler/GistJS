@@ -4,30 +4,21 @@ const Events = require('../events.js');
 const Utils = require('../utils.js');
 module.exports = (CMS) => {
 
-	var categories = {};
+	var tags = {};
 
-	categories.createCategory = (data, done) => {
-
-		CMS.getCategories((err, result) => {
-
+	tags.createTag = (data, done) => {
+		CMS.getTags((err, result) => {
 			const db = CMS.dbData;
 			const collection = CMS.dbConn.data.collection;
-			const query = {contentType: 'categoryList'};
+			const query = {contentType: 'tagList'};
 
-			let categoryList;
+			let tagList;
 
 			if (result === 0) {
-				if (typeof data.slug === 'object') {
-					categoryList = {
-						slug: Utils().arrayUnique(data.slug),
-						name: Utils().arrayUnique(data.name)
-					};
-				} else {
-					categoryList = {
-						slug: [data.slug],
-						name: [data.name]
-					};
-				}
+				categoryList = {
+					slug: [data.slug],
+					name: [data.name]
+				};
 			} else {
 				const slugs = result.slug;
 				const names = result.name;
@@ -37,40 +28,40 @@ module.exports = (CMS) => {
 				const sulgsConcat = Utils().arrayUnique(slugs.concat(newSlugs));
 				const namesConcat = Utils().arrayUnique(names.concat(newNames));
 
-				categoryList = {
+				tagList = {
 					slug: sulgsConcat,
 					name: namesConcat
 				}
 			}
 
 			const updateData = {
-				categories: categoryList,
-				contentType: 'categoryList'
+				categories: tagList,
+				contentType: 'tagList'
 			}
 
-			CMS.dbUpsert(db, collection, query, updateData, (err, result) => {
+			CMS.dbUpdate(db, collection, query, updateData, (err, result) => {
 				if (err) {
 					done(err);
 				}
 
 				done(err, result);
 			});
-
 		});
 	}
 
-	categories.getCategories = (done) => {
+	tags.getTags = (done) => {
 		const db = CMS.dbData;
 		const collection = CMS.dbConn.data.collection;
 
-		let query = {contentType: 'categoryList'};
+		let query = {contentType: 'tagList'};
 
 		CMS.dbFind(db, collection, query)
 		.then((result) => {
 			if (result.length === 0) {
 				done(null, 0);
 			} else {
-				done(null, result[0].categories);
+				console.log(result[0].tags);
+				done(null, result[0].tags);
 			}
 		})
 		.catch((e) => {
@@ -78,6 +69,6 @@ module.exports = (CMS) => {
 		});
 	}
 
-	return categories;
+	return tags;
 
 }

@@ -14,36 +14,25 @@
 	<link href="/gistjs-assets/css/components.css" rel="stylesheet" type="text/css">
 	<link href="/gistjs-assets/css/colors.css" rel="stylesheet" type="text/css">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/css/bootstrap-select.min.css">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css" rel="stylesheet" />
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 	<!-- /global stylesheets -->
 
 	<!-- Core JS files -->
 	<script>
-		const postMeta = '<%- JSON.stringify(postData.postMeta); %>';
 		const adminLocation = '<%- adminLocation%>';
 		const siteUrl = '<%- cmsInfo.url%>';
 		const postId = '<%- postData._id%>';
 		const autoSaveTimer = '<%- cmsInfo.autoSaveTimer%>';
 		const coreVersion = '<%- cmsInfo.coreVersion%>';
 		const pushEnabled = '<%- cmsInfo.pushEnabled %>';
-		const pushServicePublicKey = '<%- cms.config.vapidPublicKey%>';
+		const pushServicePublicKey = '<%- cmsInfo.vapidPublicKey%>';
 		let subscriptionStatus = '';
 	</script>
 	<!-- /core JS files -->
 
 	<!-- Plugin CSS & JS files -->
-<%
-	for (var i = 0; i < cms.adminScripts.length; i++) {
-
-		if (!cms.adminScripts[i].scriptPage) {
-			%><script type="text/javascript" src="<%- cms.adminScripts[i].scriptSrc;%>"></script><%
-		} else if (page === cms.adminScripts[i].scriptPage) {
-			%><script type="text/javascript" src="<%- cms.adminScripts[i].scriptSrc;%>"></script><%
-		}
-
-
-	}
-%>
+	<%- gjHead;%>
 <%
 	/*
 	for (var i = plugins.length - 1; i >= 0; i--) {
@@ -80,7 +69,7 @@
 		<div class="navbar-collapse collapse" id="navbar-mobile">
 			<ul class="nav navbar-nav">
 				<li><a class="sidebar-control sidebar-main-toggle hidden-xs"><i class="icon-paragraph-justify3"></i></a></li>
-				<% if (cms.currentUser.caps['updateCore'] === true) { %>
+				<% if (currentUser.caps['updateCore'] === true) { %>
 				<li class="dropdown">
 					<p class="navbar-text"><span class="label bg-success-400">Updates (2)</span></p>
 					<a href="#" class="dropdown-toggle" data-toggle="dropdown">
@@ -257,12 +246,12 @@
 					</a>
 
 					<ul class="dropdown-menu dropdown-menu-right">
-						<li><a href="/<%- CMS.adminLocation%>/user/edit/<%- cms.currentUser._id;%>"><i class="icon-user-plus"></i> My profile</a></li>
+						<li><a href="/<%- adminLocation%>/user/edit/<%- currentUser._id;%>"><i class="icon-user-plus"></i> My profile</a></li>
 						<li><a href="#"><i class="icon-coins"></i> My balance</a></li>
 						<li><a href="#"><span class="badge bg-teal-400 pull-right">58</span> <i class="icon-comment-discussion"></i> Messages</a></li>
 						<li class="divider"></li>
-						<li><a href="#"><i class="icon-cog5"></i> Account settings</a></li>
-						<li><a href="/<%- CMS.adminLocation%>/logout"><i class="icon-switch2"></i> Logout</a></li>
+						<li><a href="/<%- adminLocation;%>/user/edit/<%- currentUser.id;%>"><i class="icon-cog5"></i> My profile</a></li>
+						<li><a href="/<%- adminLocation%>/logout"><i class="icon-switch2"></i> Logout</a></li>
 					</ul>
 				</li>
 			</ul>

@@ -68,16 +68,21 @@ module.exports = (CMS) => {
 		});
 	};
 
-	attachments.getAttachment = (attachmentId, done) => {
+	attachments.getAttachmentById = (attachmentId, done) => {
 		const db = CMS.dbData;
 		const collection = CMS.dbConn.data.collection;
 
-		db[collection].findOne({'_id':ObjectId(attachmentId), contentType: 'attachment'}, (err, post) => {
+		db[collection].findOne({'_id':ObjectId(attachmentId), contentType: 'attachment'}, (err, attachment) => {
 			if (err) {
 				done(err);
 			}
 
-			done(null, post);
+			if (attachment === null) {
+				done('attachment not found');
+				return;
+			}
+
+			done(null, attachment);
 		});
 	};
 

@@ -192,7 +192,57 @@
 										</div>
 									</div>
 								<% } %>
+
+								<% if (currentUser.caps.issueKeys) { %>
+									<legend class="text-bold">API Keys</legend>
+									<div class="form-group has-feedback">
+										<label class="control-label col-lg-2">Issue/Revoke API keys</label>
+										<div class="col-lg-6">
+											<input type="text" class="form-control" value="<%- data.users[0].apiKey%>" name="apiKey" readonly>
+											<span class="help-block">API key</span>
+										</div>
+										<div class="col-md-3">
+											<button class="btn btn-info generateApiKey">Generate</button>
+											<button class="btn btn-warning revokeApiKey">Revoke</button>
+										</div>
+									</div>
+								<% } %>
+
+								<% if (currentUser.caps.editUserPermissions) { %>
+									<legend class="text-bold">Permissions</legend>
+									<div class="form-group has-feedback">
+										<label class="control-label col-lg-2">Edit user permissions </label>
+										<div class="col-lg-10">
+											<div class="row">
+											<%
+												var userCaps = data.users[0].permissions;
+												for (var i in userCaps) {
+													if (userCaps.hasOwnProperty(i)) {
+														var setting = i;
+														var status = userCaps[i]
+														if (status) {
+															var checked = 'checked';
+														} else {
+															var checked = '';
+														}
+													%>
+													<div class="col-xs-2 col-sm-4 col-md-3">
+														<label class="checkbox-inline">
+															<div class="checker"><span class="<%- checked; %>"><input type="checkbox" class="styled" checked="<%- checked; %>"></span></div>
+															<%- setting;%>
+														</label>
+													</div>
+													<%
+													}
+												}
+											%>
+											</div>
+										</div>
+									</div>
+								<% } %>
+
 								<% if (data.users[0]._id == data.userId && cmsInfo.pushEnabled === true) { %>
+									<legend class="text-bold">Push Notifications</legend>
 
 									<%
 										if (data.users[0].pushSubscription && data.users[0].pushSubscription.endpoint) {
