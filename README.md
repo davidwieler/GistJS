@@ -1,5 +1,8 @@
 # Gist JS
 
+
+[![Build Status](https://travis-ci.org/davidwieler/segments-cms.svg?branch=master)](https://travis-ci.org/davidwieler/segments-cms)
+
 ### Requirements
 * NodeJS 4.4+ . **Works best on NodeJS 7.6.**
 * Express 4 framework
