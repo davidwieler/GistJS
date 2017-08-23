@@ -16,19 +16,27 @@ Clone/download this repo into your `node_modules` folder, `cd` into the director
 
 ### Working server.js file.
 ```
-var express = require('express');
-var path = require('path');
-var cms = require('gist-js');
-var app = express();
-var port = 3000;
+const express = require('express');
+const path = require('path');
+const cms = require('gist-js');
+const app = express();
+const port = 3000;
 
-var cmsSettings = {
+const cmsSettings = {
     themeDir: path.join(__dirname + '/themes'),
     pluginDir: path.join(__dirname + '/plugins'),
     uploadDir: path.join(__dirname + '/uploads'),
+	forceSSL: false,
+	forceApiSSL: false
 }
 
 app.use('/', cms(cmsSettings, app));
+
+// Handle system error 500's
+app.use(function(error, req, res, next) {
+    //spry.track('Server Logs', {'error': {httpstatuscode: '500', stackTrace: error.stack}})
+    res.status(500).send('<h1>ERROR 500:</h1>Error loading services<br />'+error+'<br />'+error.stack);
+});
 
 app.listen(port);
 
