@@ -34,7 +34,6 @@ app.use('/', cms(cmsSettings, app));
 
 // Handle system error 500's
 app.use(function(error, req, res, next) {
-    //spry.track('Server Logs', {'error': {httpstatuscode: '500', stackTrace: error.stack}})
     res.status(500).send('<h1>ERROR 500:</h1>Error loading services<br />'+error+'<br />'+error.stack);
 });
 
