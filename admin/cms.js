@@ -54,6 +54,10 @@ const async = require('async');
 				header: [],
 				footer: []
 			};
+			CMS.adminStylesheets = {
+				header: [],
+				footer: []
+			};
 			CMS.forceSSL = CMS._security.forceSSL(settings.forceSSL);
 			CMS.forceApiSSL = CMS._security.forceApiSSL(settings.forceApiSSL);
 			CMS.apiAuthType = 'apikey';
@@ -192,10 +196,12 @@ const async = require('async');
 			// -- Categories --
 			CMS.createCategory = Promise.promisify( CMS._categories.createCategory );
 			CMS.getCategories = Promise.promisify( CMS._categories.getCategories );
+			CMS.deleteCategories = Promise.promisify( CMS._categories.deleteCategories );
 
 			// -- Tags --
 			CMS.createTag = Promise.promisify( CMS._tags.createTag );
 			CMS.getTags = Promise.promisify( CMS._tags.getTags );
+			CMS.deleteTags = Promise.promisify( CMS._tags.deleteTags );
 
 			// -- Users --
 			CMS.getUsers = Promise.promisify( CMS._users.getUsers );
@@ -234,6 +240,11 @@ const async = require('async');
 
 			// Initialize the included functions and content
 			CMS._initialFunctions.init();
+
+			////// TESTING FUNCTIONS/////
+
+			//CMS._categories.createCategory({name: 'D@*AS AS '})
+			////////////////////////////
 
 			CMS.rolesAndCaps.initRoles();
 			CMS.enableUserRegistration = () => {
@@ -302,12 +313,19 @@ const async = require('async');
 
 		doHook: (location, done) => {
 			const doTheseHooks = CMS.hooks[location];
+			const doAllHooks = CMS.hooks['all'];
 			let returns = {};
 			let promises = [];
 
 			for(var h in doTheseHooks){
 				if (doTheseHooks.hasOwnProperty(h)){
 					promises.push({slug: APP.textToSlug(h), func: doTheseHooks[h]});
+				}
+			}
+
+			for(var h in doAllHooks){
+				if (doAllHooks.hasOwnProperty(h)){
+					promises.push({slug: APP.textToSlug(h), func: doAllHooks[h]});
 				}
 			}
 

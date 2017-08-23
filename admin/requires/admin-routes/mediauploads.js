@@ -39,7 +39,13 @@ module.exports = (CMS, APP) => {
 				}
 
 				CMS.getAttachments(findAttachments, (err, result) => {
-					CMS.renderAdminTemplate('media', {attachments: result, limit: findAttachments.limit, msg: msg});
+					const templateData = {
+						data : {
+							attachments: result, limit: findAttachments.limit
+						},
+						msg: msg
+					}
+					CMS.renderAdminTemplate('media', templateData);
 				});
 			}
 		});

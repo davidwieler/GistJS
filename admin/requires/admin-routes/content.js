@@ -25,9 +25,9 @@ module.exports = (CMS, APP) => {
 			function: (req, res, next) => {
 				let msg = req.query.msg;
 				if (typeof msg !== 'undefined') {
-					CMS.renderAdminTemplate('edit', req.params, msg);
+					CMS.renderAdminTemplate('edit', {data: req.params.id, msg});
 				} else {
-					CMS.renderAdminTemplate('edit', req.params);
+					CMS.renderAdminTemplate('edit', {id: req.params.id, msg});
 				}
 			}
 		});
@@ -95,7 +95,7 @@ module.exports = (CMS, APP) => {
 			url: `${CMS.adminLocation}/categories`,
 			auth: true,
 			function: (req, res, next) => {
-				CMS.renderAdminTemplate('category-tag', 'categories');
+				CMS.renderAdminTemplate('category-tag', {data: 'categories'});
 			}
 		});
 
@@ -111,11 +111,34 @@ module.exports = (CMS, APP) => {
 		});
 
 		CMS.createRoute({
+			type: 'post',
+			url: `${CMS.adminLocation}/categories/delete`,
+			auth: true,
+			function: (req, res, next) => {
+				CMS.deleteCategories(req.body).then((result) => {
+					CMS.sendResponse(res, 200, 'done')
+				})
+			}
+		});
+
+		CMS.createRoute({
 			type: 'get',
 			url: `${CMS.adminLocation}/tags`,
 			auth: true,
 			function: (req, res, next) => {
-				CMS.renderAdminTemplate('category-tag', 'tags');
+				CMS.renderAdminTemplate('category-tag', {data: 'tags'});
+			}
+		});
+
+		CMS.createRoute({
+			type: 'post',
+			url: `${CMS.adminLocation}/tags/delete`,
+			auth: true,
+			function: (req, res, next) => {
+				console.log(req.body);
+				CMS.deleteTags(req.body).then((result) => {
+					CMS.sendResponse(res, 200, 'done')
+				})
 			}
 		});
 

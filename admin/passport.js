@@ -132,7 +132,6 @@ module.exports = function(passport, CMS) {
 	        passReqToCallback : true // allows us to pass back the entire request to the callback
 	    },
 	    function(req, username, password, done) { // callback with email and password from our form
-
 	        // find a user whose email is the same as the forms email
 	        // we are checking to see if the user trying to login already exists
 
@@ -141,18 +140,16 @@ module.exports = function(passport, CMS) {
 			CMS.dbFindOne(dbConn, collection, search)
 			.then((user) => {
 
-				console.log(user);
-
 	            // if no user is found, return the message
 	            if (!user || user === null){
-                    return done(null, false, 'Username or Password is incorrect'); // req.flash is the way to set flashdata using connect-flash
+                    return done(null, false, {message: 'invalid-login'}); // req.flash is the way to set flashdata using connect-flash
                 }
                 if(typeof user.pass === 'undefined'){
-                    return done(null, false, 'Please reset your password.'); // req.flash is the way to set flashdata using connect-flash
+                    return done(null, false, {message: 'reset-password'}); // req.flash is the way to set flashdata using connect-flash
                 }
 	            // if the user is found but the password is wrong
 	            if (!validPassword(password, user.pass)){
-                    return done(null, false, 'Username or Password is incorrect'); // create the loginMessage and save it to session as flashdata
+                    return done(null, false, {message: 'invalid-login'}); // create the loginMessage and save it to session as flashdata
                 }
 	            // all is well, return successful user
 	            return done(null, user);

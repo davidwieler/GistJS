@@ -37,6 +37,7 @@ module.exports = (CMS, APP) => {
 			auth: false,
 			function: (req, res, next) => {
 				req.session.destroy(function() {
+					req.logout();
 				    res.clearCookie(global.cms.cookieName);
 				    res.redirect('/' + CMS.adminLocation + '/login');
 				});
@@ -49,7 +50,14 @@ module.exports = (CMS, APP) => {
 			auth: false,
 			function: (req, res, next) => {
 				res.clearCookie(global.cms.cookieName);
-				CMS.renderAdminTemplate('login', { message: ''});
+
+				if (req.query) {
+					CMS.renderAdminTemplate('login', { msg: req.query.msg});
+				} else {
+					CMS.renderAdminTemplate('login');
+				}
+
+
 			}
 		});
 
@@ -64,7 +72,7 @@ module.exports = (CMS, APP) => {
 					}
 
 					if (!user) {
-						CMS.renderAdminTemplate('login', {message: info});
+						CMS.renderAdminTemplate('login', {msg: info.message});
 						return;
 					}
 

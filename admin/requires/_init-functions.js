@@ -10,8 +10,21 @@ module.exports = (CMS, APP) => {
 
 	let initFunctions = {};
 
+	initFunctions.adminStyles = () => {
+
+		CMS._utilities.addAdminStylesheet({name: 'bootstrap', src: 'bootstrap.css', type: 'core'})
+		CMS._utilities.addAdminStylesheet({name: 'icomoon', src: 'icons/icomoon/styles.css', type: 'core'})
+		CMS._utilities.addAdminStylesheet({name: 'icomoon', src: 'core.css', type: 'core'})
+		CMS._utilities.addAdminStylesheet({name: 'icomoon', src: 'components.css', type: 'core'})
+		CMS._utilities.addAdminStylesheet({name: 'icomoon', src: 'colors.css', type: 'core'})
+		CMS._utilities.addAdminStylesheet({name: 'bootstrap-select', src: 'https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/css/bootstrap-select.min.css'})
+		CMS._utilities.addAdminStylesheet({name: 'select2', src: 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css'})
+		CMS._utilities.addAdminStylesheet({name: 'font-awesome', src: 'https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css'})
+		CMS._utilities.addAdminStylesheet({name: 'roboto-font', src: 'https://fonts.googleapis.com/css?family=Roboto:400,300,100,500,700,900'})
+
+	};
+
 	initFunctions.adminScripts = () => {
-		// Footer scripts
 		CMS._utilities.addAdminScript({name: 'jquery', src: 'core/libraries/jquery.min.js', type: 'core', location: 'header'})
 		CMS._utilities.addAdminScript({name: 'wysihtml', src: 'core/libraries/wysihtml.min.js', type: 'core', page: 'edit', location: 'header'})
 		CMS._utilities.addAdminScript({name: 'wysihtml-toolbar', src: 'core/libraries/wysihtml-toolbar.min.js', type: 'core', page: 'edit', location: 'header'})
@@ -52,7 +65,36 @@ module.exports = (CMS, APP) => {
 	initFunctions.init = () => {
 		adminRoutes(CMS, APP).init();
 		initFunctions.systemCrons();
+		initFunctions.adminStyles();
 		initFunctions.adminScripts();
+
+		CMS.addHook('displayAllSystemMessages', 'all', 1, (done) => {
+			CMS.getPosts({search: {contentType: 'systemMessages'}})
+			.then((messages) => {
+				const systemMessages = messages.posts;
+				for (var i = 0; i < systemMessages.length; i++) {
+					CMS._messaging.generateSystemAlert({
+						title: systemMessages[i].msgDetails.title,
+						message: systemMessages[i].msgDetails.message,
+						type: systemMessages[i].msgDetails.type,
+						tag: systemMessages[i].msgDetails.tag
+					});
+
+					if (systemMessages[i].msgDetails.showOnce) {
+						const db = CMS.dbData;
+						const collection = CMS.dbConn.data.collection;
+
+						const search = {'msgDetails.tag': systemMessages[i].msgDetails.tag}
+
+						CMS.dbDelete(db, collection, search).
+						catch((e) => {
+							console.log(e);
+						})
+					}
+				}
+				done(true);
+			})
+		});
 
 		const metaData = {
 			heading: 'Test Header',
@@ -151,7 +193,6 @@ module.exports = (CMS, APP) => {
 		const latestPostsWidget = {
 			name: 'Latest Posts',
 			function: (done) => {
-
 					CMS.getPosts({}).then((posts) => {
 						const post = posts.posts;
 						let returns = `
@@ -160,6 +201,7 @@ module.exports = (CMS, APP) => {
 									<thead>
 										<tr>
 											<th>Posts</th>
+											<th>Author</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -168,10 +210,12 @@ module.exports = (CMS, APP) => {
 
 						for (var i = 0; i < post.length; i++) {
 							const postTitle = post[i].postTitle;
+							const author = post[i].updatedUser || post[i].user;
 							const url = `/${CMS.adminLocation}/edit/${post[i]._id}`;
 							returns += `
 								<tr>
 									<td><a href="${url}">${postTitle}</a></td>
+									<td>${author}</td>
 								</tr>
 							`;
 						}

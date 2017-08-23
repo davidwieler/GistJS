@@ -17,6 +17,8 @@
 
 	}
 %>
+<% var confirmationModal = app.confirmationModal(postData); %>
+<%- confirmationModal %>
 	<!-- Page container -->
 	<div class="page-container">
 
@@ -93,19 +95,18 @@
 											<tr>
 												<th>Name</th>
 												<th>Slug</th>
-												<th>Posts</th>
+												<th>Options</th>
 											</tr>
 										</thead>
 										<tbody data-link="row" class="rowlink">
 											<%
 												if (categories !== 0) {
 													for (var i = 0; i < categories.slug.length; i++) {
-														console.log(categories.slug[i]);
 														%>
-															<tr>
+															<tr data-id="<%- categories.slug[i];%>">
 															<td><%- categories.name[i];%></td>
 															<td><%- categories.slug[i];%></td>
-															<td>0</td>
+															<td><button class="btn btn-info delete-<%- single;%>" data-<%- single;%>-slug="<%- categories.slug[i];%>">Delete</button></td>
 															</tr>
 														<%
 													}

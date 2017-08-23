@@ -17,7 +17,7 @@ module.exports = (CMS, APP) => {
 				auth: true,
 				networkAdmin: true,
 				function: (req, res, next) => {
-					CMS.renderAdminTemplate('settings', req.params);
+					CMS.renderAdminTemplate('settings');
 				}
 			});
 		}
@@ -27,7 +27,7 @@ module.exports = (CMS, APP) => {
 			url: `${CMS.adminLocation}/settings`,
 			auth: true,
 			function: (req, res, next) => {
-				CMS.renderAdminTemplate('settings', req.params);
+				CMS.renderAdminTemplate('settings');
 			}
 		});
 

@@ -68,8 +68,6 @@ module.exports = (CMS, APP) => {
 			url: `${CMS.adminLocation}/api`,
 			apiAuth: true,
 			function: (req, res, next) => {
-				console.log('test');
-				console.log(api.security());
 				if (!api.security().isSSL && api.security().forcedApiSSL) {
 					api.response(403, 'no SSL found');
 					return;

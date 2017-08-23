@@ -31,7 +31,7 @@
 	}
 	//
 %>
-<% var fileUploadModal = app.modal(postData); %>
+<% var fileUploadModal = app.fileUploadModal(postData); %>
 <%- fileUploadModal %>
 	<div class="modal fade links-modal" id="linksinsertmodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
 		<div class="modal-dialog" role="document">
@@ -288,13 +288,13 @@
 										<div class="form-group">
 											<label>Tags</label>
 											<%
-												if (typeof categoryList !== 'undefined') {
+												if (typeof tagList !== 'undefined') {
 											%>
 											<select class="form-control add-tag" multiple="multiple" title="Add a tag">
 												<option data-hidden="true"></option>
 													<%
-														var slugs = categoryList.slug;
-														var names = categoryList.name;
+														var slugs = tagList.slug;
+														var names = tagList.name;
 
 														if (typeof slugs === 'string') {
 															slugs = [slugs];

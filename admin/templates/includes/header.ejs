@@ -5,34 +5,22 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title><%- cmsInfo.name%></title>
-
-	<!-- Global stylesheets -->
-	<link href="https://fonts.googleapis.com/css?family=Roboto:400,300,100,500,700,900" rel="stylesheet" type="text/css">
-	<link href="/gistjs-assets/css/icons/icomoon/styles.css" rel="stylesheet" type="text/css">
-	<link href="/gistjs-assets/css/bootstrap.css" rel="stylesheet" type="text/css">
-	<link href="/gistjs-assets/css/core.css" rel="stylesheet" type="text/css">
-	<link href="/gistjs-assets/css/components.css" rel="stylesheet" type="text/css">
-	<link href="/gistjs-assets/css/colors.css" rel="stylesheet" type="text/css">
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/css/bootstrap-select.min.css">
-	<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css" rel="stylesheet" />
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-	<!-- /global stylesheets -->
-
-	<!-- Core JS files -->
+	<!-- Core JS Variables -->
 	<script>
 		const adminLocation = '<%- adminLocation%>';
 		const siteUrl = '<%- cmsInfo.url%>';
-		const postId = '<%- postData._id%>';
+		const postId = '<%- postData._id || null%>';
 		const autoSaveTimer = '<%- cmsInfo.autoSaveTimer%>';
 		const coreVersion = '<%- cmsInfo.coreVersion%>';
 		const pushEnabled = '<%- cmsInfo.pushEnabled %>';
 		const pushServicePublicKey = '<%- cmsInfo.vapidPublicKey%>';
 		let subscriptionStatus = '';
 	</script>
-	<!-- /core JS files -->
+	<!-- /core JS Variables -->
 
-	<!-- Plugin CSS & JS files -->
+	<!-- Gist Js Admin Head Files -->
 	<%- gjHead;%>
+	<!-- /gist Js Admin Head Files -->
 <%
 	/*
 	for (var i = plugins.length - 1; i >= 0; i--) {

@@ -74,17 +74,9 @@
 							<div class="icon-object border-slate-300 text-slate-300"><i class="icon-reading"></i></div>
 							<h5 class="content-group">Login to your account <small class="display-block">Enter your credentials below</small></h5>
 						</div>
-						<%
-							if (typeof data.message !== 'undefined') {
-								var message = data.message;
-								if (typeof data.message.message !== 'undefined') {
-									var message = data.message.message;
-								}
-								if (message.length >= 1) {
-									%><div class="alert alert-danger"><%= message %></div><%
-								}
-							}
-						%>
+						<% if (typeof alert !== 'undefined') { %>
+							<%- app.alert(alert);%>
+						<% } %>
 						<div class="form-group has-feedback has-feedback-left">
 							<input type="text" class="form-control" placeholder="Username or email" name="username" value="">
 							<div class="form-control-feedback">

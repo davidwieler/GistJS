@@ -9,14 +9,18 @@ module.exports = (CMS, APP) => {
 
 	let render = {};
 
-	render.renderAdminTemplate = (type, urlData, msg, status) => {
+	render.renderAdminTemplate = (template, templateData) => {
+
+		console.log(template);
+
+		if (!templateData) {
+			templateData = {}
+		}
 		let options = {
-        	filename: path.join(CMS.adminDir, 'templates', type + '.ejs')
+        	filename: path.join(CMS.adminDir, 'templates', template + '.ejs')
         };
 		let data = fs.readFileSync(options.filename, 'utf-8');
 		let rendered;
-		//console.log(CMS.hooks);
-		//CMS.doHook('edit')
 
         let render = {
 			navigation: CMS.navigation,
@@ -26,10 +30,10 @@ module.exports = (CMS, APP) => {
         	themes: CMS.themes,
         	templates: CMS.getTemplates(),
         	adminLocation: CMS.adminLocation,
-        	data: urlData,
+        	data: templateData.data || {},
         	app: APP,
-			page: type,
-        	msg: msg || '',
+			page: template,
+        	msg: templateData.msg || CMS.req.query.msg,
         	postData: {},
         	postRevisions: 0,
         	plugins: CMS.pluginDetails,
@@ -42,8 +46,8 @@ module.exports = (CMS, APP) => {
 			queryVarString: CMS.passToRender.queryVarString,
 			postTypeColumns: CMS.postTypeColumns || [],
 			systemMessages: CMS.systemMessages,
-			gjHead: CMS._content.gjAdminHead(type),
-			gjFoot: CMS._content.gjAdminFooter(type)
+			gjHead: CMS._content.gjAdminHead(template),
+			gjFoot: CMS._content.gjAdminFooter(template)
         };
 
 		// Update the site details if a network subdomain is active
@@ -51,12 +55,14 @@ module.exports = (CMS, APP) => {
 			render.cmsInfo = _.merge(render.cmsInfo, CMS.subdomainInfo)
 		}
 
-        if (typeof msg !== 'undefined') {
-        	render.alert = msg;
+        if (typeof render.msg !== 'undefined') {
+        	render.alert = render.msg;
         }
 
-		if (typeof status === 'undefined') {
+		if (typeof templateData.status === 'undefined') {
 			status = 200
+		} else {
+			status = templateData.status
 		}
 		/*
 		CMS._messaging.sendPush({
@@ -78,9 +84,10 @@ module.exports = (CMS, APP) => {
 			}
 		}
 
-		CMS.doHook(type).then((results) => {
+		CMS.doHook(template).then((results) => {
 			render.hookResults = results;
-			switch (type) {
+
+			switch (template) {
 				case 'category-tag' :
 
 					if (render.data === 'tags') {
@@ -100,11 +107,12 @@ module.exports = (CMS, APP) => {
 
 				break;
 	    		case 'edit' :
-			        if (typeof urlData !== 'undefined') {
-				    	const id = urlData.id.toString();
+			        if (typeof templateData.id !== 'undefined') {
+				    	const id = templateData.id.toString();
 
-						CMS.Promise.join(CMS.getPostById(id), CMS.getCategories(), CMS.getRevisions(id), (post, cats, revisions) => {
+						CMS.Promise.join(CMS.getPostById(id), CMS.getCategories(), CMS.getTags(), CMS.getRevisions(id), (post, cats, tags, revisions) => {
 							render.postData = post;
+							render.tagList = tags || undefined;
 							render.categoryList = cats || undefined;
 							render.postRevisions = revisions;
 							render.metaBoxes = CMS.renderMetaBox(post, {type: post.contentType});
@@ -223,7 +231,8 @@ module.exports = (CMS, APP) => {
         CMS.sendResponse(CMS.res, 200, rendered);
     };
 
-	render.renderPluginTemplate = (res, plugin, page, urlData, msg) => {
+	render.renderPluginTemplate = (res, plugin, template, urlData, msg) => {
+		console.log('renderPluginTemplate');
 		const plugins = CMS.activePlugins.admin;
 		const pluginRoot = `${CMS.adminDir}/templates/pluginroot.ejs`;
 
@@ -231,10 +240,11 @@ module.exports = (CMS, APP) => {
 			if (plugins[i].pluginInfo.path === plugin) {
 
 				let options = {
-					filename: path.join(plugins[i].pluginPath, `templates/${page}.ejs`)
+					filename: path.join(plugins[i].pluginPath, `templates/${template}.ejs`)
 				};
 
 				let render = {
+					navigation: CMS.navigation,
 					headerFile: `${CMS.adminDir}/templates/includes/header.ejs`,
 					pageHeaderFile: `${CMS.adminDir}/templates/includes/pageheader.ejs`,
 					navigationFile: `${CMS.adminDir}/templates/includes/navigation.ejs`,
@@ -258,7 +268,10 @@ module.exports = (CMS, APP) => {
 		        	passedToRender: CMS.passToRender,
 					statusTypes: CMS.statusTypes,
 					queryVars: CMS.passToRender.queryVars,
-					queryVarString: CMS.passToRender.queryVarString
+					queryVarString: CMS.passToRender.queryVarString,
+					systemMessages: CMS.systemMessages,
+					gjHead: CMS._content.gjAdminHead(template),
+					gjFoot: CMS._content.gjAdminFooter(template)
 		        };
 				const pluginData = fs.readFileSync(options.filename, 'utf-8');
 				const renderedPluginTemplate = ejs.render(pluginData, render, options);

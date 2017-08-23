@@ -1,13 +1,31 @@
 $(document).ready(function() {
 
-    $('.alert').on('closed.bs.alert', function () {
+    $('body').on('click', '.plugin-action', function(e) {
+        e.preventDefault();
+		var action = $(this).data('plugin-action');
+		var plugin = $(this).data('plugin-name');
+
+		$.post(`/${adminLocation}/plugin/action`, {action, plugin}, function() {
+			setTimeout(() => {
+			window.location.reload()
+			}, 1500);
+		})
+    });
+
+    $('.alert').on('closed.bs.alert', function() {
     	adminPost('/')
-    })
-    // category page
+    });
+
+    // category-tag page
     $('body').on('input change', '#category-tag input[name="category[][name]"]', function() {
         var value = $(this).val();
 		$('input[name="category[][slug]"').val(`${app.sanitizeTitle(value)}`);
     });
+
+	$('body').on('input change', '#category-tag input[name="tag[][name]"]', function() {
+		var value = $(this).val();
+		$('input[name="tag[][slug]"').val(`${app.sanitizeTitle(value)}`);
+	})
 
     // Auto save functions
     let timeoutId;
@@ -100,6 +118,52 @@ $(document).ready(function() {
            categoryNew($(this).val(), true)
         }
     });
+
+	$('body').on('click', '.delete-category', function() {
+		var categoryData = {
+			slug: $(this).data('categorySlug'),
+			removeFromPosts: true
+		}
+
+		$('.modal-title').text('Delete Category')
+		$('.modal-body').text('Are you sure you want to delete this Category?')
+		$('.confirm-modal').addClass('delete-category-confirm').data(categoryData)
+		var modal = $('#confirmationModal');
+		modal.modal('toggle');
+	});
+
+	$('body').on('click', '.delete-tag', function() {
+		var tagData = {
+			slug: $(this).data('tagSlug'),
+			removeFromPosts: true
+		}
+
+		$('.modal-title').text('Delete Tag')
+		$('.modal-body').text('Are you sure you want to delete this Tag?')
+		$('.confirm-modal').addClass('delete-tag-confirm').data(tagData)
+		var modal = $('#confirmationModal');
+		modal.modal('toggle');
+	});
+
+	$('body').on('click', '.confirm-modal.delete-category-confirm', function() {
+		var data = $(this).data();
+
+		adminPost(`/categories/delete`, data, function() {
+			$(`tr[data-id="${data.slug}"]`).remove();
+			var modal = $('#confirmationModal');
+			modal.modal('toggle');
+		});
+	})
+
+	$('body').on('click', '.confirm-modal.delete-tag-confirm', function() {
+		var data = $(this).data();
+
+		adminPost(`/tags/delete`, data, function() {
+			$(`tr[data-id="${data.slug}"]`).remove();
+			var modal = $('#confirmationModal');
+			modal.modal('toggle');
+		});
+	})
 
     $('body').on('input change', '.category-list-input', function(e) {
         $('.submit-new-category').prop('disabled', false);
@@ -253,7 +317,8 @@ $(document).ready(function() {
         $(this).addClass('btn-info');
     });
 
-    $('body').on('click', '.file-uploads', function() {
+    $('body').on('click', '.file-uploads', function(e) {
+		e.preventDefault();
         $('.file-details').empty();
         getAttachments(function(res) {
             appendAttachments(res);

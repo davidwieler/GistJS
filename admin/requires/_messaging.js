@@ -222,6 +222,17 @@ module.exports = (CMS, APP) => {
 			msgDetails.tag = timestamp
 		}
 
+		if (msgDetails.persistent) {
+			const msgData = {
+				msgDetails,
+				contentType: 'systemMessages'
+			}
+			const db = CMS.dbData;
+			const collection = CMS.dbConn.data.collection;
+
+			CMS.dbInsert(db, collection, msgData)
+		}
+
 		if (CMS.systemMessages.length > 0) {
 			const msgExists = Utils().arrayContainsByProp(CMS.systemMessages, 'tag', msgDetails.tag, true);
 			if (msgExists) {

@@ -29,140 +29,62 @@
 
 			<!-- Main content -->
 			<div class="content-wrapper">
-				<%
-					if (typeof msg !== 'undefined') {
-				%>
-					<div class="row">
-							<div class="alert alert-info">
-							<%
-								switch(msg){
-									case '1' :
-										%> <strong>User updated</strong> <%
-									break;
-								}
-							%>
+				<% if (typeof data.msg !== 'undefined') { %>
+					<%- app.alert(data.msg);%>
+				<% } %>
+				<!-- Single line -->
+				<div class="panel panel-white">
+					<div class="panel-heading">
+						<h6 class="panel-title">Plugins</h6>
 					</div>
-				<%
-					}
-				%>
 
-				<!-- Users wrap -->
-				<div class="row">
-					<!-- Single line -->
-					<div class="panel panel-white">
-						<div class="panel-heading">
-							<h6 class="panel-title">Users</h6>
-						</div>
+					<div class="table-responsive">
+						<table class="table table-inbox">
+							<thead>
+								<tr>
+									<th>Plugin</th>
+									<th>Description</th>
+								</tr>
+							</thead>
+							<tbody data-link="row" class="rowlink">
+								<%
+									for (var i = 0; i < plugins.length; i++) {
 
-						<div class="panel-toolbar panel-toolbar-inbox">
-							<div class="navbar navbar-default">
-								<ul class="nav navbar-nav visible-xs-block no-border">
-									<li>
-										<a class="text-center collapsed" data-toggle="collapse" data-target="#inbox-toolbar-toggle-single">
-											<i class="icon-circle-down2"></i>
-										</a>
-									</li>
-								</ul>
+										var name = plugins[i].pluginInfo.name;
+										var creator = plugins[i].pluginInfo.creator || 'unknown';
+										var url = plugins[i].pluginInfo.url || 'unknown';
+										var description = plugins[i].pluginInfo.description || 'n/a';
+										var version = plugins[i].pluginInfo.version || 'unknown';
+										var active = plugins[i].pluginInfo.active;
 
-								<div class="navbar-collapse collapse" id="inbox-toolbar-toggle-single">
-									<div class="btn-group navbar-btn">
-										<button type="button" class="btn btn-default btn-icon btn-checkbox-all">
-											<div class="checker"><span><input type="checkbox" class="styled"></span></div>
-										</button>
-
-										<button type="button" class="btn btn-default btn-icon dropdown-toggle" data-toggle="dropdown">
-											<span class="caret"></span>
-										</button>
-
-										<ul class="dropdown-menu">
-											<li><a href="#">Select all</a></li>
-											<li><a href="#">Select read</a></li>
-											<li><a href="#">Select unread</a></li>
-											<li class="divider"></li>
-											<li><a href="#">Clear selection</a></li>
-										</ul>
-									</div>
-
-									<div class="btn-group navbar-btn delete-post">
-										<button type="button" class="btn btn-default"><i class="icon-bin"></i> <span class="hidden-xs position-right">Delete</span></button>
-									</div>
-
-									<div class="navbar-right">
-
-
-										<div class="btn-group navbar-btn">
-											<form>
-												<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-													<i class="icon-cog3"></i>
-													<span class="caret"></span>
-												</button>
-												<ul class="dropdown-menu dropdown-menu-right">
-													<li><a>Post count <input class="form-control" type="text" name="limit" value="<%- data.limit%>"></a></li>
-												</ul>
-											</form>
-										</div>
-
-									</div>
-								</div>
-							</div>
-						</div>
-
-						<div class="table-responsive">
-							<table class="table table-inbox">
-								<thead>
-									<tr>
-										<th></th>
-										<th>Plugin</th>
-										<th>Description</th>
-									</tr>
-								</thead>
-								<tbody data-link="row" class="rowlink">
-									<%
-										for (var i = 0; i < plugins.length; i++) {
-
-											var name = plugins[i].pluginInfo.name;
-											var creator = plugins[i].pluginInfo.creator || 'unknown';
-											var url = plugins[i].pluginInfo.url || 'unknown';
-											var description = plugins[i].pluginInfo.description || 'n/a';
-											var version = plugins[i].pluginInfo.version || 'unknown';
-											var active = plugins[i].pluginInfo.active;
-
-											%>
-											<tr class="unread">
-												<td class="table-inbox-checkbox rowlink-skip" width="25px">
-													<div class="checker"><span><input type="checkbox" class="styled" value="<%-name%>"></span></div>
-												</td>
-												<td class="table-inbox-message">
-													<a href="/<%-adminLocation%>/user/edit/<%-name%>"><strong><%- name%></strong></a>
-												</td>
-												<td class="table-inbox-name">
-													<a href="#">
-														<div class="letter-icon-title text-default"><%- description%></div>
-													</a>
-													<br />
-													<strong>Version:</strong> <%- version%> | <strong>By:</strong> <%- creator%> | <a href="<%- url%>" target="_blank"><%- url%></a>
-													<br />
-													<% if (active === true) { %>
-														<a href="/<%-adminLocation%>/plugin/disable/<%-name%>">Disable</a>
-													<% } else { %>
-														<a href="/<%-adminLocation%>/plugin/enable/<%-name%>">Enable</a>
-													<% } %>
-													| <a href="/<%-adminLocation%>/plugin/delete/<%-name%>">Delete</a>
-												</td>
-											</tr>
-											<%
-										}
-									%>
-								</tbody>
-							</table>
-						</div>
+										%>
+										<tr class="unread">
+											<td class="table-inbox-message">
+												<a href="/<%-adminLocation%>/user/edit/<%-name%>"><strong><%- name%></strong></a>
+											</td>
+											<td class="table-inbox-name">
+												<a href="#">
+													<div class="letter-icon-title text-default"><%- description%></div>
+												</a>
+												<br />
+												<strong>Version:</strong> <%- version%> | <strong>By:</strong> <%- creator%> | <a href="<%- url%>" target="_blank"><%- url%></a>
+												<br />
+												<% if (active === true) { %>
+													<a class="plugin-action" data-plugin-action="disable-plugin" data-plugin-name="<%-name%>" href="/<%-adminLocation%>/plugin/disable/<%-name%>">Disable</a>
+												<% } else { %>
+													<a class="plugin-action" data-plugin-action="enable-plugin" data-plugin-name="<%-name%>" href="/<%-adminLocation%>/plugin/enable/<%-name%>">Enable</a>
+												<% } %>
+												| <a class="plugin-action" data-plugin-action="delete-plugin" data-plugin-name="<%-name%>" href="/<%-adminLocation%>/plugin/delete/<%-name%>">Delete</a>
+											</td>
+										</tr>
+										<%
+									}
+								%>
+							</tbody>
+						</table>
 					</div>
-					<!-- /single line -->
 				</div>
-				<!-- /users wrap -->
-
-			</div>
-
+				<!-- /single line -->
 			</div>
 			<!-- /main content -->
 

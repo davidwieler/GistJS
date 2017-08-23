@@ -116,11 +116,14 @@ let self = module.exports = (mongojs, settings) => {
 	};
 
 	db.delete = (db, collection, search, done) => {
-		if (err) {
-			done(err);
-		}
 
-		done(null, result);
+		db[collection].remove(search, function(err, results) {
+			if (err){
+				done(err);
+			}
+
+			done(null, results);
+		});
 	};
 
 	return db;

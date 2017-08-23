@@ -28,7 +28,7 @@ module.exports = (CMS) => {
 
 		if (data.category) {
 			CMS.createCategory(data.category[0]);
-			data.category = data.category[0];
+			data.category = CMS._categories.shapeCategories(data.category[0]);
 		}
 
 		CMS.dbInsert(db, collection, data)
@@ -64,7 +64,7 @@ module.exports = (CMS) => {
 
 		if (data.category) {
 			CMS.createCategory(data.category[0]);
-			data.category = data.category[0];
+			data.category = CMS._categories.shapeCategories(data.category[0]);
 		} else {
 			data.category = {};
 		}
@@ -334,7 +334,16 @@ module.exports = (CMS) => {
 				}
 
 				CMS.getPosts(findPosts, (err, result) => {
-					CMS.renderAdminTemplate('post-type-list', {posts: result, limit: findPosts.limit, msg: msg, postTypeData: postTypeData});
+					const templateData = {
+						data: {
+							posts: result,
+							limit: findPosts.limit,
+							postTypeData
+						},
+						msg: msg
+					}
+
+					CMS.renderAdminTemplate('post-type-list', templateData);
 				});
 
 			}
@@ -352,6 +361,19 @@ module.exports = (CMS) => {
 
 	content.gjAdminHead = (page) => {
 		let adminHeader = '';
+
+		// Stylesheets
+		const headerStylesheets = CMS.adminStylesheets.header;
+
+		for (var i = 0; i < headerStylesheets.length; i++) {
+			if (!headerStylesheets[i].scriptPage) {
+				adminHeader += `<link href="${headerStylesheets[i].styleSrc}" rel="stylesheet" type="text/css">\n`;
+			} else if (page === headerStylesheets[i].scriptPage) {
+				adminHeader += `<link href="${headerStylesheets[i].styleSrc}" rel="stylesheet" type="text/css">\n`;
+			}
+		}
+
+		// Scripts
 		const headerScripts = CMS.adminScripts.header;
 
 		for (var i = 0; i < headerScripts.length; i++) {

@@ -1,9 +1,6 @@
 const adminPost = function(postTo, data, callback) {
 	postTo = `/${adminLocation}${postTo}`
 
-	data.loggedIn = true;
-
-
 	var xhr = $.post(postTo, data )
 			.done(function(data) {
 				if(typeof callback == 'function') {
@@ -12,7 +9,7 @@ const adminPost = function(postTo, data, callback) {
 			});
 	xhr.fail(function(xhr, textStatus, error) {
 		if(xhr.statusText == 'Unauthorized'){
-			window.location.href = `/${adminLocation}/login`;
+			window.location.href = `/${adminLocation}/login?msg=notauthorizedapi`;
 			return
 		} else {
 			callback(xhr.responseText)

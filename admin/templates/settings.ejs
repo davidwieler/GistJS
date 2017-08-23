@@ -29,8 +29,8 @@
 
 			<!-- Main content -->
 			<div class="content-wrapper">
-				<% if (typeof data.msg !== 'undefined') { %>
-					<%- app.alert(data.msg);%>
+				<% if (typeof alert !== 'undefined') { %>
+					<%- app.alert(alert);%>
 				<% } %>
 
 				<!-- Single line -->

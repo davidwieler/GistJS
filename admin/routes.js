@@ -161,6 +161,8 @@ module.exports = (CMS, router, passport, settings) => {
 		}
 	});
 
+	// If not routes are found at all, send the user to the Error 404 template.
+	// (templates/error.ejs)
 	router.get(`/${CMS.adminLocation}/*`, CMS._utilities.isLoggedIn, (req, res) => {
 		let msg = req.query.msg;
 		CMS.errorHandler({type: 'pagenotfound'}, res);

@@ -1,6 +1,7 @@
 <% include includes/header %>
 
 <% include includes/pageheader %>
+
 <%
 	var posts = data.posts;
 	var location = `/${adminLocation}/${data.postTypeData.url}`;
@@ -83,8 +84,8 @@
 
 			<!-- Main content -->
 			<div class="content-wrapper">
-				<% if (typeof data.msg !== 'undefined') { %>
-					<%- app.alert(data.msg);%>
+				<% if (typeof alert !== 'undefined') { %>
+					<%- app.alert(alert);%>
 				<% } %>
 				<!-- Single line -->
 				<div class="panel panel-white">
@@ -100,9 +101,6 @@
 							</div>
 							<div class="col-md-3">
 								<form>
-									<%
-										console.log(queryVars);
-									%>
 									<div class="form-group">
 										<div class="col-lg-12">
 											<div class="input-group">

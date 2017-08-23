@@ -1,6 +1,8 @@
 (function(exports){
 
 	exports.alert = function(msg, type) {
+
+		// TODO: add a method to adjust these alerts, and their messages
 		let className;
 		let text;
 
@@ -77,6 +79,22 @@
 			case '6' :
 				className = 'alert-warning';
 				text = '<strong>Post not found</strong>';
+			break;
+			case 'invalid-login' :
+				className = 'alert-warning';
+				text = '<strong>Username or Password is incorrect</strong>';
+			break;
+			case 'reset-password' :
+				className = 'alert-warning';
+				text = '<strong>Please Reset your Password</strong>';
+			break;
+			case 'notauthorizedapi' :
+				className = 'alert-warning';
+				text = '<strong>API Request not authorized. Please log in and confirm your API key</strong>';
+			break;
+			case 'Missing credentials' :
+				className = 'alert-warning';
+				text = '<strong>Missing Credentials</strong>';
 			break;
 			case '93' :
 				className = 'alert-info';
@@ -577,7 +595,28 @@
 		`;
 	};
 
-	exports.modal = function(post) {
+	exports.confirmationModal = function() {
+		return `
+			<div class="modal fade delete-category-tag-modal" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel">
+		        <div class="modal-dialog" role="document">
+		            <div class="modal-content">
+		                <div class="modal-header bg-primary">
+		                    <button type="button" class="close" data-dismiss="modal">×</button>
+		                    <h6 class="modal-title"></h6>
+		                </div>
+		                <div class="modal-body">
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-link" data-dismiss="modal">No thanks</button>
+							<button type="button" class="btn btn-danger confirm-modal">Delete</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		`;
+	};
+
+	exports.fileUploadModal = function(post) {
         return `
 		<div class="modal fade uploads-modal" id="fileuploadsmodal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel">
 	        <div class="modal-dialog modal-full drag-drop" role="document">

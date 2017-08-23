@@ -202,9 +202,8 @@ module.exports = (CMS, APP) => {
 	};
 
 	utilities.authApi = (req, res, next) => {
-
-		if (req.body.loggedIn) {
-			if (!req.isAuthenticated()) {
+		if (req.user.apiKey) {
+			if (req.isAuthenticated()) {
 				next();
 				return;
 			} else {
@@ -214,7 +213,6 @@ module.exports = (CMS, APP) => {
 		} else {
 			if (CMS.apiAuthType === 'apikey') {
 				const apiKey = req.body.apiKey;
-
 
 				if (_.isEmpty(apiKey)) {
 					// Check if the API key being sent is missing, or an empty string
@@ -378,19 +376,20 @@ module.exports = (CMS, APP) => {
 	};
 
 	utilities.errorHandler = (error, res) => {
+		console.log(error.type);
 		switch (error.type) {
 			case 'postnotfound':
-				CMS.renderAdminTemplate('error', {type: 'postnotfound'});
+				CMS.renderAdminTemplate('error', {data: {type: 'postnotfound'}, status: 404});
 				return;
 			break;
 
 			case 'pagenotfound':
-				CMS.renderAdminTemplate('error', {type: 'pagenotfound'}, undefined, 404);
+				CMS.renderAdminTemplate('error', {data: {type: 'pagenotfound'}, status: 404});
 				return;
 			break;
 
 			case 'invalidtemplatejson' :
-				CMS.renderAdminTemplate('error', {type: 'invalidtemplatejson'}, undefined, 404);
+				CMS.renderAdminTemplate('error', {data: {type: 'invalidtemplatejson'}, status: 406});
 				return;
 			break;
 		};
@@ -559,6 +558,44 @@ module.exports = (CMS, APP) => {
 
 	};
 
+	utilities.addAdminStylesheet = (styleObj) => {
+		if (!utilities.isUrlAbsolute(styleObj.src)) {
+			let path = '';
+			if (styleObj.type === 'theme') {
+				path = '/themes'
+			}
+
+			if (styleObj.type === 'plugin') {
+				path = '/plugins'
+			}
+
+			if (styleObj.type === 'core') {
+				path = '/gistjs-assets/css'
+			}
+
+			styleObj.src = `${path}${APP.sanitizeUrl(styleObj.src)}`
+		}
+
+		let style = {
+			styleName: styleObj.name,
+			styleSrc: styleObj.src,
+			stylePage: styleObj.page || false,
+			location: styleObj.location || 'header'
+		}
+
+		if (typeof styleObj.location !== 'undefined') {
+			style.location = styleObj.location
+			CMS.adminStylesheets[styleObj.location].push(style);
+		} else {
+			CMS.adminStylesheets.header.push(style);
+		}
+
+	};
+
+	utilities.removeAdminStylesheet = (name, src, deps, ver, footer) => {
+
+	};
+
 	utilities.addAdminScript = (scriptObj) => {
 
 		// TODO: Add array positioning from scriptObj.position
@@ -589,7 +626,7 @@ module.exports = (CMS, APP) => {
 			scriptName: scriptObj.name,
 			scriptSrc: scriptObj.src,
 			scriptPage: scriptObj.page || false,
-			location: 'footer'
+			location: scriptObj.location || 'footer'
 		}
 
 		if (typeof scriptObj.location !== 'undefined') {
@@ -644,7 +681,11 @@ module.exports = (CMS, APP) => {
 		CMS.adminScripts.removeScript.push(removeScript)
 	};
 
-	utilities.addFrontScript = (name, src, deps, ver, footer) => {
+	utilities.addScript = (name, src, deps, ver, footer) => {
+
+	};
+
+	utilities.removeScript = (name, src, deps, ver, footer) => {
 
 	};
 

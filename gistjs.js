@@ -187,7 +187,7 @@ module.exports = (settings, app) => {
 	});
 
 	process.on('unhandledRejection', function(reason, p) {
-		console.log(p, reason);
+		console.log(reason);
 	    //CMS._utilities.catchError(reason, true);
 	    // application specific logging, throwing an error, or other logic here
 	});

@@ -29,22 +29,9 @@
 
 			<!-- Main content -->
 			<div class="content-wrapper">
-				<%
-					if (typeof msg !== 'undefined') {
-				%>
-					<div class="row">
-							<div class="alert alert-info">
-							<%
-								switch(msg){
-									case '1' :
-										%> <strong>Theme activated</strong> <%
-									break;
-								}
-							%>
-					</div>
-				<%
-					}
-				%>
+				<% if (typeof alert !== 'undefined') { %>
+					<%- app.alert(alert);%>
+				<% } %>
 
 				<!-- Theme wrap -->
 				<div class="row">
