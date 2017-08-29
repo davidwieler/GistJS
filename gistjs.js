@@ -56,6 +56,11 @@ module.exports = (settings, app) => {
 		app.use(helmet(helmetSettings));
 	}
 
+	// define the project root.
+	// Used to get the config file and such
+	settings.projectRoot = process.cwd();
+
+	CMS.init(settings, passport);
 
 	if (CMS.config.anyoneRegister) {
 		CMS.enableUserRegistration();
@@ -71,10 +76,14 @@ module.exports = (settings, app) => {
 	    const dbSessionsConf = {
 	        db: {
 	            url: 'mongodb://' + CMS.dbConn.sessions.url,
+	            stringify: false,
+				autoRemove: 'interval', // TODO: make this a config setting
+				autoRemoveInterval: 10 // TODO: make this a config setting
 	        },
 	        secret: CMS.config.sessionCookieSecret,
 	        sameSite: true,
 	        cookieName: CMS.config.sessionCookieName,
+	        cookieLength: new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)) // TODO: make this a config setting
 	    };
 
 		const sessionOpts = {
@@ -152,7 +161,7 @@ module.exports = (settings, app) => {
 			const activeThemeTemplates = CMS.getTemplates();
 
 			for (var i = 0; i < activeThemeTemplates.length; i++) {
-				if (activeThemeTemplates[i].filename === 'maintenance.ejse') {
+				if (activeThemeTemplates[i].filename === 'maintenance.ejs') {
 					hasMaintenanceTemplate = true;
 					break;
 				}
@@ -183,8 +192,24 @@ module.exports = (settings, app) => {
 	});
 
 	process.on('unhandledRejection', function(reason, p) {
+		// TODO: Log this with winston
+		console.log('unhandledRejection', reason);
 	    //CMS._utilities.catchError(reason, true);
 	    // application specific logging, throwing an error, or other logic here
+	});
+
+	process.on('uncaughtException', (err) => {
+		CMS._exceptions.log(err);
+	});
+
+	process.on('exit', (code) => {
+		// TODO: Log this with winston
+		console.log(`About to exit with code: ${code}`);
+	});
+
+	process.on('rejectionHandled', (p) => {
+		// TODO: Log this with winston
+		console.log('rejection handled, check logging type and register an event there');
 	});
 
 
