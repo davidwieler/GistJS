@@ -110,7 +110,10 @@ module.exports = (CMS, APP) => {
 							const createContent = (data) => {
 								CMS.createContent(data, 'attachment', (err, id) => {
 									data._id = id;
-									CMS.sendResponse(res, 200, data);
+									CMS.doHook('mediaUpload').then((results) => {
+										data.hookResults = results;
+										CMS.sendResponse(res, 200, data);
+									})
 								});
 							}
 

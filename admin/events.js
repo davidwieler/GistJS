@@ -40,3 +40,11 @@ Events.prototype.updatePlugin = (CMS, bool, done) => {
 Events.prototype.updateTheme = (CMS, bool, done) => {
 
 };
+
+Events.prototype.installPluginModules = (CMS, bool, done) => {
+
+};
+
+Events.prototype.UninstallPluginModules = (CMS, bool, done) => {
+
+};

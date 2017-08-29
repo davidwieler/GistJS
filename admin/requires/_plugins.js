@@ -8,6 +8,9 @@ module.exports = (CMS) => {
 	var plugins = {};
 
 	plugins.initPlugins = (findUsers, done) => {
+		if (typeof CMS.pluginDir === 'undefined') {
+			return
+		}
 		let plugins = fs.readdirSync(CMS.pluginDir);
 		CMS.activePlugins = {
 			admin: [],

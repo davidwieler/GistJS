@@ -11,7 +11,8 @@ module.exports = (CMS, APP) => {
 
 	render.renderAdminTemplate = (template, templateData) => {
 
-		console.log(template);
+		console.log('_render.js - renderAdminTemplate template: ', template);
+		console.log('_render.js - renderAdminTemplate templateData: ', templateData);
 
 		if (!templateData) {
 			templateData = {}

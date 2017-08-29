@@ -25,7 +25,7 @@ module.exports = (CMS, APP) => {
 			function: (req, res, next) => {
 				let msg = req.query.msg;
 				if (typeof msg !== 'undefined') {
-					CMS.renderAdminTemplate('edit', {data: req.params.id, msg});
+					CMS.renderAdminTemplate('edit', {id: req.params.id, msg});
 				} else {
 					CMS.renderAdminTemplate('edit', {id: req.params.id, msg});
 				}

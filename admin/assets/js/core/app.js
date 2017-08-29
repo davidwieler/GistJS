@@ -371,6 +371,12 @@
         }
     };
 
+	exports.defaultEditor = function(editorId, postContent, options) {
+		return `
+		<div id="${editorId}">${postContent}</div>
+		`;
+	}
+
     exports.editor = function(post) {
 	    var postTitle = post.postTitle || '';
 	    var postUrl = post.postUrl || '';
@@ -474,6 +480,18 @@
 	                </div>\
 	            </div>';
 	}
+
+	exports.editableImage = function() {
+		return `
+			<div class="editable-image-buttons">
+				<button class="btn"><i class="fa fa-align-left" aria-hidden="true"></i></button>
+				<button class="btn"><i class="fa fa-align-center" aria-hidden="true"></i></button>
+				<button class="btn"><i class="fa fa-align-right" aria-hidden="true"></i></button>
+				<button class="btn"><i class="fa fa-align-justify" aria-hidden="true"></i></button>
+				<button class="btn"><i class="fa fa-pencil" aria-hidden="true"></i></button>
+			</div>
+		`;
+	};
 
 	exports.inlineImageEditBox = function(href, title, target) {
 		var href = href || '';

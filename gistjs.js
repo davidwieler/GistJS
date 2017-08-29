@@ -1,5 +1,4 @@
 module.exports = (settings, app) => {
-
 	// Setting up the CMS.
 	// NPM dependancies
 	const express = require('express');
@@ -57,7 +56,6 @@ module.exports = (settings, app) => {
 		app.use(helmet(helmetSettings));
 	}
 
-	CMS.init(settings, router, passport);
 
 	if (CMS.config.anyoneRegister) {
 		CMS.enableUserRegistration();
@@ -73,12 +71,10 @@ module.exports = (settings, app) => {
 	    const dbSessionsConf = {
 	        db: {
 	            url: 'mongodb://' + CMS.dbConn.sessions.url,
-	            stringify: false
 	        },
 	        secret: CMS.config.sessionCookieSecret,
 	        sameSite: true,
 	        cookieName: CMS.config.sessionCookieName,
-	        cookieLength: new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)) // NEED TO ADD A WAY TO SET THE LOGIN COOKIE LENGTH
 	    };
 
 		const sessionOpts = {
@@ -187,10 +183,10 @@ module.exports = (settings, app) => {
 	});
 
 	process.on('unhandledRejection', function(reason, p) {
-		console.log(reason);
 	    //CMS._utilities.catchError(reason, true);
 	    // application specific logging, throwing an error, or other logic here
 	});
+
 
 	/*
 		----------------------------------------------

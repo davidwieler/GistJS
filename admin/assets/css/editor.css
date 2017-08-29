@@ -1,0 +1,22 @@
+.wysihtml5-editor img:hover{
+	cursor: pointer
+}
+
+.wysihtml5-editor .editable-image{
+	background: #fbfbfb;
+    display: inline-block;
+    border: 2px solid #dadada;
+    padding: 4px;
+
+}
+
+img{
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-o-user-select: none;
+	user-select: none;
+}
+img:focus {
+    outline: none !important;
+}

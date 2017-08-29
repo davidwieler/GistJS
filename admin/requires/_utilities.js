@@ -328,7 +328,6 @@ module.exports = (CMS, APP) => {
 	}
 
 	utilities.sendResponse = (res, status, response, done) => {
-
 		if(typeof response === 'object'){
 			response = JSON.stringify(response);
 		}
@@ -338,7 +337,6 @@ module.exports = (CMS, APP) => {
 		if (typeof done === 'function') {
 			done();
 		}
-
 	};
 
 	utilities.catchError = (e, showStack) => {

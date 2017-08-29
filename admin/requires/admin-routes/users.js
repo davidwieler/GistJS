@@ -78,7 +78,7 @@ module.exports = (CMS, APP) => {
 				const results = {
 					roles: CMS.rolesAndCaps.getRoleTypes()
 				};
-				CMS.renderAdminTemplate('user-new', results, msg);
+				CMS.renderAdminTemplate('user-new', {data: results, msg: msg});
 			}
 		});
 
@@ -90,7 +90,7 @@ module.exports = (CMS, APP) => {
 				let msg = req.query.msg;
 
 				CMS.getUsers({}, (err, results) => {
-					CMS.renderAdminTemplate('users', results, msg);
+					CMS.renderAdminTemplate('users', {data: results, msg: msg});
 				});
 			}
 		});
@@ -118,7 +118,7 @@ module.exports = (CMS, APP) => {
 					results.roles = CMS.rolesAndCaps.getRoleTypes();
 					results.userId = req.params.id;
 					results.editors = editors
-					CMS.renderAdminTemplate('user-edit', results, msg);
+					CMS.renderAdminTemplate('user-edit', {data: results, msg: msg});
 
 				});
 			}

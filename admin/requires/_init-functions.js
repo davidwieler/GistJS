@@ -16,11 +16,13 @@ module.exports = (CMS, APP) => {
 		CMS._utilities.addAdminStylesheet({name: 'icomoon', src: 'icons/icomoon/styles.css', type: 'core'})
 		CMS._utilities.addAdminStylesheet({name: 'icomoon', src: 'core.css', type: 'core'})
 		CMS._utilities.addAdminStylesheet({name: 'icomoon', src: 'components.css', type: 'core'})
+		CMS._utilities.addAdminStylesheet({name: 'editor-styles', src: 'editor.css', type: 'core', page: 'edit'})
 		CMS._utilities.addAdminStylesheet({name: 'icomoon', src: 'colors.css', type: 'core'})
 		CMS._utilities.addAdminStylesheet({name: 'bootstrap-select', src: 'https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/css/bootstrap-select.min.css'})
 		CMS._utilities.addAdminStylesheet({name: 'select2', src: 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css'})
 		CMS._utilities.addAdminStylesheet({name: 'font-awesome', src: 'https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css'})
 		CMS._utilities.addAdminStylesheet({name: 'roboto-font', src: 'https://fonts.googleapis.com/css?family=Roboto:400,300,100,500,700,900'})
+		CMS._utilities.addAdminStylesheet({name: 'summernote', src: 'http://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.7/summernote.css'})
 
 	};
 
@@ -37,19 +39,27 @@ module.exports = (CMS, APP) => {
 		CMS._utilities.addAdminScript({name: 'tomarkdown', src: 'plugins/tomarkdown.js', type: 'core', page: 'edit'})
 		CMS._utilities.addAdminScript({name: 'app', src: 'core/app.js', type: 'core'})
 		CMS._utilities.addAdminScript({name: 'handlers', src: 'core/handlers.js', type: 'core', location: 'header'})
+		CMS._utilities.addAdminScript({name: 'editor-handlers', src: 'core/editor-handlers.js', type: 'core', location: 'header', page: 'edit'})
 		CMS._utilities.addAdminScript({name: 'helperFunctions', src: 'core/helperFunctions.js', type: 'core', location: 'header'})
 		CMS._utilities.addAdminScript({name: 'showdown', src: 'https://cdn.rawgit.com/showdownjs/showdown/1.6.3/dist/showdown.min.js', page: 'edit'})
 		CMS._utilities.addAdminScript({name: 'bootstrap-select', src: 'https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/js/bootstrap-select.min.js'})
 		CMS._utilities.addAdminScript({name: 'select2', src: 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js', location: 'header'})
 		CMS._utilities.addAdminScript({name: 'bootstrap', src: 'core/libraries/bootstrap.min.js', type: 'core'})
 		CMS._utilities.addAdminScript({name: 'push-notifications', src: 'core/push.js', type: 'core'})
+
+		// Replacing editor with summernote
+		CMS._utilities.addAdminScript({name: 'summernote', src: 'http://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.7/summernote.js', page: 'edit'})
 	};
 
 	initFunctions.systemCrons = () => {
+
+		// Check for trashed posts and delete, no immediateFire
 		const deleteTrashedCron = CMS._crons.createCron('sendSystemMessages', '*/5 * * * *', () => {
 			CMS._utilities.deleteTrashed();
-		}, true, true);
+		}, true, false);
 
+		// Send available push notifs to admins, immediateFire
+		// Only works if push notifications are enabled
 		const systemMessageCron = CMS._crons.createCron('sendSystemMessages', '*/55 * * * *', () => {
 			for (var i = 0; i < CMS.systemMessages.length; i++) {
 				CMS.systemMessages[i]
@@ -67,6 +77,12 @@ module.exports = (CMS, APP) => {
 		initFunctions.systemCrons();
 		initFunctions.adminStyles();
 		initFunctions.adminScripts();
+
+		CMS._exceptions.registerException('failed to connect to server', () => {
+			console.error(`\n--- DATABASE CONNECTION ISSUE ---`);
+			console.error(`Unable to contact MongoDB server @ ${CMS.dbConn.data.url}. \nPlease check that MongoDB is running, and that you've provided the correct connection information (url/username/password).`);
+			console.error(`__________________________________\n`);
+		})
 
 		CMS.addHook('displayAllSystemMessages', 'all', 1, (done) => {
 			CMS.getPosts({search: {contentType: 'systemMessages'}})

@@ -8,6 +8,9 @@ module.exports = (CMS, APP) => {
 	let logger = {};
 
 	logger.init = () => {
+		if (!CMS.logFile) {
+			CMS.logFile = 'gistJsLog.log'
+		}
 	};
 
 	logger.log = () => {
@@ -17,7 +20,7 @@ module.exports = (CMS, APP) => {
 		CMS.log[loggerName] = new (winston.Logger)({
 			transports: [
 				new (winston.transports.Console)(),
-				new (winston.transports.File)({ filename: 'somefile.log' })
+				new (winston.transports.File)({ filename: CMS.logFile })
 			]
 		});
 	};

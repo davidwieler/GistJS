@@ -6,10 +6,10 @@ const Promise = require('bluebird');
 const _ = require('lodash');
 const APP = require('./assets/js/core/app.js');
 const async = require('async');
-(() => {
 
+((module) => {
 	CMS = {
-		init: (settings, router, passport) => {
+		init: (settings, passport) => {
 			CMS.adminDir = __dirname;
 
 			if (settings.multiSite) {
@@ -18,7 +18,7 @@ const async = require('async');
 
 			try{
 				if (!settings.configLocation) {
-					CMS.configLocation = `${CMS.adminDir}/config.json`;
+					CMS.configLocation = `${settings.projectRoot}/gistjs-config.json`;
 				} else {
 					CMS.configLocation = settings.configLocation;
 				}
@@ -32,9 +32,10 @@ const async = require('async');
 			CMS._utilities = require('./requires/_utilities.js')(CMS, APP);
 			CMS._security = require('./requires/_security.js')(CMS, APP);
 			CMS._render = require('./requires/_render.js')(CMS, APP);
+			CMS._hooks = require('./requires/_hooks.js')(CMS, APP);
 
 			CMS.navigation = require('./navigation.js');
-			CMS.passport = passport;
+			CMS.passport = passport; // TODO: is this needed?
 			CMS.addedRoutes = [];
 			CMS.deletedRoutes = [];
 			CMS.pushServicesStarted = false;
@@ -131,10 +132,12 @@ const async = require('async');
 			CMS.themeDir = settings.themeDir;
 			CMS.pluginDir = settings.pluginDir;
 			CMS.uploadDir = settings.uploadDir;
-			CMS.hooks = CMS.defineHooks();
+			//CMS.hooks = CMS.defineHooks();
+			CMS.hooks = CMS._hooks.init()
 
 
 			// Requires
+			CMS._exceptions = require('./requires/_exceptions.js')(CMS, APP);
 			CMS._content = require('./requires/_content.js')(CMS, APP);
 			CMS._thumbnails = require('./requires/_thumbnails.js')(CMS, APP);
 			CMS._categories = require('./requires/_categories.js')(CMS, APP);
@@ -142,7 +145,6 @@ const async = require('async');
 			CMS._revisions = require('./requires/_revisions.js')(CMS, APP);
 			CMS._attachments = require('./requires/_attachments.js')(CMS, APP);
 			CMS._users = require('./requires/_users.js')(CMS, APP);
-
 			CMS._themes = require('./requires/_themes.js')(CMS, APP);
 			CMS._plugins = require('./requires/_plugins.js')(CMS, APP);
 			CMS._roles = require('./requires/_roles.js')(CMS, APP);
@@ -154,6 +156,9 @@ const async = require('async');
 			// Promises
 			CMS.Promise = Promise;
 
+			// Register exception rules
+			CMS._exceptions.init();
+
 			// -- Content --
 			CMS.createContent = Promise.promisify( CMS._content.createContent );
 			CMS.getPostById = Promise.promisify( CMS._content.getPostById );
@@ -161,7 +166,6 @@ const async = require('async');
 			CMS.getPosts = Promise.promisify( CMS._content.getPosts );
 			CMS.updatePost = Promise.promisify( CMS._content.updatePost );
 			CMS.deletePost = Promise.promisify( CMS._content.deletePost );
-			CMS.doHook = Promise.promisify( CMS.doHook );
 			CMS.addMetaBox = CMS._content.addMetaBox;
 
 			// -- Thumbnails --
@@ -174,10 +178,7 @@ const async = require('async');
 			CMS.deleteRevision = Promise.promisify( CMS._revisions.deleteRevision );
 
 			// -- Utilities --
-
 			CMS.request = Promise.promisify( CMS._utilities.request );
-
-
 			CMS.isLoggedIn = CMS._utilities.isLoggedIn;
 			CMS.hash = CMS._utilities.hash;
 			CMS.testDbConnection = CMS._utilities.testDbConnection;
@@ -187,6 +188,11 @@ const async = require('async');
 			CMS.setQueryVars = CMS._utilities.setQueryVars;
 			CMS.createRoute = CMS._utilities.createRoute;
 			CMS.deleteRoute = CMS._utilities.deleteRoute;
+
+			// -- Hooks --
+			CMS.addHook = CMS._hooks.addHook
+			CMS.addHookType = CMS._hooks.addHookType
+			CMS.doHook = Promise.promisify( CMS._hooks.doHook );
 
 			// -- Attachments --
 			CMS.getAttachmentById = Promise.promisify( CMS._attachments.getAttachmentById );
@@ -223,7 +229,6 @@ const async = require('async');
 			// -- Plugins --
 			CMS._plugins.initPlugins();
 			CMS.addPluginRoute = Promise.promisify( CMS._plugins.addPluginRoute );
-			const adminPlugins = CMS.activePlugins.admin;
 
 			// -- Roles --
 			CMS.rolesAndCaps = Promise.promisifyAll( CMS._roles );
@@ -258,14 +263,18 @@ const async = require('async');
 				});
 			};
 
-			// run active admin panel plugins
-			for (var i = adminPlugins.length - 1; i >= 0; i--) {
+			if (typeof adminPlugins !== 'undefined') {
+				// run active admin panel plugins
+				const adminPlugins = CMS.activePlugins.admin;
+				for (var i = adminPlugins.length - 1; i >= 0; i--) {
 
-				let requirePath = path.join(adminPlugins[i].pluginPath, adminPlugins[i].pluginInfo.require);
-				let thisPlugin = require(requirePath);
-				thisPlugin(CMS, APP).init();
+					let requirePath = path.join(adminPlugins[i].pluginPath, adminPlugins[i].pluginInfo.require);
+					let thisPlugin = require(requirePath);
+					thisPlugin(CMS, APP).init();
 
+				}
 			}
+
 
 			// Create initial postTypes
 			const posts = {
@@ -291,63 +300,6 @@ const async = require('async');
 
 		checkForUpdates: () => {
 
-		},
-
-		defineHooks: () => {
-			let hooks = {
-				dashboard: {},
-				edit: {}
-			};
-
-			return hooks;
-		},
-
-		addHook: (name, location, position, func) => {
-			let hooks = CMS.hooks;
-
-			if (typeof hooks[location] === 'undefined') {
-				hooks[location] = {};
-			}
-			hooks[location][name] = func
-		},
-
-		doHook: (location, done) => {
-			const doTheseHooks = CMS.hooks[location];
-			const doAllHooks = CMS.hooks['all'];
-			let returns = {};
-			let promises = [];
-
-			for(var h in doTheseHooks){
-				if (doTheseHooks.hasOwnProperty(h)){
-					promises.push({slug: APP.textToSlug(h), func: doTheseHooks[h]});
-				}
-			}
-
-			for(var h in doAllHooks){
-				if (doAllHooks.hasOwnProperty(h)){
-					promises.push({slug: APP.textToSlug(h), func: doAllHooks[h]});
-				}
-			}
-
-			async.forEachOf(promises, (value, key, callback) => {
-
-				if (typeof value.func === 'string') {
-					returns[value.slug] = value.func;
-					callback();
-				}
-
-				if (typeof value.func === 'function') {
-					value.func((results) => {
-						returns[value.slug] = results;
-						callback();
-					});
-				}
-			}, (err) => {
-				if (err) {
-					done(err);
-				}
-				done(null, returns);
-			});
 		},
 
 		rebuildThumbnails: (images, attachmentId, done) => {
@@ -390,4 +342,6 @@ const async = require('async');
 	    },
 	}
 
-})();
+	module.exports = CMS;
+
+})(module);

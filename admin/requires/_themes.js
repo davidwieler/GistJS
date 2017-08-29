@@ -7,6 +7,9 @@ module.exports = (CMS) => {
 	var themes = {};
 
 	themes.initThemes = () => {
+		if (typeof CMS.themeDir === 'undefined') {
+			return
+		}
 		let themes = fs.readdirSync(CMS.themeDir);
 
 		for (let i = themes.length - 1; i >= 0; i--) {

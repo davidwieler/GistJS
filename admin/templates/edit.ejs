@@ -10,7 +10,7 @@
 		var submitButton = 'Update';
 		var submitButtonProp = '';
 		var formClass = 'update';
-		var status = postData.status || 'draft';
+		var postStatus = postData.status || 'draft';
 		var template = postData.template || 'default';
 		if (typeof postData.postStats === 'undefined') {
 			postData.postStats = {};
@@ -22,13 +22,14 @@
 		var submitButton = 'Create';
 		var submitButtonProp = 'disabled';
 		var formClass = 'create';
-		var status = '';
+		var postStatus = '';
 		var template = '';
 		var postData = {
 			postStats: {}
 		};
 		var contentType = queryVars.type;
 	}
+
 	//
 %>
 <% var fileUploadModal = app.fileUploadModal(postData); %>
@@ -117,6 +118,9 @@
 				<% } %>
 				<form class="row edit-form <%- formClass%>" action="<%- formPostTo%>" method="post">
 					<div class="col-md-9 main-panel">
+
+						<%- app.defaultEditor('default-editor', postData.postContent); %>
+
 						<!-- Edit post -->
 						<% var editor = app.editor(postData); %>
 						<%- editor%>
@@ -196,7 +200,7 @@
 														const href = `/${adminLocation}/posts?status=${type}`;
 														let selected = '';
 
-														if (type === status) {
+														if (type === postStatus) {
 															selected = 'class="bg-teal-400" selected';
 														}
 														%><option value="<%- type%>" <%- selected%>><%- named%></option><%
